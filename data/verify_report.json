@@ -1,7 +1,7 @@
 {
   "version": "techline-v2.0.0",
-  "total": 52,
-  "passed": 49,
+  "total": 53,
+  "passed": 50,
   "skipped": 3,
   "results": [
     {
@@ -104,7 +104,7 @@
       "line": "模型",
       "item": "三模型推理可跑",
       "ok": true,
-      "detail": "4 个框，2558.9 ms，标签 ['helmet', 'novest', 'person']"
+      "detail": "4 个框，2456.6 ms，标签 ['helmet', 'novest', 'person']"
     },
     {
       "line": "模型",
@@ -306,7 +306,13 @@
     },
     {
       "line": "价值",
-      "item": "报告 KPI 与指标 JSON 一致",
+      "item": "完整版报告 KPI 与指标 JSON 一致",
+      "ok": true,
+      "detail": "降噪 / 判定覆盖 / 合规率"
+    },
+    {
+      "line": "价值",
+      "item": "16:9 单页报告 KPI 与指标 JSON 一致",
       "ok": true,
       "detail": "降噪 / 判定覆盖 / 合规率"
     },
