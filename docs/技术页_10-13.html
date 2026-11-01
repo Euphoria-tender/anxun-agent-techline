@@ -155,7 +155,7 @@
 <!-- ==================== 10 系统架构 ==================== -->
 <section class="slide">
   <div class="head"><span class="pno">10</span><h1 class="h1">系统架构：三级触发 —— 先决定「哪些帧值得算」，再决定「算得准不准」</h1></div>
-  <div class="sub">现场是固定机位、大部分时间空画面。真正的算力浪费不在模型慢，而在「算了不需要算的帧」。<br>后端三选一自动切换：<b>没显卡 → ONNX CPU（72.7 ms）</b>，<b>有显卡 → CUDA（22.9 ms）</b>，代码一行不改。</div>
+  <div class="sub">现场是固定机位、大部分时间空画面。真正的算力浪费不在模型慢，而在「算了不需要算的帧」。<br>后端三选一自动切换：<b>没显卡 → ONNX CPU（72.7 ms）</b>，<b>有显卡 → CUDA（≈22 ms）</b>，代码一行不改。</div>
 
   <div class="pipe">
     <div class="stage">
@@ -216,7 +216,7 @@
     <div class="kpi deco"><div class="k">mAP@0.5</div><div class="v" data-f="map">0.681</div><div class="t">目标 <i>≥ 0.85</i> · person 0.80 / helmet 0.56</div></div>
     <div class="kpi"><div class="k">误报率</div><div class="v" data-f="fp" style="color:#0B6E4F">5.1<small>%</small></div><div class="t">目标 <i>≤ 10%</i> · 合规被判违规</div></div>
     <div class="kpi"><div class="k">漏报率</div><div class="v" data-f="fn" style="color:#C62828">22.6<small>%</small></div><div class="t">目标 <i>≤ 5%</i> · 主动披露</div></div>
-    <div class="kpi"><div class="k">单帧耗时</div><div class="v" data-f="lat" style="color:#0B6E4F">22.9<small>ms</small></div><div class="t">目标 <i>≤ 50 ms</i> ✅ · RTX 5060 · 单进程 ≈25 路</div></div>
+    <div class="kpi"><div class="k">单帧耗时</div><div class="v" data-f="lat" style="color:#0B6E4F">22<small>ms</small></div><div class="t">目标 <i>≤ 50 ms</i> ✅ · RTX 5060 · 单进程 ≈25 路</div></div>
   </div>
 
   <div class="two">
@@ -261,7 +261,7 @@
     置信度整体下移，真帽子掉到检测阈值以下。AP 与业务指标之间隔着一层校准，数据不够时不能硬换。
     <br><b>扫参 6 组：</b>换 yolov8m 掉 14 个点（跨数据集权重口径对不上），提到 960 掉 3.4 个点且慢 2.2 倍。
     <b>s@640 已是这批权重的最优点</b>；要多带路数可切 480，快 35%、7 路/进程，代价是误报升到 15.8%。
-    <br><b>设备：</b>上 RTX 5060 后单帧 138 → 22.9 ms（6 倍），三个精度指标一字不差——换设备只影响速度、不影响判定。
+    <br><b>设备：</b>上 RTX 5060 后单帧 138 → 22 ms（6 倍），三个精度指标一字不差——换设备只影响速度、不影响判定。
   </div>
 
   <div class="foot"><span>安巡 Agent · 厂区安全巡检多智能体系统</span><span>P11 / 指标 · 判定阈值 0.30 / 0.20（measured 口径，config/thresholds.json）</span></div>
