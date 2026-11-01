@@ -1,8 +1,8 @@
 {
   "version": "techline-v1.1.0",
   "total": 37,
-  "passed": 37,
-  "skipped": 0,
+  "passed": 34,
+  "skipped": 3,
   "results": [
     {
       "line": "数据",
@@ -19,14 +19,14 @@
     {
       "line": "数据",
       "item": "helmet_p2/train 图片/标注配对",
-      "ok": true,
-      "detail": "1200 图 / 1277 标注 / 配对 1200"
+      "ok": null,
+      "detail": "该集合未随仓库分发（训练用，体积大）"
     },
     {
       "line": "数据",
       "item": "helmet_p2/valid 图片/标注配对",
-      "ok": true,
-      "detail": "400 图 / 400 标注 / 配对 400"
+      "ok": null,
+      "detail": "该集合未随仓库分发（训练用，体积大）"
     },
     {
       "line": "数据",
@@ -42,9 +42,9 @@
     },
     {
       "line": "数据",
-      "item": "1080p 复验素材分辨率",
-      "ok": true,
-      "detail": "1920×1920"
+      "item": "1080p 复验素材",
+      "ok": null,
+      "detail": "51MB，未随仓库分发（tools/make_1080_stream.py 可重建）"
     },
     {
       "line": "模型",
@@ -92,7 +92,7 @@
       "line": "模型",
       "item": "三模型推理可跑",
       "ok": true,
-      "detail": "4 个框，2419.9 ms，标签 ['helmet', 'novest', 'person']"
+      "detail": "4 个框，2692.4 ms，标签 ['helmet', 'novest', 'person']"
     },
     {
       "line": "模型",
