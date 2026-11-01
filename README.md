@@ -130,7 +130,8 @@ ONNX 版是自己实现的 letterbox + 解码 + NMS（`onnx_backend.py`，纯 nu
 | `models/onnx/*.onnx`（66.5 MB） | ✅ | 同上。单文件最大 42.6 MB，在 GitHub 100 MB 硬限制内 |
 | `datasets/scenes/`（300 KB） | ✅ | 控制台演示的 4 张场景图，没有它点「开始巡查」是空的 |
 | `datasets/ppe_test/`（14 MB） | ✅ | 100 张测试图 + 100 张训练图 + 标注（CC BY 4.0）。**四个指标就测在这 100 张上**，不带它指标无法复现 |
-| `datasets/helmet_p2/`（60 MB）· `test1080/`（51 MB） | ❌ | 训练集与 1080p 复验素材，体积原因不入库；`tools/fetch_helmet_p2.py` · `make_1080_stream.py` 可重建 |
+| `datasets/site_demo.mp4`（8.8 MB） | ✅ | 60s / 720p 现场素材。**价值指标要能被从头跑一遍**，不带它 `events_site.json` 只能读不能重建 |
+| `datasets/real1080.mp4`（59 MB）· `datasets/helmet_p2/`（60 MB）· `test1080/`（51 MB） | ❌ | 1080p 复验素材与训练集，体积原因不入库；`tools/make_1080_stream.py` · `fetch_helmet_p2.py` 可重建 |
 
 克隆下来直接跑，不需要额外找权重：
 
@@ -807,8 +808,10 @@ python src/anxun/report.py --metrics data/value_metrics.json \
 > 📌 **两步都能跑，看你想要哪一层。**
 > 只想验指标 → 直接从第 2 步开始：`data/events_*.json` 已随仓库分发，`stats.py`
 > 只读账本、不碰视频，clone 下来立刻能复现五个数。
-> 想验完整链路 → 第 1 步要视频，而视频体积大（`site_demo` 8.8 MB、`real1080` 59 MB）
-> 未随仓库走，用 `python tools/make_site_video.py` / `tools/make_1080_stream.py` 重建。
+> 想验完整链路 → 第 1 步的 `site_demo.mp4`（8.8 MB）**随仓库分发**，clone 下来直接能跑；
+> `real1080.mp4`（59 MB）体积太大不入库，用 `python tools/make_1080_stream.py` 重建。
+> 只用 site_demo 一段复现时，`stats.py --events data/events_site.json` 单文件也行，
+> 但判定覆盖率会从 60.5% 掉到 13.5%（720p 轨迹碎片化，见 7.2）。
 
 ### 7.1 五个数字
 

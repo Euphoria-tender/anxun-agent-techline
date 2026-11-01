@@ -96,6 +96,7 @@ docs/figs/value_report.html     报告成品（截图直接进 PPT 第 15 页）
 data/events_site.json           720p 素材的账本 + 事件（37 人次 / 15 条账本）
 data/events_1080.json           1080p 素材的账本 + 事件（44 人次 / 100 条账本）
 data/value_metrics.json         五个指标的机器可读出处
+datasets/site_demo.mp4          60s / 720p 现场素材（8.8MB，入库让指标能被从头跑一遍）
 ```
 
 ---

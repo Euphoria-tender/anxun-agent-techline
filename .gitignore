@@ -13,6 +13,9 @@ models/*.trt
 datasets/*
 !datasets/scenes/
 !datasets/ppe_test/
+# 演示视频随仓库走（8.8MB）：价值指标要能被评委从头跑一遍。
+# real1080.mp4（59MB）仍不入库，用 tools/make_1080_stream.py 重建。
+!datasets/site_demo.mp4
 # 体积原因仍不入库，用 tools/ 里的脚本重拉
 datasets/ppe_test/test1080/
 datasets/helmet_p2/
