@@ -1,19 +1,5 @@
 # 变更日志
 
-## v1.1.1 — 2026-11-01
-
-补上一个遗留的 P0：依赖没锁版本。这是 ONNX 单帧从 53.5 ms 漂到 72.7 ms 的根因——
-同一个模型、同一台机器，onnxruntime 版本一换，耗时能差 40%，而且无法归因。
-
-### 变更
-
-- `requirements-cpu.txt` / `requirements-gpu.txt`：全部改为精确版本，取自实测环境
-  （onnxruntime 1.31.1 · ultralytics 8.4.99 · opencv-python 5.0.0 · numpy 2.5.4 · torch 2.14.1 · torchvision 0.29.1）。
-- 两个文件都写明：改版本必须重跑 `evaluate_real.py --backend onnx` 并更新 README 2.1 的复测记录。
-- 版本号 1.1.0 → 1.1.1；验收报告 `version` 字段随之更新。
-
----
-
 ## v1.1.0 — 2026-11-01
 
 这一版不加架构、不换模型。主线是「把已经能跑的东西交付干净」：权重与评测集随仓库走、口径对齐、
@@ -44,6 +30,14 @@
 - 无评测集时改用合成探针图做推理烟测，不再抛 `IndexError`。
 - 新增「README 版本号与包版本一致」检查；验收报告 JSON 写入 `version` 字段。
 - 当前：仓库直接跑 **36 项 33 PASS / 0 FAIL / 3 SKIP**；补齐训练集与 1080p 素材后 **36 项全 PASS**。
+
+**依赖**
+
+- `requirements-cpu.txt` / `requirements-gpu.txt` 全部改为精确版本，取自实测环境
+  （onnxruntime 1.31.1 · ultralytics 8.4.99 · opencv-python 5.0.0 · numpy 2.5.4 · torch 2.14.1 · torchvision 0.29.1）。
+  此前一直是 `>=` 软约束，是 ONNX 单帧从 53.5 ms 漂到 72.7 ms 的根因——同一模型、同一台机器，
+  版本一换耗时差 40% 且无法归因。
+- 两个文件都注明：改版本必须重跑 `evaluate_real.py --backend onnx` 并更新 README 2.1 的复测记录。
 
 **文档**
 
