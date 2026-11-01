@@ -90,7 +90,7 @@
       "line": "模型",
       "item": "三模型真图推理可跑",
       "ok": true,
-      "detail": "4 个框，2627.2 ms，标签 ['helmet', 'novest', 'person']"
+      "detail": "4 个框，2722.7 ms，标签 ['helmet', 'novest', 'person']"
     },
     {
       "line": "模型",

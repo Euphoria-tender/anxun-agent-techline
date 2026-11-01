@@ -636,11 +636,14 @@ python src/anxun/scheduler.py --sources rtsp://cam1,rtsp://cam2,cam3.mp4 --fps 1
 
 | 方案 | 想法 | 实测 | 为什么失败 |
 |---|---|---|---|
-| **级联 ROI 精查** `cascade.py` | 全图找到人，把头部裁出来放大再跑一次 PPE | 640 原生集漏报 24.7% → **30.1%**；1080p 模拟集仅 26.9% → 25.8% | 裁出来放大等于把目标推出训练分布——模型没在「一个大头」上训过，开始幻觉出帽子 |
-| **双模型 WBF 融合** `fusion.py` | 原权重 + 微调权重各出框，加权融合 | 漏报 24.7% → **33.3%**，误报不变 | 微调权重会凭空看出帽子，融合把它的错也一起采信，违规被判成合规 |
+| **级联 ROI 精查** | 全图找到人，把头部裁出来放大再跑一次 PPE | 640 原生集漏报 24.7% → **30.1%**；1080p 模拟集仅 26.9% → 25.8% | 裁出来放大等于把目标推出训练分布——模型没在「一个大头」上训过，开始幻觉出帽子 |
+| **双模型 WBF 融合** | 原权重 + 微调权重各出框，加权融合 | 漏报 24.7% → **33.3%**，误报不变 | 微调权重会凭空看出帽子，融合把它的错也一起采信，违规被判成合规 |
 
 结论：**在权重与场景不匹配的前提下，加架构只会放大错误，不会纠正错误。**
-准确度的天花板在权重，不在结构。（脚本保留可复现：`tools/bench_cascade.py`、`tools/bench_cascade_1080.py`）
+准确度的天花板在权重，不在结构。
+
+> 这两个方案的实验代码已从交付仓库移除（属于过程产物），实测数字保留上表，
+> 因为它们是「为什么不往架构上继续投入」的直接依据。
 
 ## 七、技术页
 
@@ -686,15 +689,13 @@ anxun-v1/
 │   ├── export_onnx.py      .pt → .onnx（一次性）
 │   ├── data_card.py        全量数据卡片
 │   ├── verify_all.py       交付物验收（35 项，含起服务与真图推理）
-│   ├── cascade.py          级联 ROI 精查 —— 已验证不采用（见 6.4）
-│   ├── fusion.py           双模型 WBF 融合 —— 已验证不采用（见 6.4）
 │   └── app.py              推理服务（HTTP）
 ├── tools/                 数据拉取 · 训练准备 · 基准与复验
 │   ├── fetch_ppe_test.py / fetch_helmet_p2.py / repair_labels.py
 │   ├── make_vest.py / make_mix.py
 │   ├── make_demo_video.py / make_site_video.py / make_1080_stream.py
-│   ├── bench_arch.py / bench_cascade.py / bench_cascade_1080.py
-│   └── verify_trigger_1080.py   触发层复验（含阈值扫描）
+│   ├── verify_trigger_1080.py   触发层复验（含阈值扫描）
+│   └── bench_arch.py            模型架构开销基准（喂 4.1 的表）
 ├── docs/                  技术页_10-13.html · 数据集卡片.md · 模型卡片.md
 ├── data/                  四指标与实验数据（metrics_real / metrics_onnx / metrics_vest
 │                          sweep / sweep_rules / sweep_geom / arch_bench / batch_bench
