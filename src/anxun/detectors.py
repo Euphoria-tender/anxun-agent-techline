@@ -20,6 +20,14 @@ from pathlib import Path
 
 from .rules_engine import Box
 
+# 引擎类别 -> 模型输出里能对应的全部写法（正向证据 + 反向证据）。
+# 用来回答「这个检测器到底能判哪几类装备」，见 available_equips()。
+EQUIP_LABELS = {
+    "helmet": ("helmet", "nohelmet"),
+    "vest": ("vest", "novest"),
+    "goggles": ("goggles",),
+}
+
 
 class YoloDetector:
     """ultralytics YOLO 后端。类别映射是这一层唯一的脏活。"""
@@ -233,6 +241,36 @@ class DualDetector:
     def detect_image(self, image_path: str | Path, frame_idx: int = 0) -> dict:
         return self.detect({"image": str(image_path),
                             "scene_id": Path(image_path).stem}, frame_idx)
+
+
+def available_equips(det) -> list[str] | None:
+    """这个检测器**实际能产出**的装备类别。
+
+    为什么要问模型而不是问配置：`catalog` 里写的是「想判什么」，但权重缺失时
+    模型根本吐不出这一类框，规则引擎会把「一个框都没有」判成「没戴」——
+    一个人「没穿反光背心」的假告警能刷满整屏。这里按模型真实类别求交集：
+    缺模型就少判一类，绝不拿「没检出」冒充「没佩戴」。
+
+    返回 None 表示问不出来（自定义 / 桩检测器没有 names），调用方应保持原配置。
+    """
+    seen, found = set(), False
+    stack = [det]
+    while stack:
+        d = stack.pop()
+        names = getattr(d, "names", None)
+        if names:
+            found = True
+            for n in names.values():
+                lab = YoloDetector.LABEL_MAP.get(str(n))
+                if lab:
+                    seen.add(lab)
+        for attr in ("person", "ppe", "vest"):
+            sub = getattr(d, attr, None)
+            if sub is not None and sub is not det:
+                stack.append(sub)
+    if not found:
+        return None
+    return [e for e, labs in EQUIP_LABELS.items() if seen & set(labs)]
 
 
 def pick_device(device: str = "") -> str:

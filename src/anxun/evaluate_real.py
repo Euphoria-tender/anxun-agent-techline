@@ -149,8 +149,13 @@ def warmup(det) -> None:
 
 
 def run_eval(data_dir: str | Path, det, limit: int | None = None,
-             verbose: bool = False) -> dict:
-    """在指定数据集上评测一个检测器，返回 samples + 指标。"""
+             verbose: bool = False, scope: str = "matched") -> dict:
+    """在指定数据集上评测一个检测器，返回 samples + 指标。
+
+    scope="matched"：误报/漏报只统计「被检出的人」，衡量判定层；
+    scope="e2e"    ：连没检出的人一起算，衡量整条链路。
+    JSON 里两个数都有，headline 用哪个由 --metric-scope 决定。
+    """
     from PIL import Image
     data = Path(data_dir)
     img_dir = data / "images" if (data / "images").exists() else data
@@ -176,7 +181,7 @@ def run_eval(data_dir: str | Path, det, limit: int | None = None,
         n_person_gt += len(gt_persons)
         n_person_pred += len(pred_persons)
 
-        judged, truth = [], []
+        judged, matched_gi = [], set()
         used = set()
         for pi, pbox in enumerate(pred_persons):
             best, bv = None, 0.5
@@ -189,6 +194,7 @@ def run_eval(data_dir: str | Path, det, limit: int | None = None,
             if best is None:
                 continue
             used.add(best)
+            matched_gi.add(best)
             worn = truth_of(gt, gt_persons[best])
             if worn is None:
                 continue
@@ -197,7 +203,18 @@ def run_eval(data_dir: str | Path, det, limit: int | None = None,
                 continue
             judged.append({"person_id": f"G{best}", "equip": "helmet",
                            "status": vs[0].status})
-            truth.append({"person_id": f"G{best}", "equip": "helmet", "worn": worn})
+
+        # 真值里「能判」的人一律记录，不管有没有被检出（matched 标记）。
+        # 只记已检出的人，等于把检测层面漏掉的人从漏报率的分母里悄悄删掉：
+        # 数字会好看，但「系统一共漏了多少违规」这个问题的答案就没了。
+        # 两套口径都能从这一份数据算出来，见 metrics.business_rates(scope=...)。
+        truth = []
+        for gi, g in enumerate(gt_persons):
+            worn = truth_of(gt, g)
+            if worn is None:
+                continue
+            truth.append({"person_id": f"G{gi}", "equip": "helmet", "worn": worn,
+                          "matched": gi in matched_gi})
 
         samples.append({
             "image_id": fp.stem,
@@ -218,7 +235,7 @@ def run_eval(data_dir: str | Path, det, limit: int | None = None,
         "images": len(files),
         "persons_gt": n_person_gt,
         "persons_pred": n_person_pred,
-        "results": evaluate(samples, classes=("person", "helmet")),
+        "results": evaluate(samples, classes=("person", "helmet"), scope=scope),
     }
 
 
@@ -252,6 +269,10 @@ def main() -> int:
                     help="onnx = 不依赖 torch 的 CPU 后端（可移植版）")
     ap.add_argument("--out", default="", help="结果 json 路径，默认 data/metrics_real.json")
     ap.add_argument("--vest", default="", help="额外加载 vest 权重，用来验证「加模型不影响 helmet 判定」")
+    ap.add_argument("--metric-scope", default="matched", choices=("matched", "e2e"),
+                    help="误报/漏报的口径：matched=只算已检出的人（默认，衡量判定层）；"
+                         "e2e=连没检出的人一起算（衡量整条链路）。"
+                         "两种结果都会写进 JSON，这里只决定 headline 用哪个")
     ap.add_argument("--profile", default="", choices=("", "measured", "conservative"),
                     help="判定阈值口径；留空用 config 默认（measured）。"
                          "报数只能用 measured，换口径的结果不能和交付数字比")
@@ -269,23 +290,31 @@ def main() -> int:
             ppe=str(onnx_dir / "best.onnx"), person=str(onnx_dir / "yolov8n.onnx"))
     else:
         dev = pick_device(args.device)
+        vest = str(args.vest) if args.vest else ""
+        if vest and not Path(vest).exists():
+            print(f"找不到 vest 权重：{vest}")
+            return 2
         if Path(args.person_weights).exists():
-            det = DualDetector(args.person_weights, args.weights,
+            det = DualDetector(args.person_weights, args.weights, vest_weights=vest,
                                imgsz=args.imgsz, conf=args.conf, device=dev)
             model_name = f"{Path(args.person_weights).name} + {Path(args.weights).name}"
+            if vest:
+                model_name += f" + {Path(vest).name}"
         else:
             det = YoloDetector(args.weights, imgsz=args.imgsz, conf=args.conf, device=dev)
             model_name = Path(args.weights).name
     print(f"模型：{model_name}  imgsz={args.imgsz}  conf={args.conf}")
     warmup(det)
 
-    out = run_eval(args.data, det, limit=args.limit or None, verbose=True)
+    out = run_eval(args.data, det, limit=args.limit or None, verbose=True,
+                   scope=args.metric_scope)
     res = out["results"]
     payload = {
         "kind": "model-measured",
         "config": {"weights": model_name, "imgsz": args.imgsz, "conf": args.conf,
                    "backend": args.backend,
                    "rules_profile": _rules_profile(),
+                   "metric_scope": args.metric_scope,
                    "device": "CPU（onnxruntime，不依赖 torch）" if args.backend == "onnx"
                              else _device_note(det)},
         "dataset": {

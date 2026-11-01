@@ -424,8 +424,17 @@ def judge_equipment(person: Box, idx: int, boxes: Sequence[Box],
                                        cfg["max_ratio"])
 
     def _score(label: str):
-        """返回 (最佳框, IoU, 包含度, 是否达标)。label 为空时永不达标。"""
-        best, bi, bc = None, 0.0, 0.0
+        """返回 (最佳框, IoU, 包含度, 是否达标)。label 为空时永不达标。
+
+        择优分两层：先在**达标**的框里挑，一个都没有才回落到「最像的那个」。
+
+        v1.2.0 之前只有一层（按 (IoU, 包含度) 取全局最大），会被一个「IoU 略高、
+        但两项都不达标」的框抢走最佳位：B 包含度 1.0 本该判「已佩戴」，A 的 IoU
+        高一点点、包含度 0.59 不达标，结果判「未佩戴」。多给一个废框反而多一条
+        误报，判定非单调——这是误报的一个真实来源，回归见 tests/test_techline.py。
+        """
+        best, bi, bc = None, 0.0, 0.0          # 最像的（不保证达标，只用来写 reason）
+        qbest, qi, qc = None, 0.0, 0.0         # 达标的里面最像的
         for b in boxes:
             if not label or b.label != label:
                 continue
@@ -438,8 +447,11 @@ def judge_equipment(person: Box, idx: int, boxes: Sequence[Box],
             contain = inter / b.area if b.area > 0 else 0.0
             if (v, contain) > (bi, bc):
                 best, bi, bc = b, v, contain
-        ok = best is not None and (bi >= iou_min or bc >= contain_min)
-        return best, bi, bc, ok
+            if (v >= iou_min or contain >= contain_min) and (v, contain) > (qi, qc):
+                qbest, qi, qc = b, v, contain
+        if qbest is not None:
+            return qbest, qi, qc, True
+        return best, bi, bc, False
 
     best, best_iou, best_contain, matched = _score(equip)
     # 反向证据：模型专门训过「裸头」这一类（NO-Hardhat）。扔了它就只剩半个模型。
@@ -522,6 +534,14 @@ def aggregate_temporal(frames: Sequence[Sequence[Verdict]],
         return res
 
     window = frames[-need:]
+    # 对齐前提：每帧的判定项数与顺序一致。视频链路是「一条轨迹一个窗口」，
+    # 天然满足；多帧图片场景一旦有人进出/漏检，项数就对不上，按下标硬比会
+    # 把甲的第 2 项和乙的第 2 项比出个「一致」来。宁可全部转人工，也不编。
+    if len({len(w) for w in window}) > 1:
+        return [Verdict(v.person_idx, v.equip, "待复核", v.conf,
+                        f"帧间判定项数不一致（{[len(w) for w in window]}），无法确认是否同一人",
+                        person_id=v.person_id, iou=v.iou) for v in window[-1]]
+
     final: list[Verdict] = []
     for k, last in enumerate(window[-1]):
         seq = [w[k].status for w in window if k < len(w)]

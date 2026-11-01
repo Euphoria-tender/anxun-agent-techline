@@ -33,8 +33,8 @@ python src/anxun/verify_all.py
 
 | 场景 | 结果 |
 | :--- | :--- |
-| 克隆仓库直接跑 | **44 项：41 PASS · 0 FAIL · 3 SKIP** |
-| 补齐训练集与 1080p 素材后 | **44 项：44 PASS · 0 FAIL** |
+| 克隆仓库直接跑 | **47 项：44 PASS · 0 FAIL · 3 SKIP** |
+| 补齐训练集与 1080p 素材后 | **47 项：47 PASS · 0 FAIL** |
 
 3 项 SKIP 是体积原因没入库的大件（60MB 训练集、51MB 复验素材），脚本把「缺件」和「东西坏了」分开报，不算失败。
 验收脚本会真起服务、真跑推理、真读 JSON、真数技术页的页数与数字，不是检查文件存不存在。
@@ -131,13 +131,13 @@ ONNX 版是自己实现的 letterbox + 解码 + NMS（`onnx_backend.py`，纯 nu
 
 ```bash
 pip install -r requirements-cpu.txt    # 约 80 MB，不需要 torch
-python src/anxun/verify_all.py         # 合计 44 项：PASS 41 · FAIL 0 · SKIP 3
+python src/anxun/verify_all.py         # 合计 47 项：PASS 44 · FAIL 0 · SKIP 3（--no-serve 时 46 项）
 python src/anxun/evaluate_real.py      # 复现四个指标，实测与原 JSON 一字不差
 ```
 
 那 3 项 SKIP 都是**体积原因没随仓库走的大件**（helmet_p2 训练集 2 项、1080p 复验素材 1 项），
 **不计失败** —— 缺件不等于东西坏了，`verify_all.py` 把这两件事分开报。
-把 `tools/fetch_helmet_p2.py`、`tools/make_1080_stream.py` 跑一遍补齐，就是 **44 项全 PASS**。
+把 `tools/fetch_helmet_p2.py`、`tools/make_1080_stream.py` 跑一遍补齐，就是 **47 项全 PASS**。
 
 > 想换成 GPU 跑：`pip install -r requirements-gpu.txt`（torch 约 2 GB）。  
 > 只想要 ONNX：`models/onnx/` 三个文件已经够，`requirements-cpu.txt` 就能跑。
@@ -347,6 +347,21 @@ CPU 上是 138 ms / 5 路，GPU（RTX 5060）上 22.9 ms / 25 路，**精度三�
 
 颗粒度：误报率每 1 例 ≈ 1.02 个百分点。100 张能分辨「差一个量级」，分辨不了「差一两个点」。
 
+**漏报率的分母是谁？** 22.6% 是 21/93，统计的是**已检出的人**——没被检测到的人不进分母。
+同一批数据换整条链路口径（`--metric-scope e2e`，未检出的人算漏报）重算：
+
+| 口径 | 合规人次 | 违规人次 | 误报率 | 漏报率 |
+| :--- | ---: | ---: | ---: | ---: |
+| `matched`（默认，衡量判定层） | 98 | 93 | 5.10% | 22.58% |
+| `e2e`（衡量整条链路） | 107 | 105 | 4.67% | **31.43%** |
+
+真值可判 212 人次，实际进统计 191 人次（覆盖率 90.1%），差额就是检测层没匹配上的人。
+两个口径 `evaluate_real.py` 都会算，headline 用哪个由 `--metric-scope` 决定。
+（仓库里那份 `metrics_real.json` 是加这个字段之前跑的，四个 headline 数字逐位不变；
+重跑一次即带 `scope_detail` 与 `coverage`。）
+
+答辩措辞：说 22.6% 时必须带一句「已检出人员口径」，否则等于把检测漏检藏起来了。
+
 **换个分辨率还准不准？** 同一批 100 张 3 倍上采样到 1920×1920 再跑一遍（`data/metrics_1080.json`）：
 mAP **0.6829**、误报 **5.10% 一例没涨**、漏报 **24.73%**（+2.15 点）、单帧 **44.8 ms**（p95 54.1）。
 误报不动说明判定链对分辨率不敏感；漏报的小幅上涨来自上采样插值失真，不是阈值问题。
@@ -503,13 +518,15 @@ AP 这类检测级指标和业务指标之间隔着一层「框几何 + 置信�
    两个 bug 都是静默的，不报错，只是数字变空。
 
  helmet 指标**完全不受影响**（加 vest 前后都是 0.6808 / 5.1% / 22.58% / 72-21-5-93），
-这一点是显式验证过的，不是推的。
+这一点是显式验证过的，不是推的：`--vest` 原先是个只声明、没接线的空参数，
+v1.2.0 修补时接上了，现在一条命令即可复现（代价是单帧 20.9 → 29.5 ms，三个模型）：
 
 ```bash
 python tools/make_vest.py                                    # 建 80/20 数据集
 python src/anxun/finetune.py --data datasets/vest/data.yaml \
     --init models/yolov8n.pt --name vest_ft                  # 定轮数
 python src/anxun/evaluate_vest.py                            # 独立测试集评测
+python src/anxun/evaluate_real.py --vest models/vest.pt      # 加背心后 helmet 四项应逐位不变
 ```
 
 ### 5.8 按装备分离阈值：helmet 和 vest 不能用同一套
@@ -750,7 +767,7 @@ anxun-v1/
 │   ├── onnx_backend.py     ONNX 推理（letterbox / 解码 / NMS，不依赖 torch）
 │   ├── export_onnx.py      .pt → .onnx（一次性）
 │   ├── data_card.py        全量数据卡片
-│   ├── verify_all.py       交付物验收（44 项，含起服务与真图推理）
+│   ├── verify_all.py       交付物验收（47 项，含起服务与真图推理）
 │   └── app.py              推理服务（HTTP）
 ├── tools/                 数据拉取 · 训练准备 · 基准与复验
 │   ├── fetch_ppe_test.py / fetch_helmet_p2.py / repair_labels.py
@@ -762,6 +779,8 @@ anxun-v1/
 │   ├── metric_ci.py             误报漏报的 Wilson 置信区间（回答「100 张够不够」）
 │   └── collect_selfdata.py      现场视频抽帧 → 可标注目录（自采数据的入口）
 ├── config/thresholds.json  判定阈值的唯一事实来源（measured / conservative）
+├── tests/test_techline.py  回归测试（择优单调 / 装备清单 / 时序对齐 / 指标口径）
+│                           python -m unittest discover -s tests
 ├── docs/                  技术页_10-13.html · 技术口径.md · 指标置信区间.md
 │                          数据集卡片.md · 模型卡片.md · figs/（三张成品图）
 ├── data/                  四指标与实验数据（metrics_real / metrics_onnx / metrics_vest

@@ -38,15 +38,42 @@ def thresholds() -> dict:
 
 def inspect(scene: dict, region: Region, detector,
             ts: datetime | None = None,
-            frames: int | None = None) -> dict:
-    """跑完整条链路，返回结构化结果（不含落盘、不含展示层）。"""
+            frames: int | None = None,
+            equips: Sequence[str] | None = None) -> dict:
+    """跑完整条链路，返回结构化结果（不含落盘、不含展示层）。
+
+    equips 显式传入时以它为准（调用方按模型实际能力过滤后的结果）；
+    不传才用场景里写的。见 detectors.available_equips()。
+    """
     ts = ts or datetime.now()
-    equips: Sequence[str] = scene.get("equips", [])
-    frames = frames or int(scene.get("frames", 1))
+    if equips is None:
+        # 场景写的是「想判什么」，模型决定「能判什么」。这里兜一道底：
+        # 调用方忘了过滤时，缺权重也不会把「一个框都没有」判成「没佩戴」。
+        equips = list(scene.get("equips", []))
+        try:
+            from .detectors import available_equips
+            can = available_equips(detector)
+        except Exception:
+            can = None
+        if can is not None:
+            equips = [e for e in equips if e in can]
+    else:
+        equips = list(equips)
+    images = list(scene.get("images") or [])
+    requested = int(frames or scene.get("frames", 1))
+    # 只有一张图时，帧数硬凑成 3 只会把同一张图推理三遍，
+    # 「连续 3 帧一致」必然成立——那是编证据，不是时序确认。
+    # 真要多帧就把多张图的路径写进 scene["images"]，否则一律按单帧处理。
+    if requested > 1 and not images:
+        requested = 1
+    if images:
+        requested = min(requested, len(images))
+    requested = max(1, requested)          # frames=0 也得留一帧，否则下面取不到 last
 
     per_frame = []
-    for f in range(frames):
-        det = detector.detect(scene, f)
+    for f in range(requested):
+        det = (detector.detect_image(images[f], f) if images
+               else detector.detect(scene, f))
         boxes: list[Box] = det["boxes"]
         # 面积阈值按实际画面尺寸换算，不拿 1080p 的绝对值套所有分辨率
         fw = det.get("width") or scene.get("width") or 1280
@@ -66,10 +93,10 @@ def inspect(scene: dict, region: Region, detector,
     last_boxes = per_frame[-1]["_raw_boxes"]
     last_verdicts = per_frame[-1]["_raw_verdicts"]
 
-    if frames <= 1 or not equips:
+    if requested <= 1 or not equips:
         final = last_verdicts if equips else []
     else:
-        final = aggregate_temporal([p["_raw_verdicts"] for p in per_frame], need=frames)
+        final = aggregate_temporal([p["_raw_verdicts"] for p in per_frame], need=requested)
 
     # ---- 按装备类型归并违规，一类违规一张工单 ----
     events, tickets = [], []
@@ -80,7 +107,7 @@ def inspect(scene: dict, region: Region, detector,
 
     for equip, vs in grouped.items():
         ev = build_event(region, equip, ts, max(v.conf for v in vs),
-                         f"{scene['scene_id']} · frame {frames - 1} · {len(vs)} 人",
+                         f"{scene['scene_id']} · frame {requested - 1} · {len(vs)} 人",
                          event_id=f"EV-{ts:%Y%m%d%H%M%S}-{region.region_id}-{equip}-{_suffix(scene)}")
         events.append(_event_dict(ev))
         tickets.append(make_ticket(ev, affected=len(vs)))
@@ -105,6 +132,13 @@ def inspect(scene: dict, region: Region, detector,
         "region": region.to_dict(),
         "ts": ts.isoformat(timespec="seconds"),
         "frames": per_frame,
+        "temporal": {
+            "used": requested,                  # 实际参与判定的帧数
+            "requested": int(frames or scene.get("frames", 1)),
+            "aggregated": requested > 1,        # 没聚合就别在界面上写「3 帧一致」
+            "source": "images" if images else "single",
+        },
+        "equips": equips,                        # 实际判定的装备（已按模型能力过滤）
         "final": [v.to_dict() for v in final],
         "persons": persons,
         "events": events,

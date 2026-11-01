@@ -106,10 +106,16 @@ def map_at_50(samples: Sequence[dict], classes: Sequence[str] = ("person", "helm
 # ============================================================
 # 二、业务层：误报率 / 漏报率 / 混淆矩阵
 
-def business_rates(samples: Sequence[dict]) -> dict:
+def business_rates(samples: Sequence[dict], scope: str = "matched") -> dict:
     """
     误报率 = 实际合规却被判「未佩戴」的人×装备 / 实际合规总数
     漏报率 = 实际违规却没有被判「未佩戴」的人×装备 / 实际违规总数
+
+    scope="matched"：只统计**被检出的人**，衡量判定层判得准不准（历史口径）；
+    scope="e2e"    ：连没检出的人一起算，衡量整条链路一共漏了多少。
+
+    为什么要两个：检测层漏掉的人如果直接从分母里消失，漏报率会好看得多，
+    但「系统一共漏了多少违规」这个问题就没有答案了。两个都报，谁也别装看不见。
     """
     fp = n_compliant = 0
     fn = n_violating = 0
@@ -119,8 +125,11 @@ def business_rates(samples: Sequence[dict]) -> dict:
     for s in samples:
         judged = {(j["person_id"], j["equip"]): j["status"] for j in s["judged"]}
         for t in s["truth"]:
+            matched = t.get("matched", True)
+            if scope == "matched" and not matched:
+                continue
             key = (t["person_id"], t["equip"])
-            st = judged.get(key, "无法判定")
+            st = judged.get(key, "无法判定" if matched else "未检出")
             truth_v = not t["worn"]
             pred_v = (st == "未佩戴")
             cm[("违规" if truth_v else "合规", "判违规" if pred_v else "未判违规")] += 1
@@ -137,6 +146,7 @@ def business_rates(samples: Sequence[dict]) -> dict:
                                      "why": s.get("truth_note", "")})
 
     return {
+        "scope": scope,
         "fp_rate": round(fp / n_compliant * 100, 2) if n_compliant else None,
         "fn_rate": round(fn / n_violating * 100, 2) if n_violating else None,
         "n_compliant": n_compliant,
@@ -173,10 +183,24 @@ def latency(samples: Sequence[dict], real_ms: float | None = None) -> dict:
 # 四、汇总
 
 def evaluate(samples: Sequence[dict], classes=("person", "helmet"),
-             real_ms: float | None = None) -> dict:
+             real_ms: float | None = None, scope: str = "matched") -> dict:
     det = map_at_50(samples, classes)
-    biz = business_rates(samples)
+    matched = business_rates(samples, scope="matched")
+    e2e = business_rates(samples, scope="e2e")
+    biz = e2e if scope == "e2e" else matched
     lat = latency(samples, real_ms)
+    known = e2e["n_compliant"] + e2e["n_violating"]
+    judged_n = matched["n_compliant"] + matched["n_violating"]
+    both = {
+        "matched": {"fp_rate": matched["fp_rate"], "fn_rate": matched["fn_rate"],
+                    "n_compliant": matched["n_compliant"],
+                    "n_violating": matched["n_violating"],
+                    "confusion": matched["confusion"]},
+        "e2e": {"fp_rate": e2e["fp_rate"], "fn_rate": e2e["fn_rate"],
+                "n_compliant": e2e["n_compliant"],
+                "n_violating": e2e["n_violating"],
+                "confusion": e2e["confusion"]},
+    }
     return {
         "n_images": len(samples),
         "n_boxes": sum(len(s["pred_boxes"]) for s in samples),
@@ -184,11 +208,19 @@ def evaluate(samples: Sequence[dict], classes=("person", "helmet"),
         "per_class": {k: {kk: vv for kk, vv in v.items() if kk != "curve"}
                       for k, v in det.items() if k != "mAP"},
         "curves": {k: v.get("curve", []) for k, v in det.items() if k != "mAP"},
+        # headline：由 scope 决定，两个口径的数字都在 scope_detail 里
+        "metric_scope": scope,
         "fp_rate": biz["fp_rate"],
         "fn_rate": biz["fn_rate"],
         "confusion": biz["confusion"],
         "n_compliant": biz["n_compliant"],
         "n_violating": biz["n_violating"],
+        "scope_detail": both,
+        "coverage": {
+            "n_truth_known": known,        # 真值能判的人次（不分是否检出）
+            "n_judged": judged_n,          # 实际进了判定统计的人次
+            "rate": round(judged_n / known * 100, 2) if known else None,
+        },
         "fn_cases": biz["fn_cases"],
         "latency": lat,
         "targets": {"mAP50": 0.85, "fp_rate": 10.0, "fn_rate": 5.0, "latency_ms": 50.0},

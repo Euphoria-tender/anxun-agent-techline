@@ -28,9 +28,10 @@ import argparse
 import base64
 import json
 import mimetypes
+import os
 import sys
 import tempfile
-import time
+import threading
 import traceback
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -41,12 +42,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from anxun.catalog import REGION_MAP, SCENES, SCENE_MAP, public_scene
 from anxun import backend as backend_mod
+from anxun.detectors import available_equips
 from anxun.pipeline import inspect, thresholds
 
 ROOT = Path(__file__).resolve().parents[2]
 METRICS = ROOT / "data" / "metrics_real.json"
 
 STATE = {"detector": None, "note": "", "boot_at": datetime.now()}
+
+# ThreadingHTTPServer 是并发的，但 ultralytics 的 predict 和检测器里的框缓存
+# 都不是线程安全的：两个请求同时进来会串框、偶发崩在 CUDA 上下文上。
+# 一把锁把推理串起来——单卡本来也只能排队算，吞吐不损失。
+_INFER_LOCK = threading.Lock()
 
 
 def load_metrics() -> dict | None:
@@ -62,7 +69,27 @@ def run_inspect(scene_id: str) -> dict:
     scene = SCENE_MAP.get(scene_id)
     if not scene:
         raise ValueError(f"未知场景 {scene_id}，可用：{[s['scene_id'] for s in SCENES]}")
-    return inspect(scene, REGION_MAP[scene["region_id"]], STATE["detector"])
+    region = REGION_MAP[scene["region_id"]]
+
+    # 场景里写的是「想判什么」，模型决定「能判什么」。两者取交集，
+    # 否则缺 vest 权重时规则引擎会把「没框」当成「没穿」，全员假违规。
+    wanted = list(scene.get("equips", []))
+    can = available_equips(STATE["detector"])
+    if can is None:
+        kept, dropped = wanted, []
+    else:
+        kept = [e for e in wanted if e in can]
+        dropped = [e for e in wanted if e not in can]
+
+    with _INFER_LOCK:
+        out = inspect(scene, region, STATE["detector"], equips=kept)
+    if dropped:
+        out["degraded"] = {
+            "dropped_equips": dropped,
+            "why": "对应权重未加载，该类判定整条跳过（不拿「没检出」冒充「没佩戴」）",
+            "available": can,
+        }
+    return out
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -120,16 +147,26 @@ class Handler(BaseHTTPRequestHandler):
                     "device": prov or dev or "cpu",
                     "selfcheck": STATE.get("selfcheck"),
                     "available": backend_mod.describe(),
-                    "uptime_s": (datetime.now() - STATE["boot_at"]).seconds,
+                    "uptime_s": int((datetime.now() - STATE["boot_at"]).total_seconds()),
                 })
             if p == "/api/scenes":
-                return self._json({"scenes": [public_scene(s) for s in SCENES],
-                                   "thresholds": thresholds()})
+                # 列表也要跟模型能力对齐：界面上不该出现「会判背心」这种做不到的承诺
+                can = available_equips(STATE["detector"])
+                listed = []
+                for s in SCENES:
+                    d = public_scene(s)
+                    if can is not None:
+                        d["equips"] = [e for e in d["equips"] if e in can]
+                    listed.append(d)
+                return self._json({"scenes": listed, "thresholds": thresholds(),
+                                   "available_equips": can})
             if p == "/api/metrics":
                 return self._json(load_metrics() or {"kind": "empty"})
             if p.startswith("/docs/"):
                 target = (ROOT / "docs" / unquote(p[len("/docs/"):])).resolve()
-                if not str(target).startswith(str((ROOT / "docs").resolve())):
+                # 字符串前缀判断会被 techline-v1.2.0_xxx 这种同级目录绕过，
+                # 必须按路径层级判断。
+                if not target.is_relative_to((ROOT / "docs").resolve()):
                     return self._json({"error": "forbidden"}, 403)
                 return self._file(target)
             return self._json({"error": "not found", "path": p}, 404)
@@ -172,8 +209,15 @@ class Handler(BaseHTTPRequestHandler):
         if b64:
             if "," in b64[:100]:                 # 兼容 data URI
                 b64 = b64.split(",", 1)[1]
-            tmp = Path(tempfile.gettempdir()) / f"anxun_{int(time.time() * 1000)}.jpg"
-            tmp.write_bytes(base64.b64decode(b64))
+            # mkstemp：并发下用毫秒时间戳命名会撞名，两个请求写同一个临时文件。
+            fd, name = tempfile.mkstemp(prefix="anxun_", suffix=".jpg")
+            tmp = Path(name)
+            try:
+                with os.fdopen(fd, "wb") as fh:
+                    fh.write(base64.b64decode(b64))
+            except Exception:
+                tmp.unlink(missing_ok=True)
+                return {"error": "image_base64 解码失败"}
             path = str(tmp)
         elif not path and sid:
             scene = SCENE_MAP.get(sid)
@@ -182,16 +226,22 @@ class Handler(BaseHTTPRequestHandler):
             path = scene["image"]
         elif path:
             resolved = Path(path).resolve()
-            if not str(resolved).startswith(str(ROOT)):
+            if not resolved.is_relative_to(ROOT.resolve()):
                 return {"error": "image_path 必须在项目目录内"}
             path = str(resolved)
 
         if not path or not Path(path).exists():
+            if tmp:
+                tmp.unlink(missing_ok=True)
             return {"error": "需要 image_base64 / image_path / scene_id 之一"}
 
-        det = STATE["detector"].detect({"image": path, "scene_id": Path(path).stem}, 0)
-        if tmp and tmp.exists():
-            tmp.unlink()
+        try:
+            with _INFER_LOCK:
+                det = STATE["detector"].detect(
+                    {"image": path, "scene_id": Path(path).stem}, 0)
+        finally:
+            if tmp:
+                tmp.unlink(missing_ok=True)
         return {
             "width": det.get("width"), "height": det.get("height"),
             "infer_ms": det["infer_ms"],

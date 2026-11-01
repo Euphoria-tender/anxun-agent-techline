@@ -38,6 +38,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from anxun.catalog import REGION_MAP
 from anxun import backend as backend_mod
+from anxun.detectors import available_equips
 from anxun.rules_engine import (Box, Verdict, aggregate_temporal, build_event,
                                 judge_frame, make_ticket, min_person_area)
 
@@ -193,6 +194,13 @@ class VideoInspector:
         self.det = detector
         self.region = region
         self.interval = 1.0 / max(0.1, fps)
+        # 判定范围要跟模型能力对齐：vest 权重缺失时模型不产背心框，
+        # 硬判「未穿戴」等于把所有路过的人都报一遍。
+        can = available_equips(detector)
+        self.dropped_equips: tuple[str, ...] = ()
+        if can is not None:
+            self.dropped_equips = tuple(e for e in equips if e not in can)
+            equips = tuple(e for e in equips if e in can)
         self.equips = equips
         self.cooldown_s = cooldown_s
         # 3.0 -> 10.0（2026-11-01，1080p 真实素材复验后调整）
@@ -204,6 +212,8 @@ class VideoInspector:
         # ⚠️ 复验素材是静态照片，没有真实人体运动；上限需现场录像确认。
         self.motion_threshold = motion_threshold   # 0 = 关闭帧差跳帧
         self.verbose = verbose
+        if self.dropped_equips and verbose:
+            print(f"  [warn] 缺权重组件，跳过判定：{', '.join(self.dropped_equips)}")
         self.pipe = StreamPipeline("main", region, equips, cooldown_s, verbose)
         self.events = self.pipe.events          # 兼容旧引用
         self._prev_gray = None

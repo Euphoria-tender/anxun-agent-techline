@@ -170,6 +170,24 @@ def verify_models() -> None:
         check("模型", f"models/onnx/{name} 存在", p.exists(),
               f"{p.stat().st_size / 1e6:.2f} MB" if p.exists() else "缺失")
 
+    # 判定范围必须由模型的真实类别决定：只有安全帽模型时，不许判「未穿背心」。
+    # 缺权重 -> 模型不产该类框 -> 规则引擎把「没框」当「没戴」-> 全场假违规。
+    try:
+        from anxun.detectors import available_equips
+
+        class _Stub:
+            def __init__(self, names):
+                self.names = names
+
+        only_helmet = available_equips(_Stub({0: "person", 1: "Hardhat", 2: "NO-Hardhat"}))
+        with_vest = available_equips(_Stub({0: "person", 1: "Hardhat", 2: "NO-Hardhat",
+                                            3: "vest", 4: "no_vest"}))
+        check("模型", "装备清单按模型类别求交集",
+              only_helmet == ["helmet"] and with_vest == ["helmet", "vest"],
+              f"仅安全帽 -> {only_helmet} · 加背心 -> {with_vest}")
+    except Exception as e:
+        check("模型", "装备清单按模型类别求交集", False, f"{type(e).__name__}: {e}")
+
     if not all((ROOT / p).exists() for p in pts):
         check("模型", "真图推理", False, "权重不全，跳过")
         return
@@ -281,16 +299,20 @@ def verify_metrics() -> None:
 
     # 阈值只有一份定义（config/thresholds.json）。代码、文档、评测各自抄一份 = 两套口径，
     # 这就是 v1.1.0 的 P4-1。这条检查专门钉住它。
+    # 注意：只比 conf 两项是不够的——改 head_region_ratio / min_aspect 同样会让
+    # 判定结果变，但以前不会被发现，所以这里逐字段比。
     from anxun import rules_engine as R
+    cmp_keys = ("conf_final", "conf_review", "head_region_ratio", "head_width_ratio",
+                "min_person_area", "min_aspect")
     try:
         cfg = R.load_config()
         snap = R.profile_snapshot()
         prof = cfg["profiles"][snap["profile"]]
-        diff = [k for k in ("conf_final", "conf_review")
+        diff = [k for k in cmp_keys
                 if abs(float(prof[k]) - float(snap[k])) > 1e-9]
         check("指标", "代码阈值与 config/thresholds.json 一致", not diff,
               f"口径 {snap['profile']}：{snap['conf_review']}/{snap['conf_final']}"
-              + (f"，不一致字段 {diff}" if diff else ""))
+              + (f"，不一致字段 {diff}" if diff else f"（比对 {len(cmp_keys)} 个字段）"))
     except Exception as e:
         check("指标", "代码阈值与 config/thresholds.json 一致", False,
               f"{type(e).__name__}: {e}")
@@ -312,6 +334,20 @@ def verify_metrics() -> None:
     except Exception as e:
         check("指标", "两套口径的判定行为符合预期", False, f"{type(e).__name__}: {e}")
 
+    # 择优必须单调：多一个「IoU 略高但两项都不达标」的废框，不能把已经判定的
+    # 「已佩戴」翻成「未佩戴」。v1.2.0 之前就是按 (IoU, 包含度) 取全局最大，
+    # 多给一个框反而多一条误报。这是误报的一个真实来源，用一条断言钉住。
+    try:
+        p = R.Box("person", 0.9, 100, 100, 300, 600)
+        good = R.Box("helmet", 0.90, 170, 120, 230, 160)          # 包含度 1.0
+        junk = R.Box("helmet", 0.88, 176.5, 165.1, 291.8, 219.1)  # 两项都不达标
+        a = R.judge_equipment(p, 0, [good], "helmet").status
+        b = R.judge_equipment(p, 0, [good, junk], "helmet").status
+        check("指标", "判定择优单调（多一个废框不改结论）", a == b == "已佩戴",
+              f"单框={a} · 加废框={b}")
+    except Exception as e:
+        check("指标", "判定择优单调（多一个废框不改结论）", False, f"{type(e).__name__}: {e}")
+
     # 交出去的数字必须能说清是哪套阈值跑的，否则被追问就答不上来
     untagged = []
     for rel in ("data/metrics_real.json", "data/metrics_onnx.json"):
@@ -324,6 +360,27 @@ def verify_metrics() -> None:
             untagged.append(f"{rel}={tag!r}")
     check("指标", "交付指标标注了阈值口径（measured）", not untagged,
           "、".join(untagged) if untagged else "metrics_real / metrics_onnx 均已标注")
+
+    # 误报/漏报必须能同时给出两个口径：只算已检出的人（matched，衡量判定层）
+    # 与连没检出的人一起算（e2e，衡量整条链路）。两者差 9 个百分点，
+    # 被问「没检出的人算不算漏报」时不能答不上来。
+    try:
+        from anxun.metrics import business_rates
+        probe = [{"image_id": "probe", "gt_boxes": [], "pred_boxes": [],
+                  "truth": [{"person_id": "G0", "equip": "helmet",
+                             "worn": False, "matched": True},
+                            {"person_id": "G1", "equip": "helmet",
+                             "worn": False, "matched": False}],
+                  "judged": [{"person_id": "G0", "equip": "helmet", "status": "已佩戴"}],
+                  "latency_ms": 1.0}]
+        m = business_rates(probe, scope="matched")
+        e = business_rates(probe, scope="e2e")
+        check("指标", "误报漏报同时支持 matched / e2e 两个口径",
+              (m["n_violating"], e["n_violating"]) == (1, 2),
+              f"已检出 {m['n_violating']} 人次 · 含未检出 {e['n_violating']} 人次")
+    except Exception as e:
+        check("指标", "误报漏报同时支持 matched / e2e 两个口径", False,
+              f"{type(e).__name__}: {e}")
 
 
 # ---------------------------------------------------------------- 四、部署
@@ -395,8 +452,12 @@ def verify_slides() -> None:
     for tag, key in (("P10", "系统架构"), ("P11", "指标"), ("P12", "火焰"), ("P13", "创新")):
         check("技术页", f"{tag} 内容在位", key in t, key)
     check("技术页", "16:9 版式", "1280" in t and "720" in t, "1280×720 画布")
+    # 数字比对要按边界匹配：`"5.1" in html` 连 15.1 / 25.19 都会过，
+    # 那是「字符串出现过」不是「数字对得上」。
+    import re as _re
     for num in ("5.1", "22.6", "0.681"):
-        check("技术页", f"数字 {num} 与实测一致", num in t, "")
+        hit = bool(_re.search(rf"(?<![\d.]){_re.escape(num)}(?![\d])", t))
+        check("技术页", f"数字 {num} 与实测一致", hit, "")
 
     # 页脚要写明阈值口径：P11 报的四个数只在 measured 口径下成立
     from anxun import rules_engine as R

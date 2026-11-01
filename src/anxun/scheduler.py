@@ -48,7 +48,8 @@ class StreamReader:
     """
 
     def __init__(self, sid: str, source: str, region, fps: float = 2.0,
-                 max_seconds: float | None = None, motion_threshold: float = 10.0):
+                 max_seconds: float | None = None, motion_threshold: float = 10.0,
+                 equips: tuple[str, ...] = ("helmet", "vest")):
         import cv2
         self.sid = sid
         self.source = source
@@ -60,7 +61,10 @@ class StreamReader:
         self.step = max(1, int(round(self.src_fps / max(0.1, fps))))
         self.max_seconds = max_seconds
         self.motion_threshold = motion_threshold
-        self.pipe = StreamPipeline(sid, region, ("helmet",), 60.0, verbose=False)
+        # 与单路 stream.py 保持同一判定范围：以前这里写死 ("helmet",)，
+        # 多路模式下背心违规静默消失，和 README「复用同一份 StreamPipeline」对不上。
+        self.pipe = StreamPipeline(sid, region, equips, 60.0, verbose=False)
+        self.equips = equips
         self.read = 0
         self.last_boxes = None
         self.size = (1920, 1080)
@@ -209,11 +213,17 @@ def main() -> int:
     import numpy as np
     det.detect_frame(np.zeros((640, 640, 3), dtype=np.uint8))   # 预热
 
+    # 判定范围跟模型能力走，别把「没有背心模型」变成「全员没穿背心」
+    from anxun.detectors import available_equips
+    eq = available_equips(det)
+    equips = tuple(eq) if eq else ("helmet",)
+    print(f"判定装备：{', '.join(equips)}")
+
     sch = MultiStreamScheduler(det, batch=args.batch)
     for i, s in enumerate(srcs):
         sch.add(StreamReader(f"S{i + 1}", s, regions[i % len(regions)],
                              fps=args.fps, max_seconds=args.max_seconds or None,
-                             motion_threshold=args.motion))
+                             motion_threshold=args.motion, equips=equips))
     stats = sch.run()
 
     print("\n" + "=" * 62)
