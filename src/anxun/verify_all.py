@@ -480,6 +480,89 @@ def verify_slides() -> None:
 
 
 # ---------------------------------------------------------------- 汇总
+def verify_value() -> None:
+    """v2.0 价值闭环：账本 → 指标 → 报告，三环必须对得上。
+
+    这几条拦的都是「不报错但算错数」的问题：账本缺字段就悄悄算成 0、
+    报告里的数字和 JSON 不一致、README 承诺的指标根本没实现。
+    """
+    files = sorted((ROOT / "data").glob("events_*.json"))
+    if not files:
+        skip("价值", "判定账本", "缺 data/events_*.json，跑 stream.py --out 生成")
+        skip("价值", "指标与账本自洽", "同上")
+    else:
+        # ① 每份事件文件都得有账本 —— v1.x 的产物没有，混进来会算成 0 合规率
+        bad = []
+        bundles = {}
+        for p in files:
+            try:
+                d = json.loads(p.read_text(encoding="utf-8"))
+            except Exception as e:
+                bad.append(f"{p.name} 解析失败 {type(e).__name__}")
+                continue
+            bundles[p.name] = d
+            if not d.get("ledger"):
+                bad.append(f"{p.name} 无 ledger")
+            elif not d.get("stats", {}).get("raw_alarms"):
+                bad.append(f"{p.name} 缺 raw_alarms")
+        check("价值", "事件文件含全量判定账本", not bad,
+              "；".join(bad) if bad else f"{len(files)} 份账本")
+
+        # ② 账本自洽：事件里的人和违规轨迹必须真的在账本里出现过。
+        #    串轨（两份素材的 T1 撞名）会让这条先炸，而不是等合规率算错才发现。
+        errors = []
+        for name, d in bundles.items():
+            led = d.get("ledger") or []
+            tracks = {r["track"] for r in led}
+            bad_tracks = {r["track"] for r in led
+                          if r.get("violation") and r.get("status") != "未佩戴"}
+            if bad_tracks:
+                errors.append(f"{name} 有 {len(bad_tracks)} 条违规记录的 status 不是「未佩戴」")
+            orphan = {e["track"] for e in (d.get("events") or [])} - tracks
+            if orphan:
+                errors.append(f"{name} 有 {len(orphan)} 条事件的轨迹不在账本里")
+        check("价值", "账本自洽（事件轨迹都在账本内）", not errors,
+              "；".join(errors[:3]) if errors else "轨迹与事件对得上")
+
+    # ③ 指标 JSON 五项齐全且算得出来
+    vm_path = ROOT / "data" / "value_metrics.json"
+    if not vm_path.exists():
+        skip("价值", "价值指标 JSON", "缺 data/value_metrics.json，跑 stats.py 生成")
+        return
+    try:
+        vm = json.loads(vm_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        check("价值", "价值指标 JSON 可解析", False, f"{type(e).__name__}: {e}")
+        return
+    want = {"coverage_ratio", "verdict_coverage", "denoise_ratio",
+            "compliance_rate", "violation_duration_s"}
+    got = set((vm.get("metrics") or {}).keys())
+    check("价值", "价值指标五项齐全", want <= got, f"缺 {sorted(want - got)}" if want - got else "")
+
+    # ④ 报告里的数字必须来自这份 JSON，不能是另一套
+    rp = ROOT / "docs" / "figs" / "value_report.html"
+    if not rp.exists():
+        check("价值", "价值报告已生成", False, "缺 docs/figs/value_report.html，跑 report.py")
+    else:
+        t = rp.read_text(encoding="utf-8")
+        m = vm["metrics"]
+        exp = [f"{m['denoise_ratio']['value'] * 100:.1f}%",
+               f"{m['verdict_coverage']['value'] * 100:.1f}%",
+               f"{m['compliance_rate']['value'] * 100:.1f}%"]
+        miss = [s for s in exp if s not in t]
+        check("价值", "报告 KPI 与指标 JSON 一致", not miss,
+              f"报告缺 {miss}" if miss else "降噪 / 判定覆盖 / 合规率")
+
+    # ⑤ README 承诺的数字要真的在 README 里（v1.2.0 漏过一次同步）
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    m = vm["metrics"]
+    share = [f"{m['denoise_ratio']['value'] * 100:.1f}%",
+             f"{m['verdict_coverage']['value'] * 100:.1f}%"]
+    miss = [s for s in share if s not in readme]
+    check("价值", "README 价值指标与 JSON 一致", not miss,
+          f"README 缺 {miss}" if miss else "降噪率 / 判定覆盖率")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-serve", action="store_true")
@@ -496,6 +579,7 @@ def main() -> int:
     verify_metrics()
     verify_deploy(not args.no_serve)
     verify_slides()
+    verify_value()
 
     total = len(RESULTS)
     passed = sum(1 for r in RESULTS if r["ok"])

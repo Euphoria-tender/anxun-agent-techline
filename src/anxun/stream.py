@@ -133,7 +133,8 @@ class StreamPipeline:
     """一路视频的判定状态机：跟踪 → 四态判定 → 三帧定论 → 冷却去重。"""
 
     def __init__(self, sid: str, region, equips: tuple[str, ...] = ("helmet",),
-                 cooldown_s: float = 60.0, verbose: bool = True):
+                 cooldown_s: float = 60.0, verbose: bool = True,
+                 ledger: bool = True):
         self.sid = sid
         self.region = region
         self.equips = equips
@@ -141,6 +142,16 @@ class StreamPipeline:
         self.verbose = verbose
         self.tracker = Tracker()
         self.events: list[dict] = []
+        # ---- v2.0 判定账本 ----
+        # v1.x 只在 is_violation 时落一条事件，合规的人一条记录都不留，
+        # 于是「合规率」没有分母，「降噪率」没有分子（去重前有多少帧判了违规）。
+        # 这里把每一次定论都记下来，违规与否一样对待。
+        self.ledger_on = ledger
+        self.ledger: list[dict] = []
+        self.raw_alarms = 0        # 逐帧判违规的次数（冷却去重前）
+        self.persons_total = 0     # 进入画面的轨迹数（人次，不等于独立人数）
+        self._last: dict[tuple[int, str], dict] = {}
+        self._seen: set[int] = set()
 
     def post(self, boxes: list[Box], width: int, height: int,
              t_video: float) -> list[dict]:
@@ -151,6 +162,9 @@ class StreamPipeline:
 
         out = []
         for tr, idx in tracks:
+            if tr.tid not in self._seen:
+                self._seen.add(tr.tid)
+                self.persons_total += 1
             mine = [v for v in verdicts if v.person_idx == idx]
             mine = [Verdict(v.person_idx, v.equip, v.status, v.conf, v.reason,
                             v.is_violation, person_id=f"T{tr.tid}", iou=v.iou)
@@ -162,8 +176,12 @@ class StreamPipeline:
             # 复用引擎里的时序聚合：三帧一致才定论
             final = aggregate_temporal(list(tr.verdicts), need=3)
             for v in final:
+                # 账本先记：合规、违规、待复核、无法判定一视同仁
+                if self.ledger_on:
+                    self._book(tr, v, t_video)
                 if not v.is_violation:
                     continue
+                self.raw_alarms += 1
                 key = v.equip
                 last = tr.last_event_at.get(key, -1e9)
                 if t_video - last < self.cooldown_s:
@@ -181,6 +199,38 @@ class StreamPipeline:
                     print(f"  ⚠ {self.sid} {t_video:6.1f}s  T{tr.tid}  {d['grade']}R{d['R']}  "
                           f"{d['violation']}  置信度 {v.conf:.2f}")
         return out
+
+    def _book(self, tr, v, t_video: float) -> None:
+        """记一条账：同一人同一装备，状态变了才新增，否则只延长观测窗口。
+
+        为什么不逐帧记 —— 2fps × 60s = 120 条/路；一个 20 路的园区跑一天就是
+        345 万条，账本自己先成了负担。按「状态变化」记账，条数等于这个人换了
+        几次状态，量级才对得上运营口径。
+
+        t_video_s 是该状态**第一次**被定论的时刻，t_last 是最后一次仍成立的时刻，
+        两个都在，才能算「这个人违规持续了多久」。
+        """
+        key = (tr.tid, v.equip)
+        rec = self._last.get(key)
+        if rec is not None and rec["status"] == v.status:
+            rec["t_last"] = round(t_video, 1)
+            rec["observations"] += 1
+            return
+        rec = {
+            "t_video_s": round(t_video, 1),
+            "t_last": round(t_video, 1),
+            "track": f"T{tr.tid}",
+            "equip": v.equip,
+            "status": v.status,
+            "conf": round(v.conf, 3),
+            "violation": v.is_violation,
+            "reason": v.reason,
+            "region": self.region.name,
+            "stream": self.sid,
+            "observations": 1,
+        }
+        self.ledger.append(rec)
+        self._last[key] = rec
 
 
 # ============================================================
@@ -221,6 +271,7 @@ class VideoInspector:
         self._last_size = (1920, 1080)
         self.stats = {"frames_read": 0, "frames_processed": 0, "frames_skipped": 0,
                       "gate_skipped": 0, "infer_ms_total": 0.0, "events": 0,
+                      "raw_alarms": 0, "persons_total": 0, "ledger": 0,
                       "realtime_factor": 0.0}
 
     # ---------- 帧差：静止画面直接跳过 ----------
@@ -306,6 +357,9 @@ class VideoInspector:
         self.stats["video_s"] = round(video_s, 1)
         self.stats["avg_infer_ms"] = (round(self.stats["infer_ms_total"]
                                             / max(1, self.stats["frames_processed"]), 1))
+        self.stats["raw_alarms"] = self.pipe.raw_alarms
+        self.stats["persons_total"] = self.pipe.persons_total
+        self.stats["ledger"] = len(self.pipe.ledger)
         return self.stats
 
 
@@ -322,6 +376,7 @@ def _event_dict(ev, v, tr, t_video: float) -> dict:
         "action": ev.action,
         "assignee": t["assignee"],
         "region": ev.region.name,
+        "region_id": ev.region.region_id,
     }
 
 
@@ -347,6 +402,8 @@ def main() -> int:
     ap.add_argument("--device", default="", help="cpu 强制 CPU；留空自动")
     ap.add_argument("--vest-model", default="", help="反光背心权重；留空自动")
     ap.add_argument("--out", default="", help="事件流输出 json 路径")
+    ap.add_argument("--no-ledger", action="store_true",
+                    help="不记判定账本（退回 v1.x 行为，只输出违规事件）")
     args = ap.parse_args()
 
     region = REGION_MAP.get(args.region)
@@ -371,6 +428,7 @@ def main() -> int:
 
     insp = VideoInspector(det, region, fps=args.fps, cooldown_s=args.cooldown,
                           motion_threshold=args.motion)
+    insp.pipe.ledger_on = not args.no_ledger
     stats = insp.run(args.source, max_seconds=args.max_seconds or None)
 
     print("\n" + "=" * 62)
@@ -379,12 +437,15 @@ def main() -> int:
           f"平均推理 {stats['avg_infer_ms']} ms")
     print(f"视频 {stats['video_s']}s / 实耗 {stats['wall_s']}s  "
           f"→ 实时倍速 {stats['realtime_factor']}×")
-    print(f"告警事件 {stats['events']} 条")
+    print(f"告警事件 {stats['events']} 条"
+          f"（去重前逐帧 {stats['raw_alarms']} 次 · 画面人次 {stats['persons_total']} · "
+          f"账本 {stats['ledger']} 条）")
 
     if args.out:
         Path(args.out).write_text(json.dumps(
             {"source": args.source, "region": region.name, "fps": args.fps,
-             "stats": stats, "events": insp.events}, ensure_ascii=False, indent=2),
+             "stats": stats, "events": insp.events,
+             "ledger": insp.pipe.ledger}, ensure_ascii=False, indent=2),
             encoding="utf-8")
         print(f"-> {args.out}")
     return 0

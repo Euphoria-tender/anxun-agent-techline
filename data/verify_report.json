@@ -1,7 +1,7 @@
 {
-  "version": "techline-v1.2.0",
-  "total": 44,
-  "passed": 41,
+  "version": "techline-v2.0.0",
+  "total": 52,
+  "passed": 49,
   "skipped": 3,
   "results": [
     {
@@ -96,9 +96,15 @@
     },
     {
       "line": "模型",
+      "item": "装备清单按模型类别求交集",
+      "ok": true,
+      "detail": "仅安全帽 -> ['helmet'] · 加背心 -> ['helmet', 'vest']"
+    },
+    {
+      "line": "模型",
       "item": "三模型推理可跑",
       "ok": true,
-      "detail": "4 个框，2706.7 ms，标签 ['helmet', 'novest', 'person']"
+      "detail": "4 个框，2558.9 ms，标签 ['helmet', 'novest', 'person']"
     },
     {
       "line": "模型",
@@ -146,25 +152,25 @@
       "line": "指标",
       "item": "README 误报率与实测一致",
       "ok": true,
-      "detail": "实测 5.1%"
+      "detail": "实测 6.1%"
     },
     {
       "line": "指标",
       "item": "README 漏报率与实测一致",
       "ok": true,
-      "detail": "实测 22.58%"
+      "detail": "实测 17.20%"
     },
     {
       "line": "指标",
       "item": "README 版本号与包版本一致",
       "ok": true,
-      "detail": "包版本 v1.2.0"
+      "detail": "包版本 v2.0.0"
     },
     {
       "line": "指标",
       "item": "代码阈值与 config/thresholds.json 一致",
       "ok": true,
-      "detail": "口径 measured：0.2/0.3"
+      "detail": "口径 measured：0.2/0.3（比对 6 个字段）"
     },
     {
       "line": "指标",
@@ -174,9 +180,21 @@
     },
     {
       "line": "指标",
+      "item": "判定择优单调（多一个废框不改结论）",
+      "ok": true,
+      "detail": "单框=已佩戴 · 加废框=已佩戴"
+    },
+    {
+      "line": "指标",
       "item": "交付指标标注了阈值口径（measured）",
       "ok": true,
       "detail": "metrics_real / metrics_onnx 均已标注"
+    },
+    {
+      "line": "指标",
+      "item": "误报漏报同时支持 matched / e2e 两个口径",
+      "ok": true,
+      "detail": "已检出 1 人次 · 含未检出 2 人次"
     },
     {
       "line": "部署",
@@ -200,7 +218,7 @@
       "line": "技术页",
       "item": "文件存在",
       "ok": true,
-      "detail": "17.1 KB"
+      "detail": "17.2 KB"
     },
     {
       "line": "技术页",
@@ -240,13 +258,13 @@
     },
     {
       "line": "技术页",
-      "item": "数字 5.1 与实测一致",
+      "item": "数字 6.1 与实测一致",
       "ok": true,
       "detail": ""
     },
     {
       "line": "技术页",
-      "item": "数字 22.6 与实测一致",
+      "item": "数字 17.2 与实测一致",
       "ok": true,
       "detail": ""
     },
@@ -267,6 +285,36 @@
       "item": "指标与风险矩阵图已生成",
       "ok": true,
       "detail": "confusion_matrix / pr_curve / risk_matrix"
+    },
+    {
+      "line": "价值",
+      "item": "事件文件含全量判定账本",
+      "ok": true,
+      "detail": "2 份账本"
+    },
+    {
+      "line": "价值",
+      "item": "账本自洽（事件轨迹都在账本内）",
+      "ok": true,
+      "detail": "轨迹与事件对得上"
+    },
+    {
+      "line": "价值",
+      "item": "价值指标五项齐全",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "line": "价值",
+      "item": "报告 KPI 与指标 JSON 一致",
+      "ok": true,
+      "detail": "降噪 / 判定覆盖 / 合规率"
+    },
+    {
+      "line": "价值",
+      "item": "README 价值指标与 JSON 一致",
+      "ok": true,
+      "detail": "降噪率 / 判定覆盖率"
     }
   ]
 }

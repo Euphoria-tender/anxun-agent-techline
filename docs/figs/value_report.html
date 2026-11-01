@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>安巡 Agent · 巡检价值报告</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px; background: #eef1f5;
+         font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+         color: #0f172a; }
+  .page { width: 1280px; margin: 0 auto; background: #fff; padding: 44px;
+          box-shadow: 0 2px 14px rgba(15,23,42,.10); }
+  h1 { margin: 0; font-size: 26px; letter-spacing: .5px; }
+  .meta { margin-top: 7px; font-size: 12px; color: #64748b; }
+  .meta b { color: #0f766e; font-weight: 600; }
+  .rule { height: 3px; background: linear-gradient(90deg,#0f766e,#2563eb 55%,#e2e8f0);
+          margin: 16px 0 20px; border-radius: 2px; }
+  .kpis { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; }
+  .kpi { background: #fbfcfd; border: 1px solid #e6ebf2; border-top: 3px solid;
+         border-radius: 6px; padding: 12px 13px 13px; }
+  .kpi-label { font-size: 12px; color: #64748b; }
+  .kpi-value { font-size: 27px; font-weight: 700; margin: 5px 0 4px;
+               font-variant-numeric: tabular-nums; }
+  .kpi-sub { font-size: 10.5px; color: #94a3b8; line-height: 1.45; }
+  .charts { display: grid; grid-template-columns: 1.22fr 1fr; gap: 16px; margin-top: 20px; }
+  .card { border: 1px solid #e6ebf2; border-radius: 6px; padding: 13px 14px 10px; }
+  .card h2 { margin: 0 0 8px; font-size: 13px; color: #334155; font-weight: 600; }
+  .empty { font-size: 12px; color: #94a3b8; padding: 44px 8px; text-align: center; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11.5px; }
+  th { text-align: left; color: #64748b; font-weight: 500; font-size: 11px;
+       border-bottom: 1.5px solid #e2e8f0; padding: 6px 8px; }
+  td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+  td.rg { width: 158px; white-space: normal; line-height: 1.35; font-size: 11px; }
+  td.rg b { color: #0f766e; font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  .mono { font-variant-numeric: tabular-nums; color: #64748b; }
+  .badge { color: #fff; font-size: 10px; padding: 1.5px 7px; border-radius: 9px; }
+  .more { font-size: 11px; color: #94a3b8; padding: 7px 8px 0; }
+  .notes { margin-top: 20px; background: #fbfcfd; border: 1px solid #e6ebf2;
+           border-left: 3px solid #f59e0b; border-radius: 5px; padding: 12px 16px; }
+  .notes h3 { margin: 0 0 7px; font-size: 12px; color: #92400e; font-weight: 600; }
+  .notes ul { margin: 0; padding-left: 17px; }
+  .notes li { font-size: 11px; color: #57534e; line-height: 1.72; }
+  footer { margin-top: 16px; font-size: 10.5px; color: #94a3b8;
+           display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>安巡 Agent · 巡检价值报告</h1>
+  <div class="meta">
+    样本 <b>160s</b> · 1 路 · 出现 <b>81</b> 人次 ·
+    逐帧告警 <b>550</b> 次 · 事件 <b>56</b> 条 ·
+    生成于 2026-11-02 03:55
+  </div>
+  <div class="rule"></div>
+
+  <div class="kpis"><div class="kpi" style="border-top-color:#0f766e"><div class="kpi-label">巡检覆盖率</div><div class="kpi-value" style="color:#0f766e">16×</div><div class="kpi-sub">系统 480 分钟 vs 人工 30 分钟（推演）</div></div><div class="kpi" style="border-top-color:#2563eb"><div class="kpi-label">判定覆盖率</div><div class="kpi-value" style="color:#2563eb">60.5%</div><div class="kpi-sub">49/81 人次有定论</div></div><div class="kpi" style="border-top-color:#7c3aed"><div class="kpi-label">告警降噪率</div><div class="kpi-value" style="color:#7c3aed">89.8%</div><div class="kpi-sub">550 次逐帧告警 → 56 条事件</div></div><div class="kpi" style="border-top-color:#dc2626"><div class="kpi-label">合规率</div><div class="kpi-value" style="color:#dc2626">4.7%</div><div class="kpi-sub">2 合规 / 41 违规（n=43）</div></div><div class="kpi" style="border-top-color:#ea580c"><div class="kpi-label">违规持续时长</div><div class="kpi-value" style="color:#ea580c">3.5s</div><div class="kpi-sub">P95 13.5s · 最长 13.5s · n=54</div></div></div>
+
+  <div class="charts">
+    <div class="card"><h2>合规率时段趋势</h2><svg viewBox="0 0 560 190" width="100%" height="190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="合规率时段趋势"><text x="38" y="12" font-size="10" fill="#94a3b8">柱=该时段人次 · 线=合规率</text><line x1="38" y1="74.0" x2="548" y2="74.0" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4 3"/><text x="546" y="70.0" font-size="10" fill="#b45309" text-anchor="end">60%</text><text x="32" y="167.5" font-size="10" fill="#64748b" text-anchor="end">0</text><text x="32" y="92.5" font-size="10" fill="#64748b" text-anchor="end">50</text><text x="32" y="17.5" font-size="10" fill="#64748b" text-anchor="end">100</text><rect x="38.0" y="152.2" width="98.0" height="11.8" fill="#cfd8e3"/><rect x="137.0" y="156.1" width="98.0" height="7.9" fill="#cfd8e3"/><rect x="236.1" y="101.0" width="98.0" height="63.0" fill="#cfd8e3"/><rect x="335.1" y="128.6" width="98.0" height="35.4" fill="#cfd8e3"/><rect x="434.1" y="101.0" width="98.0" height="63.0" fill="#cfd8e3"/><rect x="533.1" y="148.2" width="13.9" height="15.8" fill="#cfd8e3"/><path d="M87.5,114.1 L186.5,164.0 L285.6,145.2 L384.6,147.3 L483.6,154.7 L540.6,51.5" fill="none" stroke="#0f766e" stroke-width="2"/><circle cx="87.5" cy="114.1" r="3.2" fill="#0f766e"/><circle cx="186.5" cy="164.0" r="3.2" fill="#0f766e"/><circle cx="285.6" cy="145.2" r="3.2" fill="#0f766e"/><circle cx="384.6" cy="147.3" r="3.2" fill="#0f766e"/><circle cx="483.6" cy="154.7" r="3.2" fill="#0f766e"/><circle cx="540.6" cy="51.5" r="3.2" fill="#0f766e"/><text x="38" y="184" font-size="10" fill="#64748b">0s</text><text x="548" y="184" font-size="10" fill="#64748b" text-anchor="end">154.5s</text></svg></div>
+    <div class="card"><h2>告警等级分布 / 区域排行</h2>
+      <svg viewBox="0 0 460 88" width="100%" height="88" xmlns="http://www.w3.org/2000/svg" role="img"><text x="58" y="21.8" font-size="11" fill="#334155" text-anchor="end">黄色</text><rect x="66" y="10.0" width="348.0" height="16.7" rx="3" fill="#ca8a04"/><text x="421.0" y="21.8" font-size="11" fill="#475569">37</text><text x="58" y="44.5" font-size="11" fill="#334155" text-anchor="end">橙色</text><rect x="66" y="32.7" width="159.9" height="16.7" rx="3" fill="#ea580c"/><text x="232.9" y="44.5" font-size="11" fill="#475569">17</text><text x="58" y="67.2" font-size="11" fill="#334155" text-anchor="end">红色</text><rect x="66" y="55.3" width="18.8" height="16.7" rx="3" fill="#dc2626"/><text x="91.8" y="67.2" font-size="11" fill="#475569">2</text></svg>
+      <svg viewBox="0 0 460 88" width="100%" height="88" xmlns="http://www.w3.org/2000/svg" role="img"><text x="58" y="26.5" font-size="11" fill="#334155" text-anchor="end">A-03</text><rect x="66" y="10.0" width="348.0" height="26.0" rx="3" fill="#0f766e"/><text x="421.0" y="26.5" font-size="11" fill="#475569">50</text><text x="58" y="60.5" font-size="11" fill="#334155" text-anchor="end">B-01</text><rect x="66" y="44.0" width="41.8" height="26.0" rx="3" fill="#0f766e"/><text x="114.8" y="60.5" font-size="11" fill="#475569">6</text></svg>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>事件明细</h2>
+    <table>
+      <thead><tr><th>时间</th><th>区域</th><th>违规</th><th>等级</th>
+      <th>风险</th><th>责任人</th><th>处置要求</th></tr></thead>
+      <tbody><tr><td class="mono">1s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr><tr><td class="mono">6s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr><tr><td class="mono">11s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未佩戴安全帽</td><td><span class="badge" style="background:#ea580c">橙色</span></td><td class="mono">R9</td><td>李国强</td><td>当日整改</td></tr><tr><td class="mono">11s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未佩戴安全帽</td><td><span class="badge" style="background:#ea580c">橙色</span></td><td class="mono">R9</td><td>李国强</td><td>当日整改</td></tr><tr><td class="mono">11s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr><tr><td class="mono">12.5s</td><td class="rg" title="2 号车间高处作业平台"><b>B-01</b> 2 号车间高处作业平台</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ea580c">橙色</span></td><td class="mono">R8</td><td>王克俭</td><td>当日整改</td></tr><tr><td class="mono">15s</td><td class="rg" title="2 号车间高处作业平台"><b>B-01</b> 2 号车间高处作业平台</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ea580c">橙色</span></td><td class="mono">R8</td><td>王克俭</td><td>当日整改</td></tr><tr><td class="mono">16s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr><tr><td class="mono">16s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr><tr><td class="mono">16s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr><tr><td class="mono">21s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未佩戴安全帽</td><td><span class="badge" style="background:#ea580c">橙色</span></td><td class="mono">R9</td><td>李国强</td><td>当日整改</td></tr><tr><td class="mono">21s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr><tr><td class="mono">21s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr><tr><td class="mono">21s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未佩戴安全帽</td><td><span class="badge" style="background:#ea580c">橙色</span></td><td class="mono">R9</td><td>李国强</td><td>当日整改</td></tr><tr><td class="mono">21s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr><tr><td class="mono">21s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr><tr><td class="mono">21s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未佩戴安全帽</td><td><span class="badge" style="background:#ea580c">橙色</span></td><td class="mono">R9</td><td>李国强</td><td>当日整改</td></tr><tr><td class="mono">21s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr><tr><td class="mono">26s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr><tr><td class="mono">26s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr><tr><td class="mono">31s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr><tr><td class="mono">31s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未佩戴安全帽</td><td><span class="badge" style="background:#ea580c">橙色</span></td><td class="mono">R9</td><td>李国强</td><td>当日整改</td></tr><tr><td class="mono">31s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr><tr><td class="mono">31s</td><td class="rg" title="3 号车间东侧通道"><b>A-03</b> 3 号车间东侧通道</td><td>未穿戴反光背心</td><td><span class="badge" style="background:#ca8a04">黄色</span></td><td class="mono">R6</td><td>李国强</td><td>限期整改</td></tr></tbody>
+    </table>
+    <div class="more">仅显示前 24 条，共 56 条</div>
+  </div>
+
+  <div class="notes">
+    <h3>口径与局限（引用这些数字时请一并说明）</h3>
+    <ul><li>巡检覆盖率是**推演值**：人工基线 人工每班 2 次 × 15 分钟，单路连续 8 小时，不是实测。</li><li>判定覆盖率 60.5%——没凑满三帧的人不计入合规率分母，这个数低说明轨迹碎（分辨率/运动），不是模型不准。</li><li>违规持续时长是**降级口径**：素材里没有「违规→整改→合规」的过程，只能算单次告警的持续时间；真实现场有整改时，同一口径自动变成整改耗时。</li><li>样本仅 160 秒、81 人次，属演示级样本，不代表班次级结论。</li></ul>
+  </div>
+
+  <footer>
+    <span>安巡 Agent · 技术线 · 判定账本 115 条</span>
+    <span>口径定义见 docs/价值指标口径.md</span>
+  </footer>
+</div>
+</body>
+</html>

@@ -119,7 +119,8 @@ class MultiStreamScheduler:
         self.readers: list[StreamReader] = []
         self.stats = {"samples": 0, "inferred": 0, "skipped": 0, "ticks": 0,
                       "batch_max": 0, "infer_ms_total": 0.0,
-                      "wall_s": 0.0, "events": 0}
+                      "wall_s": 0.0, "events": 0,
+                      "raw_alarms": 0, "persons_total": 0, "ledger": 0}
 
     def add(self, reader: StreamReader) -> "MultiStreamScheduler":
         self.readers.append(reader)
@@ -168,14 +169,19 @@ class MultiStreamScheduler:
 
         wall = time.perf_counter() - t0
         events = [e for r in self.readers for e in r.pipe.events]
+        ledger = [x for r in self.readers for x in r.pipe.ledger]
         self.stats.update(
             wall_s=round(wall, 2),
             events=len(events),
             avg_infer_ms=round(self.stats["infer_ms_total"] / max(1, self.stats["inferred"]), 1),
             gate_skipped=getattr(self.det, "gate_skipped", 0),
             throughput_fps=round(self.stats["inferred"] / wall, 1) if wall else 0,
+            raw_alarms=sum(r.pipe.raw_alarms for r in self.readers),
+            persons_total=sum(r.pipe.persons_total for r in self.readers),
+            ledger=len(ledger),
         )
         self.events = events
+        self.ledger = ledger
         return self.stats
 
 
@@ -239,8 +245,8 @@ def main() -> int:
     if args.out:
         Path(args.out).write_text(json.dumps(
             {"sources": srcs, "batch": args.batch, "fps": args.fps,
-             "stats": stats, "events": sch.events}, ensure_ascii=False, indent=2),
-            encoding="utf-8")
+             "stats": stats, "events": sch.events, "ledger": sch.ledger},
+            ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"-> {args.out}")
     return 0
 

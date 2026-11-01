@@ -2,7 +2,10 @@
 
 **厂区安全巡检** —— 摄像头画面 → 四态判定 → 风险定级 → 可执行工单。
 
-> 版本 **v1.2.0**（2026-11-02）· 相对 v1.1.0 的变更见 [`CHANGELOG.md`](CHANGELOG.md)
+> 版本 **v2.0.0**（2026-11-02）· 相对 v1.2.0 的变更见 [`CHANGELOG.md`](CHANGELOG.md)
+>
+> **v2.0 是能力跃迁，不是破坏性变更**：模型、阈值、四个指标一个都没动，
+> v1.2.0 的 0.681 / 6.12% / 17.20% / 46 ms 继续有效。新增的是第七节「价值闭环」。
 
 这个目录只做技术线的五件事：**数据、模型、指标、部署、技术页**。  
 界面、工单流转、多 Agent 编排属于系统线，不在这里。
@@ -20,6 +23,7 @@
 | **PPT 第 10–13 页** | 架构 / 指标 / 放弃火焰检测的对比 / 创新点，16:9 可直接截图 | [`docs/技术页_10-13.html`](docs/技术页_10-13.html) | 同上「技术页」段 |
 | 数据（支撑） | 3 个数据源 5 个集合 **1900 张**带标注 | [`docs/数据集卡片.md`](docs/数据集卡片.md) | 同上「数据」段 |
 | 部署（支撑） | HTTP 推理服务 + 视频巡查 CLI，三种后端自动选 | `src/anxun/app.py` · `stream.py` · `scheduler.py` | 同上「部署」段 |
+| **价值闭环**（v2.0） | 判定账本 → 五个运营指标 → 一页报告 | [`data/value_metrics.json`](data/value_metrics.json) · [`docs/figs/value_report.html`](docs/figs/value_report.html) | 同上「价值」段 + 本页第七节 |
 
 > 📌 **数字以口径为准，不以某份文档为准**：判定阈值定义在 `config/thresholds.json`，
 > 阈值 / 类别 / 耗时 / 评测四个口径收在 **[`docs/技术口径.md`](docs/技术口径.md)**。
@@ -33,8 +37,8 @@ python src/anxun/verify_all.py
 
 | 场景 | 结果 |
 | :--- | :--- |
-| 克隆仓库直接跑 | **47 项：44 PASS · 0 FAIL · 3 SKIP** |
-| 补齐训练集与 1080p 素材后 | **47 项：47 PASS · 0 FAIL** |
+| 克隆仓库直接跑 | **52 项：49 PASS · 0 FAIL · 3 SKIP** |
+| 补齐训练集与 1080p 素材后 | **52 项：52 PASS · 0 FAIL** |
 
 3 项 SKIP 是体积原因没入库的大件（60MB 训练集、51MB 复验素材），脚本把「缺件」和「东西坏了」分开报，不算失败。
 验收脚本会真起服务、真跑推理、真读 JSON、真数技术页的页数与数字，不是检查文件存不存在。
@@ -132,13 +136,13 @@ ONNX 版是自己实现的 letterbox + 解码 + NMS（`onnx_backend.py`，纯 nu
 
 ```bash
 pip install -r requirements-cpu.txt    # 约 80 MB，不需要 torch
-python src/anxun/verify_all.py         # 合计 47 项：PASS 44 · FAIL 0 · SKIP 3（--no-serve 时 46 项）
+python src/anxun/verify_all.py         # 合计 52 项：PASS 49 · FAIL 0 · SKIP 3（--no-serve 时 51 项）
 python src/anxun/evaluate_real.py      # 复现四个指标，实测与原 JSON 一字不差
 ```
 
 那 3 项 SKIP 都是**体积原因没随仓库走的大件**（helmet_p2 训练集 2 项、1080p 复验素材 1 项），
 **不计失败** —— 缺件不等于东西坏了，`verify_all.py` 把这两件事分开报。
-把 `tools/fetch_helmet_p2.py`、`tools/make_1080_stream.py` 跑一遍补齐，就是 **47 项全 PASS**。
+把 `tools/fetch_helmet_p2.py`、`tools/make_1080_stream.py` 跑一遍补齐，就是 **52 项全 PASS**。
 
 > 想换成 GPU 跑：`pip install -r requirements-gpu.txt`（torch 约 2 GB）。  
 > 只想要 ONNX：`models/onnx/` 三个文件已经够，`requirements-cpu.txt` 就能跑。
@@ -379,7 +383,7 @@ v11 主要赢在 COCO 通用 mAP 与参数效率；我们的瓶颈是 helmet 类
    类别口径和这批现场图对不上。**跨数据集的权重不能按模型大小挑，只能按实测挑。**
 2. **提高分辨率也掉点**（960 掉 3.4 个点、慢 2.2 倍）。模型是在 640 上训练的，放大推理等于把目标推出训练分布。
 
-→ **当前 s @640 已经是这批权重的最优点**。想要更高精度，只有一条路：用自己的数据微调（见第九节）。
+→ **当前 s @640 已经是这批权重的最优点**。想要更高精度，只有一条路：用自己的数据微调（见 5.4）。
 
 要带更多路数就换 `--imgsz 480`：快 35%、能带 7 路，代价是误报从 11.2% 升到 15.8%、mAP 几乎不变。
 
@@ -783,7 +787,76 @@ python src/anxun/scheduler.py --sources rtsp://cam1,rtsp://cam2,cam3.mp4 --fps 1
 > 这两个方案的实验代码已从交付仓库移除（属于过程产物），实测数字保留上表，
 > 因为它们是「为什么不往架构上继续投入」的直接依据。
 
-## 七、技术页
+## 七、价值闭环（v2.0 新增）
+
+前六节回答的是「判得准不准」。这一节回答运营真正会问的问题：**这个月合规率多少、
+巡检到底覆盖了多少时间、一条告警能压到多少条。**
+
+差别不在模型，在账本。v1.x 只在判违规时落一条事件，合规的人一条记录都不留——
+所以「合规率」没有分母，「降噪率」没有分子。v2.0 把每一次定论都记下来：
+
+```bash
+# 一条命令：跑视频 → 出账本 → 算指标 → 出报告
+python src/anxun/stream.py --source datasets/site_demo.mp4 --fps 2 --region B-01 --out data/events_site.json
+python src/anxun/stats.py  --events data/events_site.json data/events_1080.json --out data/value_metrics.json
+python src/anxun/report.py --metrics data/value_metrics.json \
+                           --events  data/events_site.json data/events_1080.json \
+                           --out     docs/figs/value_report.html
+```
+
+> 📌 **两步都能跑，看你想要哪一层。**
+> 只想验指标 → 直接从第 2 步开始：`data/events_*.json` 已随仓库分发，`stats.py`
+> 只读账本、不碰视频，clone 下来立刻能复现五个数。
+> 想验完整链路 → 第 1 步要视频，而视频体积大（`site_demo` 8.8 MB、`real1080` 59 MB）
+> 未随仓库走，用 `python tools/make_site_video.py` / `tools/make_1080_stream.py` 重建。
+
+### 7.1 五个数字
+
+样本：`site_demo.mp4`（60s，720p）+ `real1080.mp4`（100s，1080p），共 160 秒、
+81 人次、550 次逐帧告警。数字由 `data/value_metrics.json` 给出，报告里逐字一致。
+
+| 指标 | 值 | 口径 | 说明 |
+| :--- | ---: | :--- | :--- |
+| **巡检覆盖率** | **16×** | 系统看得见的时长 / 人工看得见的时长 | 单路 8 小时 480 分钟 vs 人工每班 2 次 × 15 分钟 |
+| **判定覆盖率** | **60.5%** | 有定论的轨迹 / 进入画面的人次 | 49/81。**v1.x 看不见这个数** |
+| **告警降噪率** | **89.8%** | 1 − 事件数 / 逐帧告警数 | 550 次 → 56 条 |
+| **合规率** | **4.7%** | 合规人次 / 可判定人次 | 2/43，待复核 4、无法判定 2 不计入分母 |
+| **违规持续时长** | **3.5s** | 单次违规从定论到消失，P50 | P95 13.5s · 最长 13.5s · n=54 |
+
+### 7.2 三个必须一起说的前提
+
+**① 巡检覆盖率是推演值，不是实测。** 人工侧按「每班 2 次 × 15 分钟」的排班假设折算，
+换个厂换个制度这个数就变。命令行能改（`--manual-times` / `--manual-minutes` / `--hours`），
+报告里也印着「推演」两个字。
+
+**② 判定覆盖率 60.5% 暴露的是一个真问题，不是模型不准。** 81 人次进画面、只有 49 个
+凑满三帧出了定论。差额来自轨迹碎片化：720p 素材里人小、走得快，IoU 匹配断掉就重新开轨，
+三帧窗口永远凑不齐。同一套代码跑 1080p 素材是 **100%**（44/44）。所以这个数低说明
+**素材/机位不适合**，不是模型该换。v1.x 报喜不报忧，这一栏是空的。
+
+**③ 违规持续时长是降级口径。** 素材里只有人走过，没有「戴上帽子再走」的整改动作，
+所以只能算单次告警持续多久，不是「多久整改完」。同一口径在真实现场会自动升级：
+账本里只要出现一条 `已佩戴`，两者之差就是整改耗时。
+
+> 样本 160 秒 81 人次，属**演示级样本**，不代表班次级结论。
+> 合规率 4.7% 偏低是因为这两段素材本身就是违规演示素材，不是现场水平。
+
+### 7.3 报告长什么样
+
+`docs/figs/value_report.html`，1280 宽，一页可截图直接贴 PPT 第 15 页（价值量化）：
+
+- 五张 KPI 卡（就是 7.1 那五个数）
+- 合规率时段趋势：柱子是各时段人次，折线是合规率，虚线是 60% 参考线
+- 告警等级分布 / 区域风险排行
+- 事件明细（时间 / 区域 / 违规 / 等级 / R 值 / 责任人 / 处置要求）
+- 底部「口径与局限」——**引用这些数字时请连它一起截进去**
+
+图是内联 SVG，没有 CDN、没有 matplotlib，离线打开就是最终样子；数字仍在 DOM 里，
+不是烧死在像素上。
+
+---
+
+## 八、技术页
 
 `docs/技术页_10-13.html`，四页 16:9，数字从 `/api/metrics` 读，重跑评测自动更新。
 
@@ -794,7 +867,7 @@ python src/anxun/scheduler.py --sources rtsp://cam1,rtsp://cam2,cam3.mp4 --fps 1
 
 ---
 
-## 八、与早期版本的 5 处差异（含 4 个 bug）
+## 九、与早期版本的 5 处差异（含 4 个 bug）
 
 1. **头部区域取整宽 → 正确戴帽被判未佩戴。** 安全帽框约占框宽 42%，与「满宽 × 上 30%」区域的 IoU 恒在 0.18，
    够不到 0.30。收窄到居中 44%（头宽≈0.44 肩宽）后，正常佩戴 IoU ≈0.41。
@@ -805,15 +878,17 @@ python src/anxun/scheduler.py --sources rtsp://cam1,rtsp://cam2,cam3.mp4 --fps 1
 
 ---
 
-## 九、目录
+## 十、目录
 
 ```
 anxun-v1/
 ├── src/anxun/
 │   ├── rules_engine.py    四态 + 时序聚合 + 风险矩阵 + 工单（纯标准库）
 │   ├── detectors.py       三模型串联 + 类别映射 + 人员门控 + 批前向
-│   ├── stream.py          单路巡查：三级触发 + 判定状态机
+│   ├── stream.py          单路巡查：三级触发 + 判定状态机 + 全量判定账本
 │   ├── scheduler.py       多路巡查：锁步攒批 + 各路独立状态机
+│   ├── stats.py           价值指标：覆盖率 / 降噪 / 合规率 / 持续时长（纯标准库）
+│   ├── report.py          价值报告：内联 SVG 出一页 HTML，可截图进 PPT
 │   ├── pipeline.py        单图链路：检测 → 判定 → 聚合 → 定级 → 工单
 │   ├── metrics.py         mAP@0.5 / 误报率 / 漏报率 / 耗时 + PR 曲线
 │   ├── evaluate_real.py   真实照片评测（指标数字的唯一来源）
@@ -826,7 +901,7 @@ anxun-v1/
 │   ├── onnx_backend.py     ONNX 推理（letterbox / 解码 / NMS，不依赖 torch）
 │   ├── export_onnx.py      .pt → .onnx（一次性）
 │   ├── data_card.py        全量数据卡片
-│   ├── verify_all.py       交付物验收（47 项，含起服务与真图推理）
+│   ├── verify_all.py       交付物验收（52 项，含起服务与真图推理）
 │   └── app.py              推理服务（HTTP）
 ├── tools/                 数据拉取 · 训练准备 · 基准与复验
 │   ├── fetch_ppe_test.py / fetch_helmet_p2.py / repair_labels.py
