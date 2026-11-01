@@ -101,7 +101,8 @@ def main() -> int:
     rows = []
     base = (R.CONF_FINAL, R.HELMET_IOU_MIN, R.CONTAIN_MIN, R.MAX_EQUIP_RATIO)
     R.CONF_FINAL = args.conf_final
-    for iou in (0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40):
+    # 0.28 是 2026-11-02 复扫选中的点，必须在网格里，否则前沿复现不出交付值
+    for iou in (0.10, 0.15, 0.20, 0.25, 0.28, 0.30, 0.35, 0.40):
         for ct in (0.30, 0.40, 0.50, 0.60, 0.70, 0.80):
             for mr in (1.6, 3.0, 6.0):
                 R.HELMET_IOU_MIN, R.CONTAIN_MIN, R.MAX_EQUIP_RATIO = iou, ct, mr

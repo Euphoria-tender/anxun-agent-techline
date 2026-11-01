@@ -109,7 +109,8 @@ def main() -> int:
     base = (R.CONF_FINAL, R.CONF_REVIEW)
     rows = []
     for cf in (0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70):
-        for cr in (0.25, 0.30, 0.35, 0.40, 0.45):
+        # 0.15 / 0.20 是交付配置用的复核下限，必须在网格里，否则基线行复现不出来
+        for cr in (0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45):
             if cr >= cf:
                 continue
             R.CONF_FINAL, R.CONF_REVIEW = cf, cr
