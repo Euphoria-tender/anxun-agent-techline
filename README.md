@@ -241,7 +241,7 @@ python tools/collect_selfdata.py --check datasets/self/<日期>     # 标完核�
 | `best.pt` | 安全帽检测 | HF `keremberke/yolov8s-hard-hat-detection` | ❌ |
 | `vest.pt` | 反光背心检测 | 本项目在 Chapian train 100 张上微调（强增强，45 轮） | ✅ **唯一自训** |
 
-> ⚠️ **答辩措辞**（P4-9）：不能说「我们训练了安全帽检测模型」。准确说法是
+> ⚠️ **答辩措辞**：不能说「我们训练了安全帽检测模型」。准确说法是
 > 「我们用公开权重 + 自训的背心模型组成三模型串联，并自建 100 张测试集完成评测」。
 > 三个权重各自的许可证与 SHA256 见 [`docs/模型卡片.md`](docs/模型卡片.md)。
 
@@ -713,7 +713,7 @@ python src/anxun/scheduler.py --sources rtsp://cam1,rtsp://cam2,cam3.mp4 --fps 1
 
 ---
 
-## 八、与仓库 `main` 的 5 处差异（含 4 个 bug）
+## 八、与早期版本的 5 处差异（含 4 个 bug）
 
 1. **头部区域取整宽 → 正确戴帽被判未佩戴。** 安全帽框约占框宽 42%，与「满宽 × 上 30%」区域的 IoU 恒在 0.18，
    够不到 0.30。收窄到居中 44%（头宽≈0.44 肩宽）后，正常佩戴 IoU ≈0.41。
