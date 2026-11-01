@@ -29,8 +29,8 @@ python src/anxun/verify_all.py
 
 | 场景 | 结果 |
 | :--- | :--- |
-| 克隆仓库直接跑 | **36 项：33 PASS · 0 FAIL · 3 SKIP** |
-| 补齐训练集与 1080p 素材后 | **36 项：36 PASS · 0 FAIL** |
+| 克隆仓库直接跑 | **37 项：34 PASS · 0 FAIL · 3 SKIP** |
+| 补齐训练集与 1080p 素材后 | **37 项：37 PASS · 0 FAIL** |
 
 3 项 SKIP 是体积原因没入库的大件（60MB 训练集、51MB 复验素材），脚本把「缺件」和「东西坏了」分开报，不算失败。
 验收脚本会真起服务、真跑推理、真读 JSON、真数技术页的页数与数字，不是检查文件存不存在。
@@ -124,13 +124,13 @@ ONNX 版是自己实现的 letterbox + 解码 + NMS（`onnx_backend.py`，纯 nu
 
 ```bash
 pip install -r requirements-cpu.txt    # 约 80 MB，不需要 torch
-python src/anxun/verify_all.py         # 合计 36 项：PASS 33 · FAIL 0 · SKIP 3
+python src/anxun/verify_all.py         # 合计 37 项：PASS 34 · FAIL 0 · SKIP 3
 python src/anxun/evaluate_real.py      # 复现四个指标，实测与原 JSON 一字不差
 ```
 
 那 3 项 SKIP 都是**体积原因没随仓库走的大件**（helmet_p2 训练集 2 项、1080p 复验素材 1 项），
 **不计失败** —— 缺件不等于东西坏了，`verify_all.py` 把这两件事分开报。
-把 `tools/fetch_helmet_p2.py`、`tools/make_1080_stream.py` 跑一遍补齐，就是 **36 项全 PASS**。
+把 `tools/fetch_helmet_p2.py`、`tools/make_1080_stream.py` 跑一遍补齐，就是 **37 项全 PASS**。
 
 > 想换成 GPU 跑：`pip install -r requirements-gpu.txt`（torch 约 2 GB）。  
 > 只想要 ONNX：`models/onnx/` 三个文件已经够，`requirements-cpu.txt` 就能跑。
@@ -707,7 +707,7 @@ anxun-v1/
 │   ├── onnx_backend.py     ONNX 推理（letterbox / 解码 / NMS，不依赖 torch）
 │   ├── export_onnx.py      .pt → .onnx（一次性）
 │   ├── data_card.py        全量数据卡片
-│   ├── verify_all.py       交付物验收（35 项，含起服务与真图推理）
+│   ├── verify_all.py       交付物验收（37 项，含起服务与真图推理）
 │   └── app.py              推理服务（HTTP）
 ├── tools/                 数据拉取 · 训练准备 · 基准与复验
 │   ├── fetch_ppe_test.py / fetch_helmet_p2.py / repair_labels.py
