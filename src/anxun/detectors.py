@@ -59,6 +59,7 @@ class YoloDetector:
         self.device = device
         self.names = self.model.names
         self._cache: dict[tuple[str, int], dict] = {}
+        self.cache_max = 256      # 长跑服务：缓存不设上限会一路涨
         self.unmapped = sorted({str(n) for n in self.names.values()}
                                - set(self.LABEL_MAP) - self.IGNORE) if isinstance(self.names, dict) else []
 
@@ -66,6 +67,8 @@ class YoloDetector:
         key = (str(image_path), frame_idx)
         if key in self._cache:
             return self._cache[key]
+        if len(self._cache) >= self.cache_max:
+            self._cache.clear()
         out = self._predict(str(image_path))
         self._cache[key] = out
         return out

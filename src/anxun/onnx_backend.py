@@ -180,6 +180,9 @@ class OnnxDetector:
         self.unmapped = sorted({str(n) for n in self.names.values()}
                                - set(self.LABEL_MAP) - self.IGNORE)
         self._cache: dict[tuple[str, int], dict] = {}
+        # 服务是长跑进程：缓存不设上限，换一批图就一路涨到内存告警。
+        # 缓存只负责「同一张图重复请求不重算」，清空不改变任何结果。
+        self.cache_max = 256
 
     # ---------- 内部 ----------
 
@@ -208,6 +211,8 @@ class OnnxDetector:
     def detect_image(self, image_path: str | Path, frame_idx: int = 0) -> dict:
         key = (str(image_path), frame_idx)
         if key not in self._cache:
+            if len(self._cache) >= self.cache_max:
+                self._cache.clear()
             self._cache[key] = self._infer(_read(image_path))
         return self._cache[key]
 
