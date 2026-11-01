@@ -41,6 +41,7 @@ Z = 1.96  # 95%
 SPEC = [
     ("data/metrics_real.json", "helmet · torch-GPU", "handoff"),
     ("data/metrics_onnx.json", "helmet · ONNX-CPU", "handoff"),
+    ("data/metrics_1080.json", "helmet · 1080p 难例集（3× 上采样）", "reference"),
     ("data/metrics_vest.json", "vest · torch-GPU", "reference"),
 ]
 
