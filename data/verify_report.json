@@ -1,0 +1,216 @@
+{
+  "total": 35,
+  "passed": 35,
+  "results": [
+    {
+      "line": "数据",
+      "item": "ppe_test/train 图片/标注配对",
+      "ok": true,
+      "detail": "100 图 / 100 标注 / 配对 100"
+    },
+    {
+      "line": "数据",
+      "item": "ppe_test/test 图片/标注配对",
+      "ok": true,
+      "detail": "100 图 / 100 标注 / 配对 100"
+    },
+    {
+      "line": "数据",
+      "item": "helmet_p2/train 图片/标注配对",
+      "ok": true,
+      "detail": "1200 图 / 1277 标注 / 配对 1200"
+    },
+    {
+      "line": "数据",
+      "item": "helmet_p2/valid 图片/标注配对",
+      "ok": true,
+      "detail": "400 图 / 400 标注 / 配对 400"
+    },
+    {
+      "line": "数据",
+      "item": "测试集标注可解析",
+      "ok": true,
+      "detail": "1464 框，空标注 0 张"
+    },
+    {
+      "line": "数据",
+      "item": "测试集含 person 与 helmet 真值",
+      "ok": true,
+      "detail": "person 295 / hardhat 146 / no_hardhat 150"
+    },
+    {
+      "line": "数据",
+      "item": "1080p 复验素材分辨率",
+      "ok": true,
+      "detail": "1920×1920"
+    },
+    {
+      "line": "模型",
+      "item": "models/yolov8n.pt 存在",
+      "ok": true,
+      "detail": "6.5 MB"
+    },
+    {
+      "line": "模型",
+      "item": "models/best.pt 存在",
+      "ok": true,
+      "detail": "22.5 MB"
+    },
+    {
+      "line": "模型",
+      "item": "models/vest.pt 存在",
+      "ok": true,
+      "detail": "6.3 MB"
+    },
+    {
+      "line": "模型",
+      "item": "models/onnx/yolov8n.onnx 存在",
+      "ok": true,
+      "detail": "12.82 MB"
+    },
+    {
+      "line": "模型",
+      "item": "models/onnx/best.onnx 存在",
+      "ok": true,
+      "detail": "44.72 MB"
+    },
+    {
+      "line": "模型",
+      "item": "models/onnx/vest.onnx 存在",
+      "ok": true,
+      "detail": "12.24 MB"
+    },
+    {
+      "line": "模型",
+      "item": "models/onnx/manifest.json 存在",
+      "ok": true,
+      "detail": "0.00 MB"
+    },
+    {
+      "line": "模型",
+      "item": "三模型真图推理可跑",
+      "ok": true,
+      "detail": "4 个框，2298.6 ms，标签 ['helmet', 'novest', 'person']"
+    },
+    {
+      "line": "模型",
+      "item": "输出含 person 与装备类",
+      "ok": true,
+      "detail": "['helmet', 'novest', 'person']"
+    },
+    {
+      "line": "模型",
+      "item": "ONNX 与 torch 输出一致",
+      "ok": true,
+      "detail": "5 张图 · 标签不一致 0 张 · 置信度最大偏差 0.001"
+    },
+    {
+      "line": "指标",
+      "item": "data/metrics_real.json 四指标齐全",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "line": "指标",
+      "item": "data/metrics_vest.json 四指标齐全",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "line": "指标",
+      "item": "data/metrics_onnx.json 四指标齐全",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "line": "指标",
+      "item": "README 误报率与实测一致",
+      "ok": true,
+      "detail": "实测 5.1%"
+    },
+    {
+      "line": "指标",
+      "item": "README 漏报率与实测一致",
+      "ok": true,
+      "detail": "实测 24.73%"
+    },
+    {
+      "line": "部署",
+      "item": "服务与巡查模块可导入",
+      "ok": true,
+      "detail": "app / stream / scheduler"
+    },
+    {
+      "line": "部署",
+      "item": "HTTP 服务启动并响应 /health",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "line": "部署",
+      "item": "/api/inspect 返回判定与事件",
+      "ok": true,
+      "detail": "人 1 · 违规 1 · 事件 1"
+    },
+    {
+      "line": "技术页",
+      "item": "文件存在",
+      "ok": true,
+      "detail": "17.1 KB"
+    },
+    {
+      "line": "技术页",
+      "item": "共 4 页（P10–P13）",
+      "ok": true,
+      "detail": "实际 4 页"
+    },
+    {
+      "line": "技术页",
+      "item": "P10 内容在位",
+      "ok": true,
+      "detail": "系统架构"
+    },
+    {
+      "line": "技术页",
+      "item": "P11 内容在位",
+      "ok": true,
+      "detail": "指标"
+    },
+    {
+      "line": "技术页",
+      "item": "P12 内容在位",
+      "ok": true,
+      "detail": "火焰"
+    },
+    {
+      "line": "技术页",
+      "item": "P13 内容在位",
+      "ok": true,
+      "detail": "创新"
+    },
+    {
+      "line": "技术页",
+      "item": "16:9 版式",
+      "ok": true,
+      "detail": "1280×720 画布"
+    },
+    {
+      "line": "技术页",
+      "item": "数字 5.1 与实测一致",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "line": "技术页",
+      "item": "数字 24.7 与实测一致",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "line": "技术页",
+      "item": "数字 0.681 与实测一致",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

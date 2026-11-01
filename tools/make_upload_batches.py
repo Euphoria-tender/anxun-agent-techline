@@ -98,11 +98,14 @@ def main() -> int:
 
     manifest = []
     for i, batch in enumerate(batches, 1):
+        # 提交信息按批内容生成，便于日后回溯是哪一批改动
+        dirs = sorted({f.relative_to(ROOT).parts[0] for f in batch})
         payload = {
             "files": [{"path": f.relative_to(ROOT).as_posix(),
                        "content": f.read_text(encoding="utf-8")}
                       for f in batch],
-            "message": "",
+            "message": f"安巡Agent 技术线 v1.0.0 · 第 {i}/{len(batches)} 批"
+                       f"（{len(batch)} 个文件：{', '.join(dirs)}）",
         }
         size = sum(f.stat().st_size for f in batch)
         (OUT / f"batch_{i:02d}.json").write_text(
