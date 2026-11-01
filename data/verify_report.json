@@ -1,7 +1,7 @@
 {
   "version": "techline-v1.2.0",
-  "total": 43,
-  "passed": 40,
+  "total": 44,
+  "passed": 41,
   "skipped": 3,
   "results": [
     {
@@ -98,7 +98,7 @@
       "line": "模型",
       "item": "三模型推理可跑",
       "ok": true,
-      "detail": "4 个框，2535.7 ms，标签 ['helmet', 'novest', 'person']"
+      "detail": "4 个框，2706.7 ms，标签 ['helmet', 'novest', 'person']"
     },
     {
       "line": "模型",
@@ -121,6 +121,12 @@
     {
       "line": "指标",
       "item": "data/metrics_real.json 四指标齐全",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "line": "指标",
+      "item": "data/metrics_1080.json 四指标齐全",
       "ok": true,
       "detail": ""
     },

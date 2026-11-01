@@ -243,6 +243,7 @@ def verify_metrics() -> None:
     head("三、指标（四个数）")
     spec = {
         "data/metrics_real.json": ("helmet", ("mAP50", "fp_rate", "fn_rate", "latency")),
+        "data/metrics_1080.json": ("1080", ("mAP50", "fp_rate", "fn_rate", "latency")),
         "data/metrics_vest.json": ("vest", ("mAP50", "fp_rate", "fn_rate")),
         "data/metrics_onnx.json": ("onnx", ("mAP50", "fp_rate", "fn_rate", "latency")),
     }
@@ -259,7 +260,7 @@ def verify_metrics() -> None:
         r = d.get("results") or {}
         missing = [k for k in keys if r.get(k) is None]
         check("指标", f"{rel} 四指标齐全", not missing, f"缺 {missing}" if missing else "")
-        if tag in ("helmet", "onnx"):
+        if tag in ("helmet", "onnx", "1080"):
             lat = r.get("latency") or {}
             print(f"       mAP@0.5={r.get('mAP50')}  误报={r.get('fp_rate')}%  "
                   f"漏报={r.get('fn_rate')}%  单帧={lat.get('mean_ms')} ms  "
