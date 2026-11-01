@@ -766,5 +766,6 @@ anxun-v1/
 ├── run.bat / .sh          一键启动（自动选后端）
 └── requirements-cpu.txt / requirements-gpu.txt
 
-models/ 与 datasets/ 不入库（体积大 / 二进制），获取方式见 2.3 与 docs/模型卡片.md
+随仓库分发：models/ 6 份权重（105 MB）+ datasets/ppe_test 评测集（14 MB）+ 演示素材（300 KB）。
+只有训练用大件不入库（helmet_p2 60 MB、test1080 51 MB），用 tools/ 里的脚本重拉，见 2.3。
 ```
