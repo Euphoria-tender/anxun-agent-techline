@@ -2,7 +2,7 @@
 
 **厂区安全巡检** —— 摄像头画面 → 四态判定 → 风险定级 → 可执行工单。
 
-> 版本 **v1.1.0**（2026-11-01）· 相对 v1.0.0 的变更见 [`CHANGELOG.md`](CHANGELOG.md)
+> 版本 **v1.2.0**（2026-11-02）· 相对 v1.1.0 的变更见 [`CHANGELOG.md`](CHANGELOG.md)
 
 这个目录只做技术线的五件事：**数据、模型、指标、部署、技术页**。  
 界面、工单流转、多 Agent 编排属于系统线，不在这里。
@@ -21,6 +21,10 @@
 | 数据（支撑） | 3 个数据源 5 个集合 **1900 张**带标注 | [`docs/数据集卡片.md`](docs/数据集卡片.md) | 同上「数据」段 |
 | 部署（支撑） | HTTP 推理服务 + 视频巡查 CLI，三种后端自动选 | `src/anxun/app.py` · `stream.py` · `scheduler.py` | 同上「部署」段 |
 
+> 📌 **数字以口径为准，不以某份文档为准**：判定阈值定义在 `config/thresholds.json`，
+> 阈值 / 类别 / 耗时 / 评测四个口径收在 **[`docs/技术口径.md`](docs/技术口径.md)**。
+> 本文与它冲突时，以它为准，并回头改本文。
+
 **一句命令验收全部交付物**（两种跑法，按有没带评测集）：
 
 ```bash
@@ -29,8 +33,8 @@ python src/anxun/verify_all.py
 
 | 场景 | 结果 |
 | :--- | :--- |
-| 克隆仓库直接跑 | **37 项：34 PASS · 0 FAIL · 3 SKIP** |
-| 补齐训练集与 1080p 素材后 | **37 项：37 PASS · 0 FAIL** |
+| 克隆仓库直接跑 | **43 项：40 PASS · 0 FAIL · 3 SKIP** |
+| 补齐训练集与 1080p 素材后 | **43 项：43 PASS · 0 FAIL** |
 
 3 项 SKIP 是体积原因没入库的大件（60MB 训练集、51MB 复验素材），脚本把「缺件」和「东西坏了」分开报，不算失败。
 验收脚本会真起服务、真跑推理、真读 JSON、真数技术页的页数与数字，不是检查文件存不存在。
@@ -56,8 +60,8 @@ python src/anxun/verify_all.py
 
 | 机器                | 怎么装                                   | 走哪条路         | 实测耗时          |
 | ----------------- | ------------------------------------- | ------------ | ------------- |
-| 任意电脑（没显卡、没 torch） | `pip install -r requirements-cpu.txt` | ONNX + CPU   | **53.5 ms/帧** |
-| 有 NVIDIA 显卡       | `pip install -r requirements-gpu.txt` | torch + CUDA | **25.7 ms/帧** |
+| 任意电脑（没显卡、没 torch） | `pip install -r requirements-cpu.txt` | ONNX + CPU   | **72.7 ms/帧** |
+| 有 NVIDIA 显卡       | `pip install -r requirements-gpu.txt` | torch + CUDA | **22.9 ms/帧** |
 | 有显卡但想省空间          | `pip install onnxruntime-gpu`         | ONNX + CUDA  | 自动识别          |
 
 ```bash
@@ -88,16 +92,19 @@ python src/anxun/verify_all.py
 | 运行时依赖  | torch 2.14.1+cu130 = **1.99 GB**（cp313 + Blackwell 专用） | onnxruntime + numpy + opencv ≈ **80 MB**          |
 | 模型体积   | 28 MB                                                  | **55 MB**                                         |
 | 换台电脑   | 基本装不上（Python 版本/显卡架构一换就废）                              | `pip install` 三行搞定，任何平台                           |
-| CPU 耗时 | 138 ms                                                 | **53.5 ms**（快 2.6 倍）                              |
+| CPU 耗时 | 138 ms                                                 | **72.7 ms**（快 1.9 倍）                              |
 | 指标     | —                                                      | **四个数完全一致**（0.6808 / 5.1% / 22.58% / 72-21-5-93） |
 
 ONNX 版是自己实现的 letterbox + 解码 + NMS（`onnx_backend.py`，纯 numpy），  
 不依赖 ultralytics 也不依赖 torch。逐框比对过：同一个模型、同一张图，坐标和置信度小数点后两位一致。
 
-> 📌 **复测记录（v1.1.0）**：本次重跑 `--backend onnx` 得到 **72.7 ms/帧**（`data/metrics_onnx.json`），
-> 比上表的 53.5 ms 慢 19 ms。裸测两个 session 的推理只要 49.3 ms，差异落在后处理与运行环境上，尚未定位。
-> `requirements` 至今没有锁 onnxruntime 版本（本机 1.31.1），这正是 v1.1.0 要锁版本的原因之一；
-> 干净环境验收时要一并复测，别拿两个环境下的数直接比。
+> 📌 **耗时口径（v1.2.0 起只有一个）**：单帧耗时 = `evaluate_real.py` 在 100 张测试集上的**均值**，
+> 含前后处理，同一后端、同一台机器。ONNX-CPU **72.7 ms**（p95 82.4）· torch-GPU **22.9 ms**（p95 25.7）。
+>
+> 旧文档里的 **53.5 ms 已作废**：那组数出自未锁版本的 `onnxruntime`（`>=1.17`），v1.1.0 锁到 1.31.1 后
+> 同一模型复测是 72.7 ms。两者不是同一环境，不能并列引用，更不能一个写进 PPT、一个写进 README。
+> 同理，启动自检报的 **8.8 / 31.7 ms** 是「单帧单次」的活性探测，只证明「真的在用 GPU」，
+> **不是指标口径**——不要拿它和 22.9 / 72.7 对比。
 
 ### 2.2 踩到的一个大坑：ORT 线程自旋
 
@@ -124,13 +131,13 @@ ONNX 版是自己实现的 letterbox + 解码 + NMS（`onnx_backend.py`，纯 nu
 
 ```bash
 pip install -r requirements-cpu.txt    # 约 80 MB，不需要 torch
-python src/anxun/verify_all.py         # 合计 37 项：PASS 34 · FAIL 0 · SKIP 3
+python src/anxun/verify_all.py         # 合计 43 项：PASS 40 · FAIL 0 · SKIP 3
 python src/anxun/evaluate_real.py      # 复现四个指标，实测与原 JSON 一字不差
 ```
 
 那 3 项 SKIP 都是**体积原因没随仓库走的大件**（helmet_p2 训练集 2 项、1080p 复验素材 1 项），
 **不计失败** —— 缺件不等于东西坏了，`verify_all.py` 把这两件事分开报。
-把 `tools/fetch_helmet_p2.py`、`tools/make_1080_stream.py` 跑一遍补齐，就是 **37 项全 PASS**。
+把 `tools/fetch_helmet_p2.py`、`tools/make_1080_stream.py` 跑一遍补齐，就是 **43 项全 PASS**。
 
 > 想换成 GPU 跑：`pip install -r requirements-gpu.txt`（torch 约 2 GB）。  
 > 只想要 ONNX：`models/onnx/` 三个文件已经够，`requirements-cpu.txt` 就能跑。
@@ -202,29 +209,51 @@ provider 回落、显存不足都会让程序悄悄跑在 CPU 上。自检拿真
 只有图片没有标注（3962 张 jpg、0 个 txt）。没有真值就算不出 mAP、误报率、漏报率。  
 量大但没标签，不如量小但有标签。
 
-**缺口**（写进 PPT 第 16 页）：全是境外工地图，安全帽款式与国内车间差异明显，必须自采 ≥300 张；  
+**缺口**（写进 PPT 第 16 页）：全是境外工地图，安全帽款式与国内车间差异明显，**自采数据至今 0 张**——  
+这是「公开集不落地」这个论点自己没解决的地方。采集入口已备好，缺的是素材：
+
+```bash
+# 手机/相机拍的视频丢进 datasets/raw/，一条命令抽成可标注目录
+python tools/collect_selfdata.py --src datasets/raw
+python tools/collect_selfdata.py --check datasets/self/<日期>     # 标完核对覆盖度
+```
+
 空标注负样本 0 张，误报率负样本侧还不够硬；vest / goggles 有标注但没有对应模型。
 
 ---
 
 ## 四、模型
 
-双模型串联：
+**三模型串联**（v1.1.0 起加了反光背心，本节此前写「双模型」，是滞后的表述）：
 
 ```
-画面 ──> yolov8n (COCO) ──> person 框 ──┐
-     └─> yolov8s-hardhat ──> helmet / nohelmet 框 ──> 规则引擎
+画面 ──> yolov8n (COCO) ──────> person 框 ──────────────────┐
+     ├─> yolov8s-hardhat ────> helmet / nohelmet 框 ───────┤
+     └─> vest (自训 yolov8n) ─> vest / no_vest 框 ──────────┴─> 规则引擎
 ```
 
 为什么要拆：公开的安全帽权重**只有 Hardhat / NO-Hardhat 两类，没有 person**。  
 判定链第一步要「谁在画面里」，单用一个模型时每张图都是 0 人。
+
+| 权重 | 用途 | 来源 | 是否自训 |
+| :--- | :--- | :--- | :---: |
+| `yolov8n.pt` | 人体检测 | COCO 预训练（HF `kadirnar/yolov8n-v8.0`） | ❌ |
+| `best.pt` | 安全帽检测 | HF `keremberke/yolov8s-hard-hat-detection` | ❌ |
+| `vest.pt` | 反光背心检测 | 本项目在 Chapian train 100 张上微调（强增强，45 轮） | ✅ **唯一自训** |
+
+> ⚠️ **答辩措辞**（P4-9）：不能说「我们训练了安全帽检测模型」。准确说法是
+> 「我们用公开权重 + 自训的背心模型组成三模型串联，并自建 100 张测试集完成评测」。
+> 三个权重各自的许可证与 SHA256 见 [`docs/模型卡片.md`](docs/模型卡片.md)。
 
 | 模型原始类别                | 引擎类别       | 说明           |
 | --------------------- | ---------- | ------------ |
 | `Person`              | `person`   | 人体基准框        |
 | `Hardhat` / `helmet`  | `helmet`   | 正向证据         |
 | `NO-Hardhat` / `head` | `nohelmet` | **反向证据**，不丢弃 |
-| 其他                    | 丢弃         | 与判定无关        |
+| `vest` / `no_vest`    | `vest` / `novest` | 背心正/反向证据 |
+| 其他（`boots`/`gloves`/`goggles`） | 丢弃 | 数据集里有标注，**没有对应模型**，别在 PPT 上写成「四类检测」 |
+
+完整的「数据集 9 类 → 模型输出 → 引擎类别」映射见 [`docs/技术口径.md`](docs/技术口径.md)。
 
 ### 4.1 版本选型（架构实测：CPU / 640 / 15 次中位数）
 
@@ -308,6 +337,15 @@ CPU 上的结论不变（v11 优先、v12 别碰）；GPU 上 YOLO26 才真正�
 CPU 上是 138 ms / 5 路，GPU（RTX 5060）上 22.9 ms / 25 路，**精度三项一字不差**——  
 换设备只影响速度不影响判定，这本身就是可复现性的证据。  
 （mAP 0.688→0.681 是开了人员门控：无人帧不再输出装备框，检测级指标略降，业务三指标不变。）
+
+**100 张够不够？** 见 [`docs/指标置信区间.md`](docs/指标置信区间.md)（`tools/metric_ci.py` 生成）：
+
+| 指标 | 点估计 | 95% 置信区间 | 目标 | 怎么表述 |
+| :--- | ---: | :---: | ---: | :--- |
+| 误报率 | 5.1%（5/98） | 2.2–11.4% | ≤10% | **点估计达标**，区间上界越线，不说「稳定达标」 |
+| 漏报率 | 22.6%（21/93） | 15.3–32.1% | ≤5% | 区间下界仍超标 → 差距不是样本量造成的 |
+
+颗粒度：误报率每 1 例 ≈ 1.02 个百分点。100 张能分辨「差一个量级」，分辨不了「差一两个点」。
 
 **漏报 21 例逐条归因：**
 
@@ -707,15 +745,20 @@ anxun-v1/
 │   ├── onnx_backend.py     ONNX 推理（letterbox / 解码 / NMS，不依赖 torch）
 │   ├── export_onnx.py      .pt → .onnx（一次性）
 │   ├── data_card.py        全量数据卡片
-│   ├── verify_all.py       交付物验收（37 项，含起服务与真图推理）
+│   ├── verify_all.py       交付物验收（43 项，含起服务与真图推理）
 │   └── app.py              推理服务（HTTP）
 ├── tools/                 数据拉取 · 训练准备 · 基准与复验
 │   ├── fetch_ppe_test.py / fetch_helmet_p2.py / repair_labels.py
 │   ├── make_vest.py / make_mix.py
 │   ├── make_demo_video.py / make_site_video.py / make_1080_stream.py
 │   ├── verify_trigger_1080.py   触发层复验（含阈值扫描）
-│   └── bench_arch.py            模型架构开销基准（喂 4.1 的表）
-├── docs/                  技术页_10-13.html · 数据集卡片.md · 模型卡片.md
+│   ├── bench_arch.py            模型架构开销基准（喂 4.1 的表）
+│   ├── plot_metrics.py          混淆矩阵 / PR 曲线 / 风险矩阵出图（喂 P11、P13）
+│   ├── metric_ci.py             误报漏报的 Wilson 置信区间（回答「100 张够不够」）
+│   └── collect_selfdata.py      现场视频抽帧 → 可标注目录（自采数据的入口）
+├── config/thresholds.json  判定阈值的唯一事实来源（measured / conservative）
+├── docs/                  技术页_10-13.html · 技术口径.md · 指标置信区间.md
+│                          数据集卡片.md · 模型卡片.md · figs/（三张成品图）
 ├── data/                  四指标与实验数据（metrics_real / metrics_onnx / metrics_vest
 │                          sweep / sweep_rules / sweep_geom / arch_bench / batch_bench
 │                          verify_report / verify_trigger_1080）

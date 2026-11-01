@@ -233,6 +233,12 @@ def _device_note(det) -> str:
     return f"{tag} {dev} {name}".strip() + f"（torch {torch.__version__}）"
 
 
+def _rules_profile() -> str:
+    """这组指标是哪套阈值跑出来的。没有它，两套口径的数字会被混着引用。"""
+    import anxun.rules_engine as R
+    return R.active_profile()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default=str(ROOT / "datasets" / "ppe_test" / "test"))
@@ -246,7 +252,14 @@ def main() -> int:
                     help="onnx = 不依赖 torch 的 CPU 后端（可移植版）")
     ap.add_argument("--out", default="", help="结果 json 路径，默认 data/metrics_real.json")
     ap.add_argument("--vest", default="", help="额外加载 vest 权重，用来验证「加模型不影响 helmet 判定」")
+    ap.add_argument("--profile", default="", choices=("", "measured", "conservative"),
+                    help="判定阈值口径；留空用 config 默认（measured）。"
+                         "报数只能用 measured，换口径的结果不能和交付数字比")
     args = ap.parse_args()
+
+    if args.profile:
+        import anxun.rules_engine as R
+        R.apply_profile(args.profile)
 
     if args.backend == "onnx":
         from anxun.onnx_backend import build_onnx_detector
@@ -272,6 +285,7 @@ def main() -> int:
         "kind": "model-measured",
         "config": {"weights": model_name, "imgsz": args.imgsz, "conf": args.conf,
                    "backend": args.backend,
+                   "rules_profile": _rules_profile(),
                    "device": "CPU（onnxruntime，不依赖 torch）" if args.backend == "onnx"
                              else _device_note(det)},
         "dataset": {

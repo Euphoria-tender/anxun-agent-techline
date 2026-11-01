@@ -70,9 +70,11 @@ def main() -> int:
         n_box += len(rows)
         n_empty += (0 if rows else 1)
 
+    # 路径一律写成「相对 data.yaml 所在目录」：ultralytics 在没有 path 字段时
+    # 以 yaml 所在目录为根，换机器 / 换盘符都不用改文件（旧版写死了绝对路径 D:/...）。
     (OUT / "data.yaml").write_text(
-        f"path: {OUT.as_posix()}\ntrain: train/images\nval: val/images\n"
-        f"nc: 2\nnames: ['vest', 'no_vest']\n", encoding="utf-8")
+        "train: train/images\nval: val/images\n"
+        "nc: 2\nnames: ['vest', 'no_vest']\n", encoding="utf-8")
 
     print(f"图片 {n_img}（无背心框的负样本 {n_empty}）  框 {n_box}  "
           f"训练 {n_img - len(val_idx)} / 验证 {len(val_idx)}")

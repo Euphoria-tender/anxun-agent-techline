@@ -1,5 +1,79 @@
 # 变更日志
 
+## v1.2.0 — 2026-11-02
+
+这一版不碰模型、不动指标。触发点是主仓库的 [`docs/11-项目盘点.md`](https://github.com/yukiiiii777/anxun-agent/blob/main/docs/11-%E9%A1%B9%E7%9B%AE%E7%9B%98%E7%82%B9.md)
+把技术线的 8 个问题摆到了桌面上：**同一份作品存在两套阈值、三个耗时版本、两套类别口径**。
+版本号进一位，是因为交付物里新增了三份文件（口径表 / 置信区间 / 三张图），口径本身也变了。
+
+### 判定阈值：从「写死在代码里」改成「一份配置，两个名字」
+
+- 新增 **`config/thresholds.json`**：阈值唯一事实来源，含两套 profile ——
+  `measured`（0.30 / 0.20 / IoU 0.25，交付与评测默认）与 `conservative`（0.60 / 0.40，演示用）。
+- `rules_engine.py` 启动时加载配置，模块常量由 `apply_profile()` 赋值；`pipeline.thresholds()`
+  改为读 `profile_snapshot()`，不再各存一份。`/api/scenes` 因此会带上当前口径名。
+- 切换方式：`ANXUN_RULES_PROFILE=conservative`、`--profile conservative`（`app.py` / `evaluate_real.py`）
+  或代码内 `apply_profile()`。
+- `evaluate_real.py` 把口径写进结果 JSON（`config.rules_profile`）；`data/metrics_real.json`、
+  `metrics_onnx.json` 已补标 `measured`。
+- **实测回归**：重跑 `evaluate_real.py` 得到 0.6808 / 5.10% / 22.58% / 72-21-5-93，与改造前逐位一致。
+
+> 对应盘点 P4-1（两套判定逻辑）、P4-15（主仓库 `docs/03-技术架构.md` 阈值表是旧配置）。
+> 那张表请直接换成 [`docs/技术口径.md`](docs/技术口径.md) 第一节。
+
+### 耗时口径：一个数，四个条件
+
+- README 2.1 与 `docs/模型卡片.md` 里的 **53.5 ms 作废**（未锁 `onnxruntime` 版本的旧数），
+  统一为 ONNX-CPU **72.7 ms**、torch-GPU **22.9 ms**（均为 `evaluate_real.py` 在 100 张上的均值）。
+- 启动自检的 8.8 / 31.7 ms、批处理的 6.9 / 7.1 ms 明确标注为「非指标口径」。
+  对应盘点 P4-10（单帧耗时三个版本）。
+
+### 指标：补置信区间，把「达标」说准
+
+- 新增 `tools/metric_ci.py` → `data/metrics_ci.json` + **`docs/指标置信区间.md`**（自动生成）。
+- 结论：误报率 5.1% 的 95% 区间 **2.2–11.4%**，上界越线 → 只能说「点估计达标」；
+  漏报率 22.6% 的区间 **15.3–32.1%**，下界仍高于 5% → 差距不是样本量造成的。
+- 对应盘点 P4-3（三项未达标）、P4-4（100 张够不够）。
+
+### 类别体系：一张表说清三层
+
+- 新增 **`docs/技术口径.md`** 第二节：数据集 9 类 → 模型输出 → 引擎类别 的完整映射，
+  并写明 **goggles / boots / gloves 有标注但没有模型**，PPT 不能写「四类检测」。
+- README 第四节标题下的「双模型串联」改为三模型，补来源与「是否自训」列，
+  给出答辩措辞：不能说「我们训练了安全帽模型」。对应盘点 P4-9、P4-11。
+
+### 可复现性
+
+- `datasets/*/data.yaml` 全部去掉绝对路径，改为相对 yaml 所在目录；生成脚本
+  （`make_vest.py` / `make_mix.py` / `fetch_helmet_p2.py` / `finetune.py`）同步改，重跑不会写回 `D:/...`。
+- 顺带修好两个本来坏着的配置：`ppe_test/data.yaml` 指向不存在的 `images/`（实际是 `train/images`、
+  `test/images`），`helmet_p2/data.yaml` 的 `val` 写成 `val/images`（实际是 `valid/images`）。
+- `verify_all.py` 新增 `--fetch`：一条命令补齐 3 项 SKIP 依赖的大件（约 110MB），不用再手翻 README。
+
+### 验收脚本：37 → 43 项
+
+新增 6 条硬检查，专防口径分叉：
+
+| 新增检查 | 拦什么 |
+|---|---|
+| `data.yaml 不含本机绝对路径` | 换台机器 clone 下来跑不动 |
+| `代码阈值与 config/thresholds.json 一致` | 有人改代码不改配置（或反着来） |
+| `交付指标标注了阈值口径` | 报出去的数字说不清是哪套阈值跑的 |
+| `技术页页脚标注判定阈值口径` | PPT 与代码各说各的 |
+| `两套口径的判定行为符合预期` | 阈值改了但判定没跟着变（P4-1 的分歧点） |
+| `指标与风险矩阵图已生成` | JSON 有数、图上没东西 |
+
+仓库直接跑 **43 项：40 PASS · 0 FAIL · 3 SKIP**；`--fetch` 补齐后 **43 项全 PASS**。
+
+### 新增出图与采集工具
+
+- `tools/plot_metrics.py` → `docs/figs/`：混淆矩阵、PR 曲线、L×S 风险矩阵，
+  1280×720 直接贴 PPT 第 11 / 13 页（对应盘点 P1-#10、P1-#12）。
+- `tools/collect_selfdata.py`：现场视频 → 去重抽帧 → 可标注目录（含空标注负样本、manifest、覆盖度核对）。
+  自采数据 0 张这一步从此是「跑命令」而不是「写代码」（对应盘点 P0-#3）。
+
+---
+
 ## v1.1.0 — 2026-11-01
 
 这一版不加架构、不换模型。主线是「把已经能跑的东西交付干净」：权重与评测集随仓库走、口径对齐、

@@ -5,6 +5,7 @@
     "imgsz": 640,
     "conf": 0.25,
     "backend": "torch",
+    "rules_profile": "measured",
     "device": "GPU cuda:0 NVIDIA GeForce RTX 5060 Laptop GPU（torch 2.14.1+cu130）"
   },
   "dataset": {

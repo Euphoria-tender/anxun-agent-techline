@@ -1,7 +1,8 @@
 # Chapian/PPE_detection · Roboflow PPE Detection v3 · CC BY 4.0
 # 来源: https://universe.roboflow.com/developing-automatic-surveillance-system-for-personal-protective-equipment-compliance-in-real-construction-sites-using-deep-neural-network-models/ppe-detection-9p0pu/dataset/3
-train: images
-val: images
-test: images
+# 路径相对本文件所在目录（不写 path 字段），换机器不用改
+train: train/images
+val: test/images
+test: test/images
 nc: 9
 names: ['boots', 'gloves', 'hardhat', 'no_boots', 'no_gloves', 'no_hardhat', 'no_vest', 'person', 'vest']

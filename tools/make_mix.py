@@ -17,6 +17,7 @@ YOLO 原生支持，标注目录靠把 images 换成 labels 自动定位，不�
 
 from __future__ import annotations
 
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -70,19 +71,23 @@ def main() -> int:
     st = remap_chapian()
     print(f"Chapian 并入：{st['images']} 张 / {st['boxes']} 框 -> {WORK.relative_to(ROOT)}")
 
+    MIX.mkdir(parents=True, exist_ok=True)
+
+    def rel(p: Path) -> str:
+        """相对 data.yaml 所在目录的路径——换机器 / 换盘符都不用改 yaml。"""
+        return Path(os.path.relpath(p, MIX)).as_posix()
+
     trains = []
     if (P2 / "train" / "images").exists():
         n = len(list((P2 / "train" / "images").glob("*.jpg")))
-        trains.append((P2 / "train" / "images").as_posix())
+        trains.append(rel(P2 / "train" / "images"))
         print(f"toborobot   ：{n} 张")
-    trains.append((WORK / "images").as_posix())
+    trains.append(rel(WORK / "images"))
 
-    val = (P2 / "valid" / "images").as_posix()
-    MIX.mkdir(parents=True, exist_ok=True)
+    val = rel(P2 / "valid" / "images")
     yaml = MIX / "data.yaml"
     yaml.write_text(
-        f"path: {ROOT.as_posix()}\n"
-        f"train:\n" + "".join(f"  - {t}\n" for t in trains) +
+        "train:\n" + "".join(f"  - {t}\n" for t in trains) +
         f"val: {val}\n"
         f"nc: 2\nnames: ['helmet', 'nohelmet']\n", encoding="utf-8")
 

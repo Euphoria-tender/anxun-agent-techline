@@ -1,0 +1,124 @@
+{
+  "kind": "metric-confidence-interval",
+  "generated_at": "2026-11-01T23:32:54",
+  "method": "Wilson score interval, 95% (z=1.96)，按人次计",
+  "note": "mAP 不给区间：自助法需要逐图 AP，当前 JSON 未落逐图结果",
+  "metrics": {
+    "data/metrics_real.json": {
+      "label": "helmet · torch-GPU",
+      "role": "handoff",
+      "rules_profile": "measured",
+      "fp_rate": {
+        "k": 5,
+        "n": 98,
+        "rate": 5.1,
+        "ci95": [
+          2.2,
+          11.39
+        ],
+        "target": 10.0,
+        "point_ok": true,
+        "robust_ok": false,
+        "one_case_pp": 1.02
+      },
+      "fn_rate": {
+        "k": 21,
+        "n": 93,
+        "rate": 22.58,
+        "ci95": [
+          15.27,
+          32.07
+        ],
+        "target": 5.0,
+        "point_ok": false,
+        "robust_ok": false,
+        "one_case_pp": 1.08
+      },
+      "mAP50": {
+        "value": 0.6808,
+        "target": 0.85,
+        "ci": null,
+        "why": "需逐图 AP 才能自助法；100 张上单图权重 1%，区间会很宽"
+      }
+    },
+    "data/metrics_onnx.json": {
+      "label": "helmet · ONNX-CPU",
+      "role": "handoff",
+      "rules_profile": "measured",
+      "fp_rate": {
+        "k": 5,
+        "n": 98,
+        "rate": 5.1,
+        "ci95": [
+          2.2,
+          11.39
+        ],
+        "target": 10.0,
+        "point_ok": true,
+        "robust_ok": false,
+        "one_case_pp": 1.02
+      },
+      "fn_rate": {
+        "k": 21,
+        "n": 93,
+        "rate": 22.58,
+        "ci95": [
+          15.27,
+          32.07
+        ],
+        "target": 5.0,
+        "point_ok": false,
+        "robust_ok": false,
+        "one_case_pp": 1.08
+      },
+      "mAP50": {
+        "value": 0.6808,
+        "target": 0.85,
+        "ci": null,
+        "why": "需逐图 AP 才能自助法；100 张上单图权重 1%，区间会很宽"
+      }
+    },
+    "data/metrics_vest.json": {
+      "label": "vest · torch-GPU",
+      "role": "reference",
+      "rules_profile": "unknown",
+      "fp_rate": {
+        "k": 12,
+        "n": 44,
+        "rate": 27.27,
+        "ci95": [
+          16.35,
+          41.85
+        ],
+        "target": 10.0,
+        "point_ok": false,
+        "robust_ok": false,
+        "one_case_pp": 2.27
+      },
+      "fn_rate": {
+        "k": 21,
+        "n": 185,
+        "rate": 11.35,
+        "ci95": [
+          7.55,
+          16.73
+        ],
+        "target": 5.0,
+        "point_ok": false,
+        "robust_ok": false,
+        "one_case_pp": 0.54
+      },
+      "mAP50": {
+        "value": 0.4524,
+        "target": 0.85,
+        "ci": null,
+        "why": "需逐图 AP 才能自助法；100 张上单图权重 1%，区间会很宽"
+      }
+    }
+  },
+  "summary": [
+    "误报率 5.1%（5/98），95% 区间 2.2–11.39%，目标 ≤10.0%。点估计达标，但区间上界越线——只能说「点估计达标」，不能说「稳定达标」。",
+    "漏报率 22.58%（21/93），95% 区间 15.27–32.07%，目标 ≤5.0%。区间下界 15.27% 仍高于目标 5.0%——差距不是 100 张样本量造成的，换更大的测试集也救不回来。",
+    "颗粒度：误报率每 1 例 ≈ 1.02 个百分点，漏报率每 1 例 ≈ 1.08 个百分点。100 张能分辨「差一个量级」，分辨不了「差 1–2 个点」。"
+  ]
+}

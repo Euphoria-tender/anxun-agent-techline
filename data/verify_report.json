@@ -1,7 +1,7 @@
 {
-  "version": "techline-v1.1.0",
-  "total": 37,
-  "passed": 34,
+  "version": "techline-v1.2.0",
+  "total": 43,
+  "passed": 40,
   "skipped": 3,
   "results": [
     {
@@ -44,7 +44,13 @@
       "line": "数据",
       "item": "1080p 复验素材",
       "ok": null,
-      "detail": "51MB，未随仓库分发（tools/make_1080_stream.py 可重建）"
+      "detail": "51MB，未随仓库分发；补齐：python tools/make_1080_stream.py（或加 --fetch 自动跑）"
+    },
+    {
+      "line": "数据",
+      "item": "data.yaml 不含本机绝对路径",
+      "ok": true,
+      "detail": "6 份均为相对路径，换机器不用改"
     },
     {
       "line": "模型",
@@ -92,7 +98,7 @@
       "line": "模型",
       "item": "三模型推理可跑",
       "ok": true,
-      "detail": "4 个框，2692.4 ms，标签 ['helmet', 'novest', 'person']"
+      "detail": "4 个框，2535.7 ms，标签 ['helmet', 'novest', 'person']"
     },
     {
       "line": "模型",
@@ -146,7 +152,25 @@
       "line": "指标",
       "item": "README 版本号与包版本一致",
       "ok": true,
-      "detail": "包版本 v1.1.0"
+      "detail": "包版本 v1.2.0"
+    },
+    {
+      "line": "指标",
+      "item": "代码阈值与 config/thresholds.json 一致",
+      "ok": true,
+      "detail": "口径 measured：0.2/0.3"
+    },
+    {
+      "line": "指标",
+      "item": "两套口径的判定行为符合预期",
+      "ok": true,
+      "detail": "measured=已佩戴 · conservative=待复核（同一输入 conf 0.52）"
+    },
+    {
+      "line": "指标",
+      "item": "交付指标标注了阈值口径（measured）",
+      "ok": true,
+      "detail": "metrics_real / metrics_onnx 均已标注"
     },
     {
       "line": "部署",
@@ -170,7 +194,7 @@
       "line": "技术页",
       "item": "文件存在",
       "ok": true,
-      "detail": "17.0 KB"
+      "detail": "17.1 KB"
     },
     {
       "line": "技术页",
@@ -225,6 +249,18 @@
       "item": "数字 0.681 与实测一致",
       "ok": true,
       "detail": ""
+    },
+    {
+      "line": "技术页",
+      "item": "页脚标注了判定阈值口径",
+      "ok": true,
+      "detail": "0.20 / 0.30"
+    },
+    {
+      "line": "技术页",
+      "item": "指标与风险矩阵图已生成",
+      "ok": true,
+      "detail": "confusion_matrix / pr_curve / risk_matrix"
     }
   ]
 }

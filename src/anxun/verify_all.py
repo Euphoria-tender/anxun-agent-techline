@@ -11,6 +11,7 @@
 ----
     python src/anxun/verify_all.py              # 全量（含起服务，约 30 秒）
     python src/anxun/verify_all.py --no-serve   # 跳过 HTTP 服务（约 10 秒）
+    python src/anxun/verify_all.py --fetch      # 先补齐 3 项 SKIP（下载 ~110MB，再验收）
     python src/anxun/verify_all.py --json out.json   # 结果另存 JSON
 
 退出码：0 = 全部通过；1 = 有 FAIL。
@@ -70,6 +71,26 @@ def head(t: str) -> None:
     print(f"\n=== {t} ===")
 
 
+# ---------------------------------------------------------------- 零、补齐大件
+def fetch_missing() -> None:
+    """把 3 项 SKIP 依赖的大件补上（训练集 60MB + 1080p 素材 51MB）。
+
+    为什么要做成一个开关：换台机器复现时，人工翻 README 找两条命令再依次跑，
+    这一步最容易漏。--fetch 把它变成验收脚本的一部分，跑完直接全 PASS。
+    """
+    head("零、补齐大件（--fetch）")
+    for script, note in (("tools/fetch_helmet_p2.py", "helmet_p2 训练集（约 60MB）"),
+                         ("tools/make_1080_stream.py", "1080p 复验素材（约 51MB）")):
+        p = ROOT / script
+        if not p.exists():
+            check("补齐", note, False, f"缺脚本 {script}")
+            continue
+        t0 = time.perf_counter()
+        r = subprocess.run([sys.executable, str(p)], cwd=str(ROOT))
+        check("补齐", note, r.returncode == 0,
+              f"退出码 {r.returncode} · {time.perf_counter() - t0:.0f}s")
+
+
 # ---------------------------------------------------------------- 一、数据
 def verify_data() -> None:
     head("一、数据")
@@ -122,7 +143,16 @@ def verify_data() -> None:
         check("数据", "1080p 复验素材分辨率", img is not None and min(img.shape[:2]) >= 1080,
               f"{img.shape[1]}×{img.shape[0]}" if img is not None else "读不到")
     else:
-        skip("数据", "1080p 复验素材", "51MB，未随仓库分发（tools/make_1080_stream.py 可重建）")
+        skip("数据", "1080p 复验素材",
+             "51MB，未随仓库分发；补齐：python tools/make_1080_stream.py（或加 --fetch 自动跑）")
+
+    # data.yaml 里写死绝对路径 = 换机器就找不到数据。这是「clone 下来跑不动」的隐形原因之一。
+    import re as _re
+    yamls = sorted((ROOT / "datasets").glob("*/data.yaml"))
+    bad = [y.parent.name for y in yamls
+           if _re.search(r"(?<![A-Za-z])[A-Za-z]:[\\/]", y.read_text(encoding="utf-8"))]
+    check("数据", "data.yaml 不含本机绝对路径", bool(yamls) and not bad,
+          f"仍写死：{bad}" if bad else f"{len(yamls)} 份均为相对路径，换机器不用改")
 
 
 # ---------------------------------------------------------------- 二、模型
@@ -248,6 +278,52 @@ def verify_metrics() -> None:
     from anxun import __version__
     check("指标", "README 版本号与包版本一致", f"v{__version__}" in readme, f"包版本 v{__version__}")
 
+    # 阈值只有一份定义（config/thresholds.json）。代码、文档、评测各自抄一份 = 两套口径，
+    # 这就是 v1.1.0 的 P4-1。这条检查专门钉住它。
+    from anxun import rules_engine as R
+    try:
+        cfg = R.load_config()
+        snap = R.profile_snapshot()
+        prof = cfg["profiles"][snap["profile"]]
+        diff = [k for k in ("conf_final", "conf_review")
+                if abs(float(prof[k]) - float(snap[k])) > 1e-9]
+        check("指标", "代码阈值与 config/thresholds.json 一致", not diff,
+              f"口径 {snap['profile']}：{snap['conf_review']}/{snap['conf_final']}"
+              + (f"，不一致字段 {diff}" if diff else ""))
+    except Exception as e:
+        check("指标", "代码阈值与 config/thresholds.json 一致", False,
+              f"{type(e).__name__}: {e}")
+
+    # 口径不是换个数字就算数，判定行为必须跟着变：同一个 0.52 的帽框，
+    # measured 判「已佩戴」、conservative 判「待复核」。这正是 P4-1 的分歧点，
+    # 也是「演示用保守配置」这套说法成立的前提。
+    try:
+        saved = R.active_profile()
+        p = R.Box("person", 0.9, 0, 0, 100, 300)
+        h = R.Box("helmet", 0.52, 28, 0, 72, 90)
+        R.apply_profile("measured")
+        a = R.judge_equipment(p, 0, [h], "helmet").status
+        R.apply_profile("conservative")
+        b = R.judge_equipment(p, 0, [h], "helmet").status
+        R.apply_profile(saved)
+        check("指标", "两套口径的判定行为符合预期", (a, b) == ("已佩戴", "待复核"),
+              f"measured={a} · conservative={b}（同一输入 conf 0.52）")
+    except Exception as e:
+        check("指标", "两套口径的判定行为符合预期", False, f"{type(e).__name__}: {e}")
+
+    # 交出去的数字必须能说清是哪套阈值跑的，否则被追问就答不上来
+    untagged = []
+    for rel in ("data/metrics_real.json", "data/metrics_onnx.json"):
+        p = ROOT / rel
+        if not p.exists():
+            continue
+        tag = ((json.loads(p.read_text(encoding="utf-8")).get("config") or {})
+               .get("rules_profile"))
+        if tag != "measured":
+            untagged.append(f"{rel}={tag!r}")
+    check("指标", "交付指标标注了阈值口径（measured）", not untagged,
+          "、".join(untagged) if untagged else "metrics_real / metrics_onnx 均已标注")
+
 
 # ---------------------------------------------------------------- 四、部署
 def verify_deploy(serve: bool) -> None:
@@ -321,15 +397,34 @@ def verify_slides() -> None:
     for num in ("5.1", "22.6", "0.681"):
         check("技术页", f"数字 {num} 与实测一致", num in t, "")
 
+    # 页脚要写明阈值口径：P11 报的四个数只在 measured 口径下成立
+    from anxun import rules_engine as R
+    cf, cr = R.CONF_FINAL, R.CONF_REVIEW
+    check("技术页", "页脚标注了判定阈值口径",
+          f"{cf:.2f}" in t and f"{cr:.2f}" in t, f"{cr:.2f} / {cf:.2f}")
+
+    # PPT 第 11/13 页要贴图，JSON 有数但没图等于没做
+    figs = ["confusion_matrix.png", "pr_curve.png", "risk_matrix.png"]
+    missing = [f for f in figs
+               if not (ROOT / "docs" / "figs" / f).exists()
+               or (ROOT / "docs" / "figs" / f).stat().st_size < 10_000]
+    check("技术页", "指标与风险矩阵图已生成", not missing,
+          f"缺 {missing}，跑 python tools/plot_metrics.py" if missing
+          else "confusion_matrix / pr_curve / risk_matrix")
+
 
 # ---------------------------------------------------------------- 汇总
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-serve", action="store_true")
+    ap.add_argument("--fetch", action="store_true",
+                    help="先跑 tools/ 里的两个脚本补齐大件，再验收（下载约 110MB）")
     ap.add_argument("--json", default="")
     args = ap.parse_args()
 
     print(f"交付物验收 · {ROOT}")
+    if args.fetch:
+        fetch_missing()
     verify_data()
     verify_models()
     verify_metrics()

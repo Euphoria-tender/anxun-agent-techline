@@ -23,39 +23,147 @@
 
 from __future__ import annotations
 
+import json
+import os
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Sequence
 
 
 # ============================================================
-# 一、阈值配置
+# 一、阈值配置（唯一事实来源：config/thresholds.json）
+#
+# 为什么改成读配置文件
+# --------------------
+# v1.1.0 之前阈值是写死的模块常量，结果主仓库的 demo 与这里的评测各有一套：
+# demo 用 0.60/0.40（四态齐全，适合演示），评测用 0.30/0.20（漏报最低，适合报数）。
+# 同一份作品两个口径，评委只要先跑评测再跑 demo 就会发现判定结果不一致。
+#
+# 现在只有一份定义（config/thresholds.json），代码、文档、验收脚本都读它：
+#   measured      实测口径 —— 交付与评测默认，四个指标就是它测的
+#   conservative  保守口径 —— 演示用，阈值更严，能看见「待复核」这一档
+#
+# 切换方式（三选一，优先级从高到低）：
+#   1) 环境变量 ANXUN_RULES_PROFILE=conservative
+#   2) 命令行 --profile conservative（app.py / evaluate_real.py 已接）
+#   3) 代码里 rules_engine.apply_profile("conservative")
+#
+# ⚠️ 换口径会改变业务指标，不会改变模型。要报数就用 measured，别混。
+CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "thresholds.json"
 
-# v1 阈值重标定（100 张真实测试集，CF × IOU 二维网格，见 data/sweep_rules.json）
-#   初版 0.60/0.40/0.30/0.60 → 误报 11.2% / 漏报 38.7%
-#   现值 0.30/0.20/0.25/0.60 → 误报  7.1% / 漏报 24.7%
-# 做过的稳定性检查：测试集对半切开，现值误报 6.8% / 7.7%（稳），
-# 原值 8.5% / 15.4%（波动大）——现值不仅低，而且稳。
-# ⚠️ 仍然是在测试集上选的，属乐观估计；自采数据到位后必须复核。
-CONF_FINAL = 0.30          # >= 此值：直接下结论
-CONF_REVIEW = 0.20         # [此值, CONF_FINAL)：转人工复核
-                           # <  CONF_REVIEW ：丢弃，不输出
+_REQUIRED = ("conf_final", "conf_review", "head_region_ratio", "head_width_ratio",
+             "min_person_area", "min_aspect", "equip")
 
-HELMET_IOU_MIN = 0.25      # 安全帽框与头部区域的 IoU 阈值（0.30→0.25：误报 11.2%→7.1%）
-HEAD_REGION_RATIO = 0.30   # 头部区域 = 人员框上部 30%
-HEAD_WIDTH_RATIO = 0.44    # 头部区域横向只取人员框中间的 44%（头宽 ≈ 0.44 肩宽）
-                           # v1 校准：原实现取整个人员框宽度，导致安全帽框（约占框宽 42%）
-                           # 与头部区域的 IoU 恒在 0.18 左右，正确佩戴会被判成「未佩戴」。
-                           # 收窄到解剖比例后，正常佩戴的 IoU ≈ 0.41，阈值 0.30 才成立。
 
-CONTAIN_MIN = 0.60         # 装备框「落在区域内」的比例下限。
-                           # 护目镜这类小目标，框面积只有面部区域的 8%，IoU 永远过不了 0.30，
-                           # 所以小目标改用包含度：装备框有 60% 以上落在该区域内即视为佩戴。
-# 1.60 -> 3.00：扫参发现原模型把框画得偏大（帽框面积约为头部区域 0.86 倍，
-# 但分布右尾能到 2 倍以上），1.6 会把一批「真的戴了帽」的正确框整条拒掉，
-# 于是合规的人被判未佩戴。放宽到 3.0 后误报 7.1% -> 5.1%，漏报不变。
-# 数据见 data/sweep_geom.json（同一网格下微调模型仍全面更差，见 README 5.4）
-MAX_EQUIP_RATIO = 3.00     # 装备框面积不得超过区域面积的 3.0 倍
+def load_config(path: str | Path | None = None) -> dict:
+    """读阈值配置。文件缺失直接报错，不做静默降级——阈值悄悄跑回默认值最危险。"""
+    p = Path(path) if path else CONFIG_PATH
+    if not p.exists():
+        raise FileNotFoundError(
+            f"阈值配置缺失：{p}。它是判定口径的唯一事实来源，不能缺省。")
+    cfg = json.loads(p.read_text(encoding="utf-8"))
+    for name, prof in cfg.get("profiles", {}).items():
+        missing = [k for k in _REQUIRED if k not in prof]
+        if missing:
+            raise ValueError(f"阈值 profile「{name}」缺字段：{missing}")
+        if not 0 < prof["conf_review"] < prof["conf_final"] < 1:
+            raise ValueError(
+                f"阈值 profile「{name}」不合法：要求 0 < conf_review < conf_final < 1，"
+                f"实际 {prof['conf_review']} / {prof['conf_final']}")
+    return cfg
+
+
+CFG = load_config()
+PROFILES: dict[str, dict] = CFG["profiles"]
+DEFAULT_PROFILE = CFG.get("default_profile", "measured")
+
+# 当前生效的口径。环境变量优先，方便一台机器上同时跑演示与评测。
+PROFILE = (os.environ.get("ANXUN_RULES_PROFILE") or "").strip() or DEFAULT_PROFILE
+
+# 下面这些全局量在 apply_profile() 里被赋值；保留模块级名字是为了兼容既有调用
+# （sweep_rules.py / sweep_geom.py 直接改它们做扫参，改完自己还原）。
+CONF_FINAL = 0.0
+CONF_REVIEW = 0.0
+HELMET_IOU_MIN = 0.0
+HEAD_REGION_RATIO = 0.0
+HEAD_WIDTH_RATIO = 0.0
+CONTAIN_MIN = 0.0
+MAX_EQUIP_RATIO = 0.0
+MIN_PERSON_AREA = 0.0
+MIN_ASPECT = 0.0
+MIN_PERSON_AREA_RATIO = 0.0
+EQUIP_OVERRIDE: dict[str, dict[str, float]] = {}
+
+
+def apply_profile(name: str) -> dict:
+    """切换阈值口径并返回生效后的快照。
+
+    只改模块级全局量，不动模型、不动数据。切换是幂等的。
+    """
+    global PROFILE, CONF_FINAL, CONF_REVIEW, HELMET_IOU_MIN, HEAD_REGION_RATIO
+    global HEAD_WIDTH_RATIO, CONTAIN_MIN, MAX_EQUIP_RATIO, MIN_PERSON_AREA
+    global MIN_ASPECT, MIN_PERSON_AREA_RATIO, EQUIP_OVERRIDE
+
+    if name not in PROFILES:
+        raise KeyError(f"未知阈值口径「{name}」，可选：{sorted(PROFILES)}")
+    prof = PROFILES[name]
+    PROFILE = name
+    CONF_FINAL = float(prof["conf_final"])
+    CONF_REVIEW = float(prof["conf_review"])
+    HEAD_REGION_RATIO = float(prof["head_region_ratio"])
+    HEAD_WIDTH_RATIO = float(prof["head_width_ratio"])
+    MIN_PERSON_AREA = float(prof["min_person_area"])
+    MIN_ASPECT = float(prof["min_aspect"])
+
+    equip = {k: dict(v) for k, v in prof["equip"].items()}
+    helmet = equip.get("helmet", {})
+    HELMET_IOU_MIN = float(helmet.get("iou_min", 0.25))
+    CONTAIN_MIN = float(helmet.get("contain_min", 0.60))
+    MAX_EQUIP_RATIO = float(helmet.get("max_ratio", 3.0))
+    # helmet 用模块常量（扫参入口），其他装备走覆盖表
+    EQUIP_OVERRIDE = {k: v for k, v in equip.items() if k != "helmet"}
+
+    MIN_PERSON_AREA_RATIO = MIN_PERSON_AREA / (1920 * 1080)
+    return profile_snapshot()
+
+
+def active_profile() -> str:
+    """当前生效的口径名（写进评测 JSON，谁都能看出这组数是哪套阈值跑的）。"""
+    return PROFILE
+
+
+def profile_snapshot() -> dict:
+    """当前生效阈值的快照。接口、报告、验收脚本都从这里取数，避免各拿各的。"""
+    prof = PROFILES.get(PROFILE, {})
+    return {
+        "profile": PROFILE,
+        "label": prof.get("label", PROFILE),
+        "conf_final": CONF_FINAL,
+        "conf_review": CONF_REVIEW,
+        "iou_min": HELMET_IOU_MIN,
+        "contain_min": CONTAIN_MIN,
+        "max_equip_ratio": MAX_EQUIP_RATIO,
+        "head_region_ratio": HEAD_REGION_RATIO,
+        "head_width_ratio": HEAD_WIDTH_RATIO,
+        "min_person_area": MIN_PERSON_AREA,
+        "min_person_area_ratio": round(MIN_PERSON_AREA_RATIO, 6),
+        "min_aspect": MIN_ASPECT,
+        "equip_override": {k: dict(v) for k, v in EQUIP_OVERRIDE.items()},
+        "config_path": str(CONFIG_PATH),
+        "updated_at": CFG.get("updated_at", ""),
+    }
+
+
+apply_profile(PROFILE)
+
+# 各口径的来历，留在代码里比留在 PPT 里可靠
+#   measured      100 张真实测试集 CF × IOU 二维网格扫出（data/sweep_rules.json）
+#                 0.30/0.20/0.25/3.0 → 误报 5.1% / 漏报 22.58%
+#                 稳定性：测试集对半切，误报 6.8% / 7.7%；旧口径 8.5% / 15.4%
+#   conservative  v1.0 初版 0.60/0.40/0.30 → 误报 11.2% / 漏报 38.7%
+#                 demo 用它是为了让「待复核」这一档真的出现（0.52 的样本会落进去）
+# ⚠️ 两套都是在测试集上选的，属乐观估计；自采数据到位后必须复核。
 
 # 按装备分离的几何阈值
 # ----------------------
@@ -69,12 +177,8 @@ MAX_EQUIP_RATIO = 3.00     # 装备框面积不得超过区域面积的 3.0 倍
 # 而 helmet 降到 0.10 会把误报从 5.1% 抬到 9.2%。所以只能分开。
 #
 # 实现上 helmet 继续用上面的模块常量（sweep_rules.py / sweep_geom.py 直接改它们，
-# 是 helmet 的扫参入口）；其他装备在这里覆盖。没有覆盖的装备退回模块常量。
-EQUIP_OVERRIDE: dict[str, dict[str, float]] = {
-    "vest": {"iou_min": 0.10, "contain_min": 0.60, "max_ratio": 6.0},
-}
-
-
+# 是 helmet 的扫参入口）；其他装备由 config/thresholds.json 的 equip 段给出覆盖，
+# apply_profile() 时填进 EQUIP_OVERRIDE。没有覆盖的装备退回 helmet 那套。
 def equip_cfg(equip: str) -> dict[str, float]:
     """取某个装备的几何阈值；没有专门配置的用 helmet 那套常量。"""
     base = {"iou_min": HELMET_IOU_MIN, "contain_min": CONTAIN_MIN,
@@ -86,7 +190,7 @@ def equip_cfg(equip: str) -> dict[str, float]:
 # 这一条是拿真实数据跑出来的——只用正向证据时，漏报率一度到 45%。
 NEG_LABEL = {"helmet": "nohelmet"}
 
-MIN_PERSON_AREA = 8000.0   # 人员框面积下限（像素^2），1920×1080 下的标定值
+# 人员框面积下限（像素^2），1920×1080 下的标定值。数值见 config: measured.min_person_area
 
 # 人员框高宽比下限，小于此值视为半身/蹲姿，不做判定。
 # 1.20 -> 0.90（v1.1.0）：把这条闸门逐例复核了一遍。
@@ -96,13 +200,13 @@ MIN_PERSON_AREA = 8000.0   # 人员框面积下限（像素^2），1920×1080 �
 #   强行判会拿后背当头部，那才是真的在编证据。
 # 代价要讲清楚：这条闸门原本防的是「头部不在框内上部」，放宽后对弯腰作业会多一分风险。
 # 实测口径：漏报 24.73% -> 22.58%（93 个违规人次里恢复 2 例），误报 5.10% 不变。
-MIN_ASPECT = 0.90
+# 现值 0.90，见 config: measured.min_aspect。
 
 # v1 修正：绝对面积阈值不能跨分辨率用。
 # 8000px² @ 1920×1080 相当于画面面积的 0.386%；换成 640×640 的现场照片，
 # 同样远近的人只剩 1/9 像素，会被整片误判成「无法判定」——实测这一条吃掉了 22% 的漏报。
 # 现在按画面面积占比判，与分辨率解耦；1920×1080 下与原来的 8000px² 完全等价。
-MIN_PERSON_AREA_RATIO = MIN_PERSON_AREA / (1920 * 1080)
+# 占比由 apply_profile() 从 min_person_area 换算，不单独配。
 
 
 def min_person_area(width: float, height: float) -> float:
@@ -210,9 +314,14 @@ class Box:
     def cy(self) -> float:
         return (self.y1 + self.y2) / 2
 
-    def top_region(self, ratio: float = HEAD_REGION_RATIO,
+    def top_region(self, ratio: float | None = None,
                    width_ratio: float = 1.0) -> "Box":
-        """返回框的顶部区域（默认上部 30%，横向按 width_ratio 居中收窄）。"""
+        """返回框的顶部区域（默认上部 30%，横向按 width_ratio 居中收窄）。
+
+        ratio 传 None 时取当前口径的 head_region_ratio，而不是函数定义时的常量快照——
+        否则切换阈值口径后，这里会悄悄用旧值。
+        """
+        ratio = HEAD_REGION_RATIO if ratio is None else ratio
         half = self.w * width_ratio / 2.0
         return Box(self.label, self.conf, self.cx - half, self.y1,
                    self.cx + half, self.y1 + self.h * ratio)

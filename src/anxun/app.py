@@ -214,7 +214,17 @@ def main():
                     help="auto=有显卡用显卡；onnx=不依赖 torch，任意电脑可跑")
     ap.add_argument("--device", default="", help="cpu 强制 CPU；留空自动")
     ap.add_argument("--vest-model", default="", help="反光背心权重；留空则 models/vest.pt 存在就用")
+    ap.add_argument("--profile", default="", choices=("", "measured", "conservative"),
+                    help="判定阈值口径；留空读 ANXUN_RULES_PROFILE 或 config 默认值（measured）。"
+                         "演示想要四态齐全就用 conservative")
     args = ap.parse_args()
+
+    if args.profile:
+        from anxun import rules_engine
+        snap = rules_engine.apply_profile(args.profile)
+        print(f"阈值口径：{snap['label']}（{snap['profile']}）"
+              f"  conf {snap['conf_review']}/{snap['conf_final']}"
+              f"  IoU {snap['iou_min']}")
 
     try:
         det, note, bname = backend_mod.build(

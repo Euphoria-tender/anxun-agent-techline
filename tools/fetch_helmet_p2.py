@@ -139,8 +139,9 @@ def main() -> int:
               f"框 {st['boxes']:>6}  空标注 {st['empty']}")
 
     yaml = OUT / "data.yaml"
+    # 不写 path：ultralytics 以 yaml 所在目录为根，路径相对它即可，换机器不用改
     yaml.write_text(
-        f"path: {OUT.as_posix()}\ntrain: train/images\nval: val/images\n"
+        f"train: train/images\nval: val/images\n"
         f"nc: {len(NAMES)}\nnames: {NAMES}\n", encoding="utf-8")
     print(f"\n-> {yaml}")
     print("下一步：python src/anxun/finetune.py --data datasets/helmet_p2/data.yaml")

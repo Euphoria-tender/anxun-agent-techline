@@ -5,6 +5,7 @@
     "imgsz": 640,
     "conf": 0.25,
     "backend": "onnx",
+    "rules_profile": "measured",
     "device": "CPU（onnxruntime，不依赖 torch）"
   },
   "dataset": {

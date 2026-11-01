@@ -19,29 +19,21 @@ from typing import Sequence
 
 from .rules_engine import (Box, Region, Event, aggregate_temporal, build_event,
                            judge_frame, make_ticket, grade_of, GRADE_HEX,
-                           min_person_area, CONF_FINAL, CONF_REVIEW,
-                           HELMET_IOU_MIN, HEAD_REGION_RATIO, HEAD_WIDTH_RATIO,
-                           CONTAIN_MIN, MIN_PERSON_AREA, MIN_PERSON_AREA_RATIO,
-                           MIN_ASPECT, L_TABLE, S_MAP)
+                           min_person_area, profile_snapshot, L_TABLE, S_MAP)
 
 FRAME_COUNT = 3          # 视频流的时序窗口：连续 3 帧一致才定论
 GRADE_ORDER = {"蓝色": 1, "黄色": 2, "橙色": 3, "红色": 4}
 
 
 def thresholds() -> dict:
-    """把阈值原样吐出去，答辩时可以直接指着屏幕念依据。"""
-    return {
-        "conf_final": CONF_FINAL,
-        "conf_review": CONF_REVIEW,
-        "iou_min": HELMET_IOU_MIN,
-        "contain_min": CONTAIN_MIN,
-        "head_region_ratio": HEAD_REGION_RATIO,
-        "head_width_ratio": HEAD_WIDTH_RATIO,
-        "min_person_area": MIN_PERSON_AREA,
-        "min_person_area_ratio": round(MIN_PERSON_AREA_RATIO, 6),
-        "min_aspect": MIN_ASPECT,
-        "temporal_need": FRAME_COUNT,
-    }
+    """把当前生效的阈值原样吐出去，答辩时可以直接指着屏幕念依据。
+
+    数据源是 config/thresholds.json（经 rules_engine.profile_snapshot()），
+    不在本文件里另抄一份——抄一份就是下一个「两套阈值」。
+    """
+    snap = profile_snapshot()
+    snap["temporal_need"] = FRAME_COUNT
+    return snap
 
 
 def inspect(scene: dict, region: Region, detector,

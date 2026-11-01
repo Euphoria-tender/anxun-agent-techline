@@ -116,9 +116,10 @@ def main() -> int:
         st = remap("train", keep_every=5)      # 80 训练 / 20 验证
         print(f"训练集重映射完成：{st['images']} 张（val {st['val']}）、"
               f"{st['boxes']} 个框、空标注 {st['empty']} 张")
+        # 不写 path：以 yaml 所在目录为根，路径相对它，换机器不用改
         (WORK / "data.yaml").write_text(
-            f"path: {WORK.as_posix()}\ntrain: images/train\nval: images/val\n"
-            f"nc: 2\nnames: ['hardhat', 'no_hardhat']\n", encoding="utf-8")
+            "train: images/train\nval: images/val\n"
+            "nc: 2\nnames: ['hardhat', 'no_hardhat']\n", encoding="utf-8")
         data_yaml = WORK / "data.yaml"
 
     from ultralytics import YOLO
