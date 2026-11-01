@@ -7,7 +7,7 @@
 
     torch + CUDA     .pt 权重 + torch[cuXXX]     最快（本机 RTX 5060：25.7 ms）
     ONNX + CUDA      .onnx + onnxruntime-gpu     快，且模型只有 55MB
-    ONNX + CPU       .onnx + onnxruntime         任意电脑可跑（本机 CPU：53.5 ms）
+    ONNX + CPU       .onnx + onnxruntime         任意电脑可跑（本机 CPU：≈46 ms，三模型并发）
 
 选路策略（prefer="auto"）：
 

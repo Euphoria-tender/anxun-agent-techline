@@ -12,7 +12,7 @@
 
 为什么要导：`.pt` 要装 torch（本机那个 cu130 轮子 1.99 GB），
 换台电脑基本装不上。ONNX 两个模型合计 55 MB，`onnxruntime` 只有 15 MB，
-CPU 上还比 torch 快 2.6 倍（53.5 ms vs 138 ms，同一台机器实测）。
+CPU 上还比 torch 快 3 倍（≈46 ms vs 138 ms，同一台机器实测；46 是三模型并发后的数）。
 
 注意：导出需要 torch（一次性），运行不需要。
 没有 torch 的机器直接拷 `models/onnx/` 整个目录过去就行。

@@ -6,6 +6,7 @@
     "conf": 0.25,
     "backend": "onnx",
     "rules_profile": "measured",
+    "metric_scope": "matched",
     "device": "CPU（onnxruntime，不依赖 torch）"
   },
   "dataset": {
@@ -17,7 +18,7 @@
     "persons_pred": 296,
     "eval_note": "真值佩戴状态由标注框推导：Hardhat 落在头部区域=合规，只检出 NO-Hardhat=违规；两者都无则跳过。判定由引擎给出。"
   },
-  "generated_at": "2026-11-01T19:13:36",
+  "generated_at": "2026-11-02T02:43:52",
   "results": {
     "n_images": 100,
     "n_boxes": 549,
@@ -2787,6 +2788,7 @@
         }
       ]
     },
+    "metric_scope": "matched",
     "fp_rate": 5.1,
     "fn_rate": 22.58,
     "confusion": {
@@ -2797,6 +2799,37 @@
     },
     "n_compliant": 98,
     "n_violating": 93,
+    "scope_detail": {
+      "matched": {
+        "fp_rate": 5.1,
+        "fn_rate": 22.58,
+        "n_compliant": 98,
+        "n_violating": 93,
+        "confusion": {
+          "tp": 72,
+          "fn": 21,
+          "fp": 5,
+          "tn": 93
+        }
+      },
+      "e2e": {
+        "fp_rate": 4.67,
+        "fn_rate": 31.43,
+        "n_compliant": 107,
+        "n_violating": 105,
+        "confusion": {
+          "tp": 72,
+          "fn": 33,
+          "fp": 5,
+          "tn": 102
+        }
+      }
+    },
+    "coverage": {
+      "n_truth_known": 212,
+      "n_judged": 191,
+      "rate": 90.09
+    },
     "fn_cases": [
       {
         "image_id": "0209-00176-076b1_jpg.rf.bf4a342fb9fad43ac51f6f4fac9e677e",
@@ -2821,6 +2854,13 @@
       },
       {
         "image_id": "147_jpg.rf.09f3b8ee4afb9ee71c32d647f1f8b34b",
+        "person": "G0",
+        "equip": "helmet",
+        "judged": "已佩戴",
+        "why": ""
+      },
+      {
+        "image_id": "147_jpg.rf.09f3b8ee4afb9ee71c32d647f1f8b34b",
         "person": "G1",
         "equip": "helmet",
         "judged": "已佩戴",
@@ -2829,13 +2869,6 @@
       {
         "image_id": "147_jpg.rf.09f3b8ee4afb9ee71c32d647f1f8b34b",
         "person": "G2",
-        "equip": "helmet",
-        "judged": "已佩戴",
-        "why": ""
-      },
-      {
-        "image_id": "147_jpg.rf.09f3b8ee4afb9ee71c32d647f1f8b34b",
-        "person": "G0",
         "equip": "helmet",
         "judged": "已佩戴",
         "why": ""
@@ -2884,9 +2917,9 @@
       }
     ],
     "latency": {
-      "mean_ms": 72.69,
-      "p95_ms": 82.39,
-      "max_ms": 103.81,
+      "mean_ms": 46.11,
+      "p95_ms": 49.06,
+      "max_ms": 56.77,
       "n": 100,
       "pipeline_mean_ms": null
     },

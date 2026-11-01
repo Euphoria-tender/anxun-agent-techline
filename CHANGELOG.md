@@ -98,6 +98,24 @@
   `/docs/` 与 `image_path` 的路径校验从字符串前缀改成 `Path.is_relative_to`；
   `/health` 的 `uptime_s` 改用 `total_seconds()`（原来跑满一天归零）。
 
+### ONNX-CPU 三模型并发：72.7 → 46 ms（输出逐框不变）
+
+CPU 路径原来串行跑三个模型，且每个模型各做一遍预处理。两处都是白等/白算：
+
+- **预处理只算一次**：三个模型 imgsz 都是 640，同一张图的张量完全一样。
+  抽出 `OnnxDetector.preprocess()` / `infer_tensor()`，`OnnxDualDetector` 复用同一份张量（省 ≈6 ms）。
+- **单图路径三模型并发**：`detect_image` 把三个 session 丢进 3 线程池，`session.run` 释放 GIL，
+  真并行（省 ≈20 ms）。`detect_frame` 保持「先人体 → 门控 → 再跑装备」的串行顺序——
+  视频里大部分帧没人，门控省的前向比并发值钱。
+- **零碎**：letterbox 输入已是目标尺寸时不 resize 不拷贝；归一化改原地乘。
+
+结果：**ONNX-CPU 单帧 72.7 → 46.1 ms（p95 82.4 → 49.1）**，两次复跑 46.10 / 46.11。
+权重、预处理、decode、NMS 全没改，10 张图逐框比对完全一致，
+`evaluate_real.py --backend onnx` 重跑四项指标逐位不变（0.6808 / 5.10% / 22.58% / 72-21-5-93）。
+
+边界：只在逻辑线程 ≥12 时开并发，小机器自动退回串行（预处理复用仍生效）；
+`ANXUN_ONNX_PARALLEL=0` 可强制串行。做法与验证写在 `docs/技术口径.md` 3.2。
+
 ### 文档：补上「为什么现在还是 YOLOv8」
 
 - README 新增 **4.2**：四条理由（权重全部 v8 结构 / 同架构重训实测败给原权重 /

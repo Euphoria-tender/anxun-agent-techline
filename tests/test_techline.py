@@ -103,6 +103,31 @@ class TestAvailableEquips(unittest.TestCase):
                          "缺背心权重却仍在判背心：会把「没框」当成「没穿」")
 
 
+class TestPreprocess(unittest.TestCase):
+    """letterbox 的快路径与缩放映射，别为了省拷贝把坐标算错。"""
+
+    def test_noop_when_already_square(self):
+        import numpy as np
+        from anxun.onnx_backend import letterbox
+        img = np.zeros((640, 640, 3), dtype=np.uint8)
+        out, r, pad = letterbox(img, 640)
+        self.assertIs(out, img)          # 不 resize 不拷贝
+        self.assertEqual(r, 1.0)
+        self.assertEqual(pad, (0, 0))
+
+    def test_letterbox_maps_back_correctly(self):
+        import numpy as np
+        from anxun.onnx_backend import letterbox
+        img = np.zeros((480, 640, 3), dtype=np.uint8)
+        out, r, pad = letterbox(img, 640)
+        self.assertEqual(out.shape, (640, 640, 3))
+        self.assertAlmostEqual(r, 1.0)
+        # 上下各留 80 px 灰边
+        self.assertEqual(pad[0], 0)
+        self.assertIn(pad[1], (79, 80))
+        self.assertTrue((out[0, 0] == 114).all())
+
+
 class TestTemporal(unittest.TestCase):
     """单图不许硬凑多帧；真多图才做时序聚合。"""
 

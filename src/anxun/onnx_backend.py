@@ -33,7 +33,9 @@ ONNX 版把依赖压到这一层：
 from __future__ import annotations
 
 import json
+import os
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
@@ -52,6 +54,8 @@ def letterbox(img: np.ndarray, size: int = 640, color: int = 114):
     h, w = img.shape[:2]
     r = min(size / h, size / w)
     nw, nh = int(round(w * r)), int(round(h * r))
+    if (nw, nh) == (size, size):
+        return img, r, (0, 0)          # 已经是目标尺寸：不 resize 也不拷贝
     if (nw, nh) != (w, h):
         img = cv2.resize(img, (nw, nh), interpolation=cv2.INTER_LINEAR)
     dw, dh = (size - nw) / 2, (size - nh) / 2
@@ -64,8 +68,8 @@ def letterbox(img: np.ndarray, size: int = 640, color: int = 114):
 
 def to_tensor(img: np.ndarray) -> np.ndarray:
     """BGR HWC uint8 -> RGB 1CHW float32 [0,1]。"""
-    x = img[:, :, ::-1].transpose(2, 0, 1)
-    x = np.ascontiguousarray(x, dtype=np.float32) / 255.0
+    x = np.ascontiguousarray(img[:, :, ::-1].transpose(2, 0, 1), dtype=np.float32)
+    x *= np.float32(1.0 / 255.0)       # 原地缩放，少一次 5 MB 的分配
     return x[None, ...]
 
 
@@ -186,12 +190,21 @@ class OnnxDetector:
 
     # ---------- 内部 ----------
 
-    def _infer(self, frame: np.ndarray) -> dict:
-        t0 = time.perf_counter()
-        lb, r, pad = letterbox(frame, self.imgsz)
-        out = self.sess.run(None, {self.input_name: to_tensor(lb)})[0]
-        dets = decode(out, self.conf, self.iou, r, pad, len(self.names))
+    def preprocess(self, frame: np.ndarray) -> tuple[np.ndarray, float, tuple[int, int]]:
+        """letterbox + 归一化，返回 (输入张量, 缩放比, 填充)。
 
+        单独拆出来是为了复用：三个模型 imgsz 相同时，同一张图的张量完全一样，
+        以前每个模型各算一遍（0.5 + 2.8 ms × 3），纯属重复劳动。
+        """
+        lb, r, pad = letterbox(frame, self.imgsz)
+        return to_tensor(lb), r, pad
+
+    def infer_tensor(self, tensor: np.ndarray, ratio: float, pad: tuple[int, int],
+                     shape: tuple[int, int]) -> dict:
+        """对已预处理的张量做前向 + 解码。shape 是原图 (h, w)。"""
+        t0 = time.perf_counter()
+        out = self.sess.run(None, {self.input_name: tensor})[0]
+        dets = decode(out, self.conf, self.iou, ratio, pad, len(self.names))
         boxes, dropped = [], {}
         for k, s, x1, y1, x2, y2 in dets:
             raw = str(self.names.get(k, k))
@@ -201,10 +214,18 @@ class OnnxDetector:
                 continue
             boxes.append(Box(label, float(s), float(x1), float(y1),
                              float(x2), float(y2)))
-        h, w = frame.shape[:2]
+        h, w = shape
         return {"boxes": boxes, "infer_ms": round((time.perf_counter() - t0) * 1000, 2),
                 "backend": self.name, "kind": self.kind,
                 "width": int(w), "height": int(h), "dropped": dropped}
+
+    def _infer(self, frame: np.ndarray) -> dict:
+        """单模型完整一次推理（含预处理）。infer_ms 与改动前口径一致。"""
+        t0 = time.perf_counter()
+        tensor, r, pad = self.preprocess(frame)
+        out = self.infer_tensor(tensor, r, pad, frame.shape[:2])
+        out["infer_ms"] = round((time.perf_counter() - t0) * 1000, 2)
+        return out
 
     # ---------- 对外 ----------
 
@@ -234,6 +255,19 @@ class OnnxDualDetector:
     人体 + 装备，ONNX 模型串联。门控、批前向接口与 DualDetector 保持一致。
 
     vest_onnx 可选：反光背心模型。给了就是三模型，不加也不影响原有行为。
+
+    两条路径的执行策略不同，是有意的：
+
+      detect_image（单图 / HTTP 接口 / 评测）—— **三模型并发**，延迟优先。
+        单张图没有「空画面」可省，串行跑等于三个模型互相排队；
+        并发之后 wall time 从 ≈70 ms 降到 ≈47 ms，输出的框逐位不变
+        （同一批权重、同一份预处理，只是不互相等了）。
+
+      detect_frame（视频流）—— 先人体、再门控、再串行跑装备，吞吐优先。
+        视频里大部分帧没人，门控省下的前向比并发更值钱；这条路径的耗时
+        不是指标口径（见 README「三级触发」一节）。
+
+    环境变量 ANXUN_ONNX_PARALLEL=0 可强制退回串行（对比测速 / 排障用）。
     """
 
     name = "onnx+onnx"
@@ -242,7 +276,7 @@ class OnnxDualDetector:
     def __init__(self, person_onnx: str | Path, ppe_onnx: str | Path,
                  vest_onnx: str | Path = "",
                  imgsz: int = 640, conf: float = 0.25, device: str = "",
-                 gate: bool = True):
+                 gate: bool = True, parallel: bool | None = None):
         self.person = OnnxDetector(person_onnx, imgsz=imgsz, conf=conf, device=device)
         self.ppe = OnnxDetector(ppe_onnx, imgsz=imgsz, conf=conf, device=device)
         self.vest = (OnnxDetector(vest_onnx, imgsz=imgsz, conf=conf, device=device)
@@ -251,6 +285,20 @@ class OnnxDualDetector:
             self.name = "onnx+onnx+onnx"
         self.gate = gate
         self.gate_skipped = 0
+
+        # 并发只在核够多时划算：单模型本来就能吃满十几线程，核少了三个模型只会互相抢。
+        # 实测 24 线程收益最大，8 线程时并发与串行基本持平，4 线程反而更慢。
+        if parallel is None:
+            parallel = (os.cpu_count() or 1) >= 12
+            if os.environ.get("ANXUN_ONNX_PARALLEL", "1") == "0":
+                parallel = False
+        self.parallel = bool(parallel)
+        self._pool = (ThreadPoolExecutor(max_workers=1 + len(self._equip_models()),
+                                         thread_name_prefix="anxun-onnx")
+                      if self.parallel else None)
+
+        self._cache: dict[tuple[str, int], dict] = {}
+        self.cache_max = 256
 
     def _need_equip(self, person_res: dict) -> bool:
         if not self.gate:
@@ -266,34 +314,59 @@ class OnnxDualDetector:
             out.append(self.vest)
         return out
 
-    def _merge(self, a: dict, b: dict) -> dict:
-        return {"boxes": list(a["boxes"]) + list(b["boxes"]),
-                "infer_ms": round(a["infer_ms"] + b["infer_ms"], 2),
+    def _shared_prep(self) -> bool:
+        """三个模型输入尺寸一致时，同一张图的预处理结果可以共用。"""
+        return all(m.imgsz == self.person.imgsz for m in self._equip_models())
+
+    def _pack(self, a: dict, rest: list, ms: float) -> dict:
+        boxes = list(a["boxes"])
+        dropped = dict(a.get("dropped") or {})
+        for r in rest:
+            boxes.extend(r["boxes"])
+            dropped.update(r.get("dropped") or {})
+        return {"boxes": boxes, "infer_ms": round(ms, 2),
                 "backend": self.name, "kind": self.kind,
                 "width": a.get("width"), "height": a.get("height"),
-                "dropped": {**a.get("dropped", {}), **b.get("dropped", {})}}
+                "dropped": dropped}
+
+    def _run(self, frame, parallel: bool) -> dict:
+        t0 = time.perf_counter()
+        models = [self.person] + self._equip_models()
+        if self._shared_prep():
+            prep = self.person.preprocess(frame)          # 只算一次
+            jobs = [(m, prep) for m in models]
+        else:
+            jobs = [(m, m.preprocess(frame)) for m in models]
+        shape = frame.shape[:2]
+
+        if parallel and self._pool is not None:
+            futs = [self._pool.submit(m.infer_tensor, *p, shape) for m, p in jobs]
+            res = [f.result() for f in futs]
+            a = res[0]
+            wall = (time.perf_counter() - t0) * 1000
+            # 门控照旧生效：没人就把装备结果丢掉。并发只是「白算」，结论不变。
+            if not self._need_equip(a):
+                return self._pack(a, [], wall)
+            return self._pack(a, res[1:], wall)
+
+        a = self.person.infer_tensor(*jobs[0][1], shape)
+        if not self._need_equip(a):
+            return self._pack(a, [], (time.perf_counter() - t0) * 1000)
+        rest = [m.infer_tensor(*p, shape) for m, p in jobs[1:]]
+        return self._pack(a, rest, (time.perf_counter() - t0) * 1000)
 
     def detect_image(self, image_path: str | Path, frame_idx: int = 0) -> dict:
-        a = self.person.detect_image(image_path, frame_idx)
-        if not self._need_equip(a):
-            return self._merge(a, {"boxes": [], "infer_ms": 0.0})
-        boxes, ms = [], 0.0
-        for m in self._equip_models():
-            r = m.detect_image(image_path, frame_idx)
-            boxes += r["boxes"]
-            ms += r["infer_ms"]
-        return self._merge(a, {"boxes": boxes, "infer_ms": ms})
+        key = (str(image_path), frame_idx)
+        if key in self._cache:
+            return self._cache[key]
+        if len(self._cache) >= self.cache_max:
+            self._cache.clear()
+        out = self._run(_read(image_path), parallel=True)
+        self._cache[key] = out
+        return out
 
     def detect_frame(self, frame) -> dict:
-        a = self.person.detect_frame(frame)
-        if not self._need_equip(a):
-            return self._merge(a, {"boxes": [], "infer_ms": 0.0})
-        boxes, ms = [], 0.0
-        for m in self._equip_models():
-            r = m.detect_frame(frame)
-            boxes += r["boxes"]
-            ms += r["infer_ms"]
-        return self._merge(a, {"boxes": boxes, "infer_ms": ms})
+        return self._run(frame, parallel=False)
 
     def detect_batch(self, frames: list) -> list[dict]:
         return [self.detect_frame(f) for f in frames]

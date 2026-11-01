@@ -60,7 +60,7 @@ python src/anxun/verify_all.py
 
 | 机器                | 怎么装                                   | 走哪条路         | 实测耗时          |
 | ----------------- | ------------------------------------- | ------------ | ------------- |
-| 任意电脑（没显卡、没 torch） | `pip install -r requirements-cpu.txt` | ONNX + CPU   | **72.7 ms/帧** |
+| 任意电脑（没显卡、没 torch） | `pip install -r requirements-cpu.txt` | ONNX + CPU   | **≈46 ms/帧** |
 | 有 NVIDIA 显卡       | `pip install -r requirements-gpu.txt` | torch + CUDA | **≈22 ms/帧** |
 | 有显卡但想省空间          | `pip install onnxruntime-gpu`         | ONNX + CUDA  | 自动识别          |
 
@@ -92,19 +92,20 @@ python src/anxun/verify_all.py
 | 运行时依赖  | torch 2.14.1+cu130 = **1.99 GB**（cp313 + Blackwell 专用） | onnxruntime + numpy + opencv ≈ **80 MB**          |
 | 模型体积   | 28 MB                                                  | **55 MB**                                         |
 | 换台电脑   | 基本装不上（Python 版本/显卡架构一换就废）                              | `pip install` 三行搞定，任何平台                           |
-| CPU 耗时 | 138 ms                                                 | **72.7 ms**（快 1.9 倍）                              |
+| CPU 耗时 | 138 ms                                                 | **≈46 ms**（快 3.0 倍）                              |
 | 指标     | —                                                      | **四个数完全一致**（0.6808 / 5.1% / 22.58% / 72-21-5-93） |
 
 ONNX 版是自己实现的 letterbox + 解码 + NMS（`onnx_backend.py`，纯 numpy），  
 不依赖 ultralytics 也不依赖 torch。逐框比对过：同一个模型、同一张图，坐标和置信度小数点后两位一致。
 
 > 📌 **耗时口径（v1.2.0 起只有一个）**：单帧耗时 = `evaluate_real.py` 在 100 张测试集上的**均值**，
-> 含前后处理，同一后端、同一台机器。ONNX-CPU **72.7 ms**（p95 82.4）· torch-GPU **≈22 ms**（p95 ≈25，三次复跑 21.8–22.4）。
+> 含前后处理，同一后端、同一台机器。ONNX-CPU **≈46 ms**（p95 ≈49）· torch-GPU **≈22 ms**（p95 ≈25，三次复跑 21.8–22.4）。
 >
 > 旧文档里的 **53.5 ms 已作废**：那组数出自未锁版本的 `onnxruntime`（`>=1.17`），v1.1.0 锁到 1.31.1 后
-> 同一模型复测是 72.7 ms。两者不是同一环境，不能并列引用，更不能一个写进 PPT、一个写进 README。
+> 同一模型复测是 72.7 ms；v1.2.0 又把三个模型改成「共享预处理 + 并发」，现在是 ≈46 ms
+> （做法与验证见 [`docs/技术口径.md`](docs/技术口径.md) 3.2）。三个数不是同一套代码，不能并列引用。
 > 同理，启动自检报的 **8.8 / 31.7 ms** 是「单帧单次」的活性探测，只证明「真的在用 GPU」，
-> **不是指标口径**——不要拿它和上表的 ≈22 / 72.7 对比。
+> **不是指标口径**——不要拿它和上表的 ≈22 / ≈46 对比。
 
 ### 2.2 踩到的一个大坑：ORT 线程自旋
 

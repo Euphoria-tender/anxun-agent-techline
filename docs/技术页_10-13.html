@@ -155,7 +155,7 @@
 <!-- ==================== 10 系统架构 ==================== -->
 <section class="slide">
   <div class="head"><span class="pno">10</span><h1 class="h1">系统架构：三级触发 —— 先决定「哪些帧值得算」，再决定「算得准不准」</h1></div>
-  <div class="sub">现场是固定机位、大部分时间空画面。真正的算力浪费不在模型慢，而在「算了不需要算的帧」。<br>后端三选一自动切换：<b>没显卡 → ONNX CPU（72.7 ms）</b>，<b>有显卡 → CUDA（≈22 ms）</b>，代码一行不改。</div>
+  <div class="sub">现场是固定机位、大部分时间空画面。真正的算力浪费不在模型慢，而在「算了不需要算的帧」。<br>后端三选一自动切换：<b>没显卡 → ONNX CPU（≈46 ms）</b>，<b>有显卡 → CUDA（≈22 ms）</b>，代码一行不改。</div>
 
   <div class="pipe">
     <div class="stage">
