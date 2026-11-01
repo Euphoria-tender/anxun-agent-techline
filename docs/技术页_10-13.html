@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>安巡 Agent · 技术页 10-13</title>
+<style>
+  :root {
+    --ink: #0F1720;
+    --ink-2: #3C4A57;
+    --muted: #6B7A88;
+    --line: #DDE3E9;
+    --line-2: #EDF1F5;
+    --amber: #B87200;
+    --amber-bg: #FFF6E5;
+    --red: #C62828;
+    --green: #0B6E4F;
+    --blue: #1B5FA8;
+    --bg: #FFFFFF;
+    --paper: #F7F9FB;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #E9ECF0;
+    font-family: "Noto Sans SC", -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    padding: 24px 0;
+  }
+  .slide {
+    width: 1280px; height: 720px; background: var(--bg);
+    margin: 0 auto 24px; padding: 44px 56px 40px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 6px 28px rgba(15,23,32,.14);
+    display: flex; flex-direction: column;
+  }
+  .slide::before {
+    content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 4px;
+    background: linear-gradient(90deg, #E08A00, #FFB020 40%, #FFD98A 100%);
+  }
+  .head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; }
+  .pno {
+    font-family: "JetBrains Mono", Consolas, monospace; font-size: 13px;
+    color: var(--amber); letter-spacing: 1px;
+  }
+  .h1 { font-size: 30px; font-weight: 700; letter-spacing: -.4px; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 22px; }
+  .foot {
+    position: absolute; left: 56px; right: 56px; bottom: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 10.5px; color: #9AA7B4; letter-spacing: .3px;
+  }
+  .tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; padding: 3px 9px; border-radius: 999px;
+    background: var(--amber-bg); color: var(--amber); border: 1px solid #F2DDB4;
+  }
+  .tag.warn { background: #FFF1F0; color: var(--red); border-color: #F6CFCB; }
+  .tag.ok { background: #EAF6F1; color: var(--green); border-color: #C6E5D9; }
+
+  /* ---------- P10 架构 ---------- */
+  .pipe { display: flex; align-items: stretch; gap: 0; margin-top: 8px; }
+  .stage {
+    flex: 1; border: 1.5px solid var(--line); border-radius: 12px; padding: 16px 16px 14px;
+    background: var(--paper); position: relative;
+  }
+  .stage.model { border-color: #F0D49A; background: #FFFDF7; }
+  .stage.det { border-color: #C9DCEF; background: #F7FBFF; }
+  .arrow { width: 34px; display: flex; align-items: center; justify-content: center; color: #B9C4CF; font-size: 18px; }
+  .stage-h { font-size: 11px; color: var(--muted); letter-spacing: .6px; margin-bottom: 6px; }
+  .stage-t { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .stage-d { font-size: 11.5px; color: var(--ink-2); line-height: 1.65; }
+  .stage-file {
+    margin-top: 10px; font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 10.5px; color: var(--amber); background: var(--amber-bg);
+    padding: 3px 7px; border-radius: 5px; display: inline-block;
+  }
+  .band { display: flex; gap: 12px; margin-top: 18px; }
+  .side {
+    flex: 1; border: 1px dashed var(--line); border-radius: 10px; padding: 12px 14px;
+    font-size: 11.5px; color: var(--ink-2); line-height: 1.6; background: #FCFDFE;
+  }
+  .side b { color: var(--ink); font-size: 12.5px; }
+  .side .dim { color: var(--muted); }
+  .kv { display: flex; gap: 26px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line-2); }
+  .kv div { font-size: 11.5px; color: var(--muted); }
+  .kv b { display: block; font-family: "JetBrains Mono", Consolas, monospace; font-size: 20px; color: var(--ink); margin-bottom: 1px; }
+
+  /* ---------- P11 指标 ---------- */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+  .kpi { border: 1.5px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--paper); }
+  .kpi .k { font-size: 11px; color: var(--muted); letter-spacing: .4px; }
+  .kpi .v { font-family: "JetBrains Mono", Consolas, monospace; font-size: 32px; letter-spacing: -1px; margin: 2px 0 3px; }
+  .kpi .v small { font-size: 13px; color: var(--muted); letter-spacing: 0; }
+  .kpi .t { font-size: 10.5px; color: var(--muted); }
+  .kpi .t i { font-style: normal; color: var(--amber); font-family: "JetBrains Mono", monospace; }
+  .kpi.deco { border-color: #F0D49A; background: #FFFDF7; }
+  .two { display: grid; grid-template-columns: 1fr 1.15fr; gap: 16px; }
+  .box { border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .box-h { padding: 9px 14px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 600; background: var(--paper); display: flex; gap: 8px; align-items: center; }
+  .box-h span { font-weight: 400; color: var(--muted); font-size: 10.5px; }
+  .cm { padding: 12px 14px; display: grid; grid-template-columns: 78px 1fr 1fr; gap: 5px; }
+  .cm > div { text-align: center; padding: 10px 4px; border-radius: 7px; font-family: "JetBrains Mono", monospace; font-size: 17px; }
+  .cm .h { font-family: inherit; font-size: 10.5px; color: var(--muted); display: flex; align-items: center; justify-content: center; padding: 2px; }
+  .cm .tp { background: #E7F5EF; color: var(--green); }
+  .cm .tn { background: #F1F8F5; color: #35705C; }
+  .cm .fp { background: #FFF3E8; color: #A35B00; }
+  .cm .fn { background: #FDEDEC; color: var(--red); }
+  .cm .cell small { display: block; font-family: inherit; font-size: 9.5px; color: var(--muted); margin-top: 2px; }
+  .err { padding: 10px 14px 14px; font-size: 11px; color: var(--ink-2); line-height: 1.75; }
+  .err b { color: var(--ink); }
+  .bar { height: 5px; border-radius: 3px; background: var(--line-2); margin: 4px 0 7px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--amber); }
+  .note {
+    margin-top: 12px; font-size: 11px; color: var(--ink-2); line-height: 1.7;
+    border-left: 3px solid #F0D49A; padding-left: 12px; background: #FFFDF7; padding: 10px 12px; border-radius: 0 8px 8px 0;
+  }
+
+  /* ---------- P12 对比 ---------- */
+  table.cmp { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
+  .cmp th, .cmp td { padding: 13px 14px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .cmp thead th { font-size: 11px; color: var(--muted); letter-spacing: .5px; font-weight: 500; background: var(--paper); }
+  .cmp td:first-child { color: var(--muted); font-size: 11.5px; width: 130px; }
+  .cmp .bad { color: var(--red); }
+  .cmp .good { color: var(--green); font-weight: 600; }
+  .quote {
+    margin-top: 20px; padding: 18px 22px; background: var(--ink); color: #F4F7FA;
+    border-radius: 12px; font-size: 17px; line-height: 1.6; letter-spacing: .2px;
+  }
+  .quote b { color: #FFC24A; }
+
+  /* ---------- P13 创新点 ---------- */
+  .inno { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .inno .c { border: 1.5px solid var(--line); border-radius: 12px; padding: 18px 20px; background: var(--paper); }
+  .inno .c.hl { border-color: #F0D49A; background: #FFFDF7; }
+  .inno .n { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--amber); letter-spacing: 1px; }
+  .inno h3 { font-size: 19px; margin: 4px 0 8px; }
+  .inno p { font-size: 12.5px; color: var(--ink-2); line-height: 1.75; }
+  .inno .punch { margin-top: 10px; font-size: 13px; color: var(--ink); font-weight: 600; }
+  .tri { display: flex; align-items: center; gap: 12px; margin-top: auto; }
+  .tri .b { flex: 1; text-align: center; padding: 14px 10px; border-radius: 10px; font-size: 13px; font-weight: 600; }
+  .tri .b.a { background: #EAF3FB; color: var(--blue); }
+  .tri .b.b { background: #FFF6E5; color: var(--amber); }
+  .tri .b.c { background: #EAF6F1; color: var(--green); }
+  .tri .x { color: #B9C4CF; font-size: 16px; }
+
+  @media print {
+    @page { size: 1280px 720px; margin: 0; }
+    body { background: #fff; padding: 0; }
+    .slide { margin: 0; box-shadow: none; page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== 10 系统架构 ==================== -->
+<section class="slide">
+  <div class="head"><span class="pno">10</span><h1 class="h1">系统架构：三级触发 —— 先决定「哪些帧值得算」，再决定「算得准不准」</h1></div>
+  <div class="sub">现场是固定机位、大部分时间空画面。真正的算力浪费不在模型慢，而在「算了不需要算的帧」。<br>后端三选一自动切换：<b>没显卡 → ONNX CPU（53.5 ms）</b>，<b>有显卡 → CUDA（25.7 ms）</b>，代码一行不改。</div>
+
+  <div class="pipe">
+    <div class="stage">
+      <div class="stage-h">① 触发层 · <span style="color:#0B6E4F">省算力</span></div>
+      <div class="stage-t">三级过滤</div>
+      <div class="stage-d">抽帧 2fps → 帧差判静止 → 无人跳过 PPE<br>合成素材省 84% · <b>1080p 真实素材省 86%</b>（阈值经复验从 3.0 调到 10.0）</div>
+      <div class="stage-file">stream.py · scheduler.py</div>
+    </div>
+    <div class="arrow">›</div>
+    <div class="stage">
+      <div class="stage-h">② 调度层 · <span style="color:#0B6E4F">吃满 GPU</span></div>
+      <div class="stage-t">多路锁步攒批</div>
+      <div class="stage-d">多路各取一帧凑一批，一次前向<br>batch=4 时 <b>19.5 → 13.7 ms/帧（1.4×）</b></div>
+      <div class="stage-file">scheduler.py</div>
+    </div>
+    <div class="arrow">›</div>
+    <div class="stage model">
+      <div class="stage-h">③ 感知层 · <span style="color:#B87200">看得见</span></div>
+      <div class="stage-t">双模型串联</div>
+      <div class="stage-d">人体 + 安全帽 + 反光背心（三模型）<br>只给位置和置信度，不做任何判断</div>
+      <div class="stage-file">detectors.py</div>
+    </div>
+    <div class="arrow">›</div>
+    <div class="stage det">
+      <div class="stage-h">④ 判定层 · <span style="color:#1B5FA8">判得准</span></div>
+      <div class="stage-t">规则引擎 + 状态机</div>
+      <div class="stage-d">四态 → 三帧时序 → R=L×S 定级 → 工单<br>纯查表，同一输入永远同一输出</div>
+      <div class="stage-file">rules_engine.py · pipeline.py</div>
+    </div>
+  </div>
+
+  <div class="band">
+    <div class="side"><b>解耦点</b>　<span class="dim">推理只负责「N 帧进、N 组框出」，判定只吃「框 + 时间戳」——批大小、设备、模型都不影响判定</span></div>
+    <div class="side"><b>换模型的代价</b>　<span class="dim">改一行权重路径，判定口径与阈值完全不动</span></div>
+    <div class="side"><b>可复现</b>　<span class="dim">锁步调度让同样的输入必定得到同样的帧序与同样的事件</span></div>
+  </div>
+
+  <div class="kv">
+    <div><b>3</b>级触发（抽帧 / 帧差 / 门控）</div>
+    <div><b>3</b>个检测模型（人 / 帽 / 背心）</div>
+    <div><b>84%</b>前向次数省下来</div>
+    <div><b>4</b>态判定（不是二分类）</div>
+    <div><b>R = L × S</b>查表定级，不靠大模型</div>
+    <div><b>2</b>fps 抽帧 · 单进程 ≈25 路</div>
+    <div><b>1080p</b> 单帧 30.5ms（640 输入 6.9ms）</div>
+  </div>
+
+  <div class="foot"><span>安巡 Agent · 厂区安全巡检多智能体系统</span><span>P10 / 系统架构</span></div>
+</section>
+
+<!-- ==================== 11 指标 ==================== -->
+<section class="slide">
+  <div class="head"><span class="pno">11</span><h1 class="h1">指标：四个数，一个说得清的口径</h1>
+    <span class="tag ok" >真模型实测 · 100 张真实照片</span></div>
+  <div class="sub">指标不是为了好看，是为了说清「哪里不行」。误报率比 mAP 更该强调——工业现场误报多了，人就把告警关掉。</div>
+
+  <div class="kpis">
+    <div class="kpi deco"><div class="k">mAP@0.5</div><div class="v" data-f="map">0.688</div><div class="t">目标 <i>≥ 0.85</i> · person 0.80 / helmet 0.58</div></div>
+    <div class="kpi"><div class="k">误报率</div><div class="v" data-f="fp" style="color:#0B6E4F">5.1<small>%</small></div><div class="t">目标 <i>≤ 10%</i> · 合规被判违规</div></div>
+    <div class="kpi"><div class="k">漏报率</div><div class="v" data-f="fn" style="color:#C62828">24.7<small>%</small></div><div class="t">目标 <i>≤ 5%</i> · 主动披露</div></div>
+    <div class="kpi"><div class="k">单帧耗时</div><div class="v" data-f="lat" style="color:#0B6E4F">26.0<small>ms</small></div><div class="t">目标 <i>≤ 50 ms</i> ✅ · RTX 5060 · 单进程 ≈25 路</div></div>
+  </div>
+
+  <div class="two">
+    <div class="box">
+      <div class="box-h">混淆矩阵<span>按「人 × 装备」计，295 个标注人员</span></div>
+      <div class="cm" id="cm">
+        <div class="h"></div><div class="h">判违规</div><div class="h">未判违规</div>
+        <div class="h">实际违规</div><div class="tp">70<small>命中</small></div><div class="fn">23<small>漏报</small></div>
+        <div class="h">实际合规</div><div class="fp">5<small>误报</small></div><div class="tn">93<small>正确放行</small></div>
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="box-h">漏报去哪了<span>23 例逐条归因（2026-10-31 实测），不是「模型不准」一句带过</span></div>
+      <div class="err">
+        <b>① 模型真的看错 15 例（65%）</b>
+        <div class="bar"><i style="width:65%;background:#C62828"></i></div>
+        确实戴着帽却被判成没戴。阈值已经调到最松，这块救不回来，只能靠更好的权重。
+        <br><br>
+        <b>② 远距离小目标 6 例（26%）</b>
+        <div class="bar"><i style="width:26%"></i></div>
+        人员框小于画面面积的 0.386%，判「无法判定」。
+        <br><br>
+        <b>③ 灰区待复核 2 例（9%）</b>
+        <div class="bar"><i style="width:9%"></i></div>
+        置信度落在 0.20–0.30，按规则不硬判。
+        <br><br>
+        <b>结论：调参到头了。</b>剩 23 例里 65% 是真看错，下一轮只能换权重。
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>怎么读这组数：</b>这是公开权重 <code>yolov8s-hard-hat</code> 直接推理的结果，<b>没有在我们的数据上微调</b>，
+    域不匹配导致置信度整体偏低，于是大量样本落进 0.4–0.6 灰区。
+    真正的判断错误只有 2 例（5%），说明<b>判定链没问题，问题在模型置信度分布</b>——自采数据微调后这一块会先收敛。
+    <br><b>五步优化：</b>面积阈值按画面占比换算 → 裸头框作反向证据 → CONF_FINAL 0.60→0.40 → IOU_MIN 0.30→0.25 → <b>装备框面积上限 1.6→3.0</b>。
+    倒数第二步拿 1 个点漏报换 4 个点误报（首次达标）；最后一步把装备框面积上限从 1.6 放到 3.0，
+    <b>误报 7.1%→5.1%，漏报不变</b>——原因是这个模型把帽框画得偏大，1.6 的上限会把一批真戴帽的正确框整条拒掉。
+    选它的依据不是单点数字，而是把测试集对半切开后误报只波动 1 个点（旧配置波动 7 个点）。
+    <br><b>微调实验（已做，暂不采用）：</b>用 80 张训练后 helmet AP 从 0.579 涨到 0.766，但误报/漏报反而变差——
+    置信度整体下移，真帽子掉到检测阈值以下。说明 AP 和业务指标之间隔着一层校准，数据量不够时不能硬换。
+    <br><b>扫参 6 组（模型规模 × 输入分辨率）：</b>换 yolov8m 掉 14 个点（跨数据集权重口径对不上），
+    提到 960 掉 3.4 个点且慢 2.2 倍（模型在 640 上训，放大推理离开训练分布）。
+    <b>s@640 已是这批权重的最优点</b>；要带更多路数可切 480，快 35%、CPU 上 7 路/进程，代价是误报升到 15.8%。
+    <br><b>设备：</b>上 RTX 5060 后单帧 138 → 25.7 ms（5.4 倍），三个精度指标一字不差——
+    换设备只影响速度、不影响判定，目标 ≤50ms 达成。
+  </div>
+
+  <div class="foot"><span>安巡 Agent · 厂区安全巡检多智能体系统</span><span>P11 / 指标</span></div>
+</section>
+
+<!-- ==================== 12 火焰检测 ==================== -->
+<section class="slide">
+  <div class="head"><span class="pno">12</span><h1 class="h1">为什么放弃火焰检测，改做安全帽</h1></div>
+  <div class="sub">同一个赛题下我们比较了三个方向。放弃不是做不出来，是做不稳。</div>
+
+  <table class="cmp">
+    <thead><tr><th></th><th>火灾 / 烟雾检测</th><th>PPE 穿戴检测（选定）</th></tr></thead>
+    <tbody>
+      <tr><td>任务本质</td><td class="bad">语义判断 —— 「像不像火」</td><td class="good">存在性判断 —— 「头上有没有」</td></tr>
+      <tr><td>主要干扰源</td><td>蒸汽、粉尘反光、红色物料、焊接弧光</td><td>遮挡、光照（都可控）</td></tr>
+      <tr><td>精度天花板</td><td class="bad">换一个厂区就掉一大截</td><td class="good">类别稳定，可做高</td></tr>
+      <tr><td>演示风险</td><td class="bad">灯光一变就翻车，录屏不可复现</td><td class="good">同一条素材录几遍结果一致</td></tr>
+      <tr><td>误报代价</td><td>高（一次误报就是一次停产疏散）</td><td>低（补一顶帽子，成本可忽略）</td></tr>
+      <tr><td>能否闭环到工单</td><td>难，火情不是「限期整改」的事</td><td class="good">能，责任人 / 时限 / 复查都成立</td></tr>
+    </tbody>
+  </table>
+
+  <div class="quote">在工业场景里，宁可做一个<b>可靠的小任务</b>，也不做一个<b>不可靠的大任务</b>。<br>
+    <span style="font-size:14px;opacity:.8">我们要证明的不是模型能识多少类，而是识别结果能不能变成一条有人负责的工单。</span></div>
+
+  <div class="foot"><span>安巡 Agent · 厂区安全巡检多智能体系统</span><span>P12 / 技术选型</span></div>
+</section>
+
+<!-- ==================== 13 创新点 ==================== -->
+<section class="slide">
+  <div class="head"><span class="pno">13</span><h1 class="h1">创新点与跨学科视角</h1></div>
+  <div class="sub">两个创新点，各配一句能被记住的话。</div>
+
+  <div class="inno">
+    <div class="c hl">
+      <div class="n">创新点 01</div>
+      <h3>感知闭环：让 Agent 有眼睛</h3>
+      <p>多数 Agent 作品停在「对话」。我们把摄像头接进决策链：看得见（双模型串联：人体 + 装备）→ 判得准（四态判定 + 正反证据融合：有帽框算戴、裸头框算没戴、两者都有转人工）→ 落得下（工单 + 状态机）。
+         并且为<b>实时视频</b>专门做了三级触发——抽帧 / 帧差 / 无人门控，合成素材上前向从 240 降到 39（省 84%）；
+         换成 1080p 真实照片素材复验时发现阈值 3.0 会被机位晃动击穿（节省跌到 39%），调到 10.0 后回到 86%，
+         因为现场的浪费从来不是「模型慢」，而是「算了不需要算的帧」。</p>
+      <div class="punch">「看得见 → 判得准 → 落得下」</div>
+    </div>
+    <div class="c">
+      <div class="n">创新点 02</div>
+      <h3>定级有据：等级不由大模型拍脑袋</h3>
+      <p>同样的「没戴帽子」，在高处作业平台是 R=16 立即停工的红色风险，在原料库装卸区是 R=3 加强关注的蓝色。
+         定级走 R = L × S 查表 + 法规条款映射，纯确定性计算，同一输入连跑三次结果一致，敢让评委当场重算。</p>
+      <div class="punch">「告警是一条通知，工单是一个责任」</div>
+    </div>
+  </div>
+
+  <div class="tri">
+    <div class="b a">安全工程<br><span style="font-weight:400;font-size:11px;opacity:.8">风险矩阵 L × S</span></div>
+    <span class="x">×</span>
+    <div class="b b">计算机视觉<br><span style="font-weight:400;font-size:11px;opacity:.8">检测 + 四态 + 时序聚合</span></div>
+    <span class="x">×</span>
+    <div class="b c">管理学<br><span style="font-weight:400;font-size:11px;opacity:.8">PDCA 闭环</span></div>
+  </div>
+
+  <div class="foot"><span>安巡 Agent · 厂区安全巡检多智能体系统</span><span>P13 / 创新点</span></div>
+</section>
+
+<script>
+/* 数字来自 metrics.json；文件直接打开时用页面内的兜底值 */
+(async function () {
+  try {
+    const r = await fetch("/api/metrics");
+    if (!r.ok) return;
+    const m = await r.json();
+    if (!m || !m.results) return;
+    const x = m.results;
+    const set = (k, v) => { const n = document.querySelector(`[data-f="${k}"]`); if (n) n.innerHTML = v; };
+    set("map", (x.mAP50 ?? 0).toFixed(3));
+    set("fp", (x.fp_rate ?? 0).toFixed(1) + "<small>%</small>");
+    set("fn", (x.fn_rate ?? 0).toFixed(1) + "<small>%</small>");
+    set("lat", (x.latency.mean_ms ?? 0).toFixed(1) + "<small>ms</small>");
+    const c = x.confusion;
+    const cm = document.getElementById("cm");
+    if (cm) {
+      cm.innerHTML = `
+        <div class="h"></div><div class="h">判违规</div><div class="h">未判违规</div>
+        <div class="h">实际违规</div>
+        <div class="tp cell">${c.tp}<small>命中</small></div>
+        <div class="fn cell">${c.fn}<small>漏报</small></div>
+        <div class="h">实际合规</div>
+        <div class="fp cell">${c.fp}<small>误报</small></div>
+        <div class="tn cell">${c.tn}<small>正确放行</small></div>`;
+    }
+  } catch (e) { /* file:// 打开时静默用兜底值 */ }
+})();
+</script>
+</body>
+</html>

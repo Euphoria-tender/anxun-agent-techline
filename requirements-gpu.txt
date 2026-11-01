@@ -1,0 +1,15 @@
+# 有 NVIDIA 显卡：用 GPU 加速（最准最快）
+#   pip install -r requirements-gpu.txt
+#
+# 注意 CUDA 版本要和显卡架构匹配：
+#   RTX 50 系（Blackwell / sm_120）必须 CUDA 12.8+，本机用的是 cu130
+#   其他卡用官方默认即可：pip install torch torchvision
+#
+# 如果只想用 ONNX 的 GPU 加速（模型更小），改用：
+#   pip install onnxruntime-gpu          # 注意：它与 onnxruntime 不能共存
+torch
+torchvision
+ultralytics>=8.3
+onnxruntime>=1.17
+opencv-python>=4.8
+numpy>=1.24

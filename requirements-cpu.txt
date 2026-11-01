@@ -1,0 +1,6 @@
+# 最轻量：任意电脑都能跑（无 GPU、无 torch）
+#   pip install -r requirements-cpu.txt
+# 合计下载约 80 MB，安装后磁盘占用约 130 MB
+onnxruntime>=1.17
+opencv-python>=4.8
+numpy>=1.24

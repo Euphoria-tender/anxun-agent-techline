@@ -1,0 +1,22 @@
+# 模型权重不入库
+#   .pt   —— torch 轮子 2GB，换机器基本装不上，带上去也没用
+#   .onnx —— 68MB 二进制；本仓库经文本通道上传，二进制会损坏
+# 获取：从本机拷贝 models/，或 python src/anxun/export_onnx.py 重新导出（需 torch）
+models/
+
+# 数据集媒体不入库
+#   mp4 单个最大 142MB，超过 GitHub 100MB 硬限制；图片可用 tools/ 里的脚本重新拉：
+#   fetch_ppe_test.py / fetch_helmet_p2.py / make_vest.py / make_mix.py
+datasets/
+
+# 训练产物（runs/finetune、runs/ft_mix、runs/vest_* 等），可由 finetune.py 重现
+runs/
+
+# 上传载荷（推送用的中间产物，内容与源文件重复）
+.upload/
+
+# 缓存与临时文件
+__pycache__/
+*.pyc
+*.tmp
+.DS_Store

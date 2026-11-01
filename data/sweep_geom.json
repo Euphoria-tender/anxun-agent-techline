@@ -1,0 +1,1205 @@
+{
+  "ppe": "best.pt",
+  "conf_final": 0.3,
+  "rows": [
+    {
+      "iou": 0.4,
+      "contain": 0.8,
+      "max_ratio": 3.0,
+      "fp": 33.7,
+      "fn": 15.1,
+      "fp_n": 33,
+      "fn_n": 14
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.8,
+      "max_ratio": 6.0,
+      "fp": 33.7,
+      "fn": 15.1,
+      "fp_n": 33,
+      "fn_n": 14
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.8,
+      "max_ratio": 1.6,
+      "fp": 36.7,
+      "fn": 15.1,
+      "fp_n": 36,
+      "fn_n": 14
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.8,
+      "max_ratio": 3.0,
+      "fp": 13.3,
+      "fn": 17.2,
+      "fp_n": 13,
+      "fn_n": 16
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.8,
+      "max_ratio": 6.0,
+      "fp": 13.3,
+      "fn": 17.2,
+      "fp_n": 13,
+      "fn_n": 16
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.8,
+      "max_ratio": 1.6,
+      "fp": 16.3,
+      "fn": 17.2,
+      "fp_n": 16,
+      "fn_n": 16
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.8,
+      "max_ratio": 3.0,
+      "fp": 20.4,
+      "fn": 17.2,
+      "fp_n": 20,
+      "fn_n": 16
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.8,
+      "max_ratio": 6.0,
+      "fp": 20.4,
+      "fn": 17.2,
+      "fp_n": 20,
+      "fn_n": 16
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.8,
+      "max_ratio": 1.6,
+      "fp": 24.5,
+      "fn": 17.2,
+      "fp_n": 24,
+      "fn_n": 16
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.7,
+      "max_ratio": 3.0,
+      "fp": 29.6,
+      "fn": 17.2,
+      "fp_n": 29,
+      "fn_n": 16
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.7,
+      "max_ratio": 6.0,
+      "fp": 29.6,
+      "fn": 17.2,
+      "fp_n": 29,
+      "fn_n": 16
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.7,
+      "max_ratio": 1.6,
+      "fp": 32.7,
+      "fn": 17.2,
+      "fp_n": 32,
+      "fn_n": 16
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.7,
+      "max_ratio": 3.0,
+      "fp": 12.2,
+      "fn": 18.3,
+      "fp_n": 12,
+      "fn_n": 17
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.7,
+      "max_ratio": 6.0,
+      "fp": 12.2,
+      "fn": 18.3,
+      "fp_n": 12,
+      "fn_n": 17
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.7,
+      "max_ratio": 1.6,
+      "fp": 15.3,
+      "fn": 18.3,
+      "fp_n": 15,
+      "fn_n": 17
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.7,
+      "max_ratio": 3.0,
+      "fp": 19.4,
+      "fn": 18.3,
+      "fp_n": 19,
+      "fn_n": 17
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.7,
+      "max_ratio": 6.0,
+      "fp": 19.4,
+      "fn": 18.3,
+      "fp_n": 19,
+      "fn_n": 17
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.7,
+      "max_ratio": 1.6,
+      "fp": 23.5,
+      "fn": 18.3,
+      "fp_n": 23,
+      "fn_n": 17
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.6,
+      "max_ratio": 3.0,
+      "fp": 20.4,
+      "fn": 20.4,
+      "fp_n": 20,
+      "fn_n": 19
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.6,
+      "max_ratio": 6.0,
+      "fp": 20.4,
+      "fn": 20.4,
+      "fp_n": 20,
+      "fn_n": 19
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.6,
+      "max_ratio": 1.6,
+      "fp": 22.4,
+      "fn": 20.4,
+      "fp_n": 22,
+      "fn_n": 19
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.6,
+      "max_ratio": 3.0,
+      "fp": 9.2,
+      "fn": 21.5,
+      "fp_n": 9,
+      "fn_n": 20
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.6,
+      "max_ratio": 6.0,
+      "fp": 9.2,
+      "fn": 21.5,
+      "fp_n": 9,
+      "fn_n": 20
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.6,
+      "max_ratio": 1.6,
+      "fp": 12.2,
+      "fn": 21.5,
+      "fp_n": 12,
+      "fn_n": 20
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.6,
+      "max_ratio": 3.0,
+      "fp": 14.3,
+      "fn": 21.5,
+      "fp_n": 14,
+      "fn_n": 20
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.6,
+      "max_ratio": 6.0,
+      "fp": 14.3,
+      "fn": 21.5,
+      "fp_n": 14,
+      "fn_n": 20
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.6,
+      "max_ratio": 1.6,
+      "fp": 17.3,
+      "fn": 21.5,
+      "fp_n": 17,
+      "fn_n": 20
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.6,
+      "max_ratio": 3.0,
+      "fp": 5.1,
+      "fn": 24.7,
+      "fp_n": 5,
+      "fn_n": 23
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.6,
+      "max_ratio": 6.0,
+      "fp": 5.1,
+      "fn": 24.7,
+      "fp_n": 5,
+      "fn_n": 23
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.7,
+      "max_ratio": 3.0,
+      "fp": 5.1,
+      "fn": 24.7,
+      "fp_n": 5,
+      "fn_n": 23
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.7,
+      "max_ratio": 6.0,
+      "fp": 5.1,
+      "fn": 24.7,
+      "fp_n": 5,
+      "fn_n": 23
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.8,
+      "max_ratio": 3.0,
+      "fp": 6.1,
+      "fn": 24.7,
+      "fp_n": 6,
+      "fn_n": 23
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.8,
+      "max_ratio": 6.0,
+      "fp": 6.1,
+      "fn": 24.7,
+      "fp_n": 6,
+      "fn_n": 23
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.6,
+      "max_ratio": 1.6,
+      "fp": 7.1,
+      "fn": 24.7,
+      "fp_n": 7,
+      "fn_n": 23
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.7,
+      "max_ratio": 1.6,
+      "fp": 7.1,
+      "fn": 24.7,
+      "fp_n": 7,
+      "fn_n": 23
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.8,
+      "max_ratio": 1.6,
+      "fp": 8.2,
+      "fn": 24.7,
+      "fp_n": 8,
+      "fn_n": 23
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.6,
+      "max_ratio": 3.0,
+      "fp": 4.1,
+      "fn": 25.8,
+      "fp_n": 4,
+      "fn_n": 24
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.6,
+      "max_ratio": 6.0,
+      "fp": 4.1,
+      "fn": 25.8,
+      "fp_n": 4,
+      "fn_n": 24
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.7,
+      "max_ratio": 3.0,
+      "fp": 4.1,
+      "fn": 25.8,
+      "fp_n": 4,
+      "fn_n": 24
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.7,
+      "max_ratio": 6.0,
+      "fp": 4.1,
+      "fn": 25.8,
+      "fp_n": 4,
+      "fn_n": 24
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.8,
+      "max_ratio": 3.0,
+      "fp": 4.1,
+      "fn": 25.8,
+      "fp_n": 4,
+      "fn_n": 24
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.8,
+      "max_ratio": 6.0,
+      "fp": 4.1,
+      "fn": 25.8,
+      "fp_n": 4,
+      "fn_n": 24
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.6,
+      "max_ratio": 1.6,
+      "fp": 6.1,
+      "fn": 25.8,
+      "fp_n": 6,
+      "fn_n": 24
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.7,
+      "max_ratio": 1.6,
+      "fp": 6.1,
+      "fn": 25.8,
+      "fp_n": 6,
+      "fn_n": 24
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.8,
+      "max_ratio": 1.6,
+      "fp": 6.1,
+      "fn": 25.8,
+      "fp_n": 6,
+      "fn_n": 24
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.5,
+      "max_ratio": 3.0,
+      "fp": 5.1,
+      "fn": 26.9,
+      "fp_n": 5,
+      "fn_n": 25
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.5,
+      "max_ratio": 6.0,
+      "fp": 5.1,
+      "fn": 26.9,
+      "fp_n": 5,
+      "fn_n": 25
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.5,
+      "max_ratio": 3.0,
+      "fp": 6.1,
+      "fn": 26.9,
+      "fp_n": 6,
+      "fn_n": 25
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.5,
+      "max_ratio": 6.0,
+      "fp": 6.1,
+      "fn": 26.9,
+      "fp_n": 6,
+      "fn_n": 25
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.5,
+      "max_ratio": 1.6,
+      "fp": 7.1,
+      "fn": 26.9,
+      "fp_n": 7,
+      "fn_n": 25
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.5,
+      "max_ratio": 1.6,
+      "fp": 7.1,
+      "fn": 26.9,
+      "fp_n": 7,
+      "fn_n": 25
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.5,
+      "max_ratio": 1.6,
+      "fp": 8.2,
+      "fn": 26.9,
+      "fp_n": 8,
+      "fn_n": 25
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.5,
+      "max_ratio": 3.0,
+      "fp": 8.2,
+      "fn": 26.9,
+      "fp_n": 8,
+      "fn_n": 25
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.5,
+      "max_ratio": 6.0,
+      "fp": 8.2,
+      "fn": 26.9,
+      "fp_n": 8,
+      "fn_n": 25
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.3,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.3,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.4,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.4,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.5,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.5,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.6,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.6,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.7,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.7,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.8,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.8,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.3,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.3,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.4,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.4,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.5,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.5,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.6,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.6,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.7,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.7,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.8,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.8,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.3,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.3,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.3,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.3,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.3,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.3,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.3,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.3,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.3,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.3,
+      "max_ratio": 6.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.4,
+      "max_ratio": 3.0,
+      "fp": 3.1,
+      "fn": 28.0,
+      "fp_n": 3,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.4,
+      "max_ratio": 6.0,
+      "fp": 3.1,
+      "fn": 28.0,
+      "fp_n": 3,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.4,
+      "max_ratio": 3.0,
+      "fp": 3.1,
+      "fn": 28.0,
+      "fp_n": 3,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.4,
+      "max_ratio": 6.0,
+      "fp": 3.1,
+      "fn": 28.0,
+      "fp_n": 3,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.4,
+      "max_ratio": 3.0,
+      "fp": 3.1,
+      "fn": 28.0,
+      "fp_n": 3,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.4,
+      "max_ratio": 6.0,
+      "fp": 3.1,
+      "fn": 28.0,
+      "fp_n": 3,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.4,
+      "max_ratio": 3.0,
+      "fp": 3.1,
+      "fn": 28.0,
+      "fp_n": 3,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.4,
+      "max_ratio": 6.0,
+      "fp": 3.1,
+      "fn": 28.0,
+      "fp_n": 3,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.4,
+      "max_ratio": 3.0,
+      "fp": 3.1,
+      "fn": 28.0,
+      "fp_n": 3,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.4,
+      "max_ratio": 6.0,
+      "fp": 3.1,
+      "fn": 28.0,
+      "fp_n": 3,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.3,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.4,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.5,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.6,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.7,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.8,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.3,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.4,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.5,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.6,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.7,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.15,
+      "contain": 0.8,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.3,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.5,
+      "max_ratio": 3.0,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.5,
+      "max_ratio": 6.0,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.3,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.5,
+      "max_ratio": 3.0,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.5,
+      "max_ratio": 6.0,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.3,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.3,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.3,
+      "max_ratio": 1.6,
+      "fp": 4.1,
+      "fn": 28.0,
+      "fp_n": 4,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.4,
+      "max_ratio": 1.6,
+      "fp": 5.1,
+      "fn": 28.0,
+      "fp_n": 5,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.4,
+      "max_ratio": 1.6,
+      "fp": 5.1,
+      "fn": 28.0,
+      "fp_n": 5,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.4,
+      "max_ratio": 1.6,
+      "fp": 5.1,
+      "fn": 28.0,
+      "fp_n": 5,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.35,
+      "contain": 0.4,
+      "max_ratio": 1.6,
+      "fp": 5.1,
+      "fn": 28.0,
+      "fp_n": 5,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.4,
+      "contain": 0.4,
+      "max_ratio": 1.6,
+      "fp": 5.1,
+      "fn": 28.0,
+      "fp_n": 5,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.5,
+      "max_ratio": 1.6,
+      "fp": 6.1,
+      "fn": 28.0,
+      "fp_n": 6,
+      "fn_n": 26
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.5,
+      "max_ratio": 1.6,
+      "fp": 6.1,
+      "fn": 28.0,
+      "fp_n": 6,
+      "fn_n": 26
+    }
+  ],
+  "pareto": [
+    {
+      "iou": 0.4,
+      "contain": 0.8,
+      "max_ratio": 3.0,
+      "fp": 33.7,
+      "fn": 15.1,
+      "fp_n": 33,
+      "fn_n": 14
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.8,
+      "max_ratio": 3.0,
+      "fp": 13.3,
+      "fn": 17.2,
+      "fp_n": 13,
+      "fn_n": 16
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.7,
+      "max_ratio": 3.0,
+      "fp": 12.2,
+      "fn": 18.3,
+      "fp_n": 12,
+      "fn_n": 17
+    },
+    {
+      "iou": 0.3,
+      "contain": 0.6,
+      "max_ratio": 3.0,
+      "fp": 9.2,
+      "fn": 21.5,
+      "fp_n": 9,
+      "fn_n": 20
+    },
+    {
+      "iou": 0.25,
+      "contain": 0.6,
+      "max_ratio": 3.0,
+      "fp": 5.1,
+      "fn": 24.7,
+      "fp_n": 5,
+      "fn_n": 23
+    },
+    {
+      "iou": 0.2,
+      "contain": 0.6,
+      "max_ratio": 3.0,
+      "fp": 4.1,
+      "fn": 25.8,
+      "fp_n": 4,
+      "fn_n": 24
+    },
+    {
+      "iou": 0.1,
+      "contain": 0.3,
+      "max_ratio": 3.0,
+      "fp": 2.0,
+      "fn": 28.0,
+      "fp_n": 2,
+      "fn_n": 26
+    }
+  ]
+}

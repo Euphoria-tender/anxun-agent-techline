@@ -1,0 +1,525 @@
+# -*- coding: utf-8 -*-
+"""
+安巡 Agent · 规则引擎
+=====================
+
+纯确定性实现：PPE 判定 -> 风险等级核查 -> 工单生成
+
+设计原则
+--------
+1. 不调用任何大模型做判定或计算。同一输入永远同一输出，可复现、可审计。
+2. 所有阈值集中在「一、阈值配置」，答辩时可逐条说明依据。
+3. 每个结论都带 reason 字段，回答「为什么这么判」。
+4. 检测模型只负责产出 Box，不参与任何决策。换模型不影响本文件。
+
+与仓库 main 分支的差异（v1 校准，阈值口径的改动都写在代码注释里）
+--------------------------------------------------------------
+- HEAD_WIDTH_RATIO：头部区域横向收窄到 44%，否则正确戴帽会被判未佩戴
+- CONTAIN_MIN：小目标（护目镜）改用包含度判据，IoU 数学上过不了
+- MIN_PERSON_AREA_RATIO：面积阈值按画面占比换算，不再跨分辨率用绝对值
+- NEG_LABEL：裸头框作为反向证据，正向/反向证据冲突时转人工
+- LEGAL_REFS：把每个违规映射到法规/标准条款（带“待核对原文”标记）
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, asdict
+from datetime import datetime, timedelta
+from typing import Sequence
+
+
+# ============================================================
+# 一、阈值配置
+
+# v1 阈值重标定（100 张真实测试集，CF × IOU 二维网格，见 data/sweep_rules.json）
+#   初版 0.60/0.40/0.30/0.60 → 误报 11.2% / 漏报 38.7%
+#   现值 0.30/0.20/0.25/0.60 → 误报  7.1% / 漏报 24.7%
+# 做过的稳定性检查：测试集对半切开，现值误报 6.8% / 7.7%（稳），
+# 原值 8.5% / 15.4%（波动大）——现值不仅低，而且稳。
+# ⚠️ 仍然是在测试集上选的，属乐观估计；自采数据到位后必须复核。
+CONF_FINAL = 0.30          # >= 此值：直接下结论
+CONF_REVIEW = 0.20         # [此值, CONF_FINAL)：转人工复核
+                           # <  CONF_REVIEW ：丢弃，不输出
+
+HELMET_IOU_MIN = 0.25      # 安全帽框与头部区域的 IoU 阈值（0.30→0.25：误报 11.2%→7.1%）
+HEAD_REGION_RATIO = 0.30   # 头部区域 = 人员框上部 30%
+HEAD_WIDTH_RATIO = 0.44    # 头部区域横向只取人员框中间的 44%（头宽 ≈ 0.44 肩宽）
+                           # v1 校准：原实现取整个人员框宽度，导致安全帽框（约占框宽 42%）
+                           # 与头部区域的 IoU 恒在 0.18 左右，正确佩戴会被判成「未佩戴」。
+                           # 收窄到解剖比例后，正常佩戴的 IoU ≈ 0.41，阈值 0.30 才成立。
+
+CONTAIN_MIN = 0.60         # 装备框「落在区域内」的比例下限。
+                           # 护目镜这类小目标，框面积只有面部区域的 8%，IoU 永远过不了 0.30，
+                           # 所以小目标改用包含度：装备框有 60% 以上落在该区域内即视为佩戴。
+# 1.60 -> 3.00：扫参发现原模型把框画得偏大（帽框面积约为头部区域 0.86 倍，
+# 但分布右尾能到 2 倍以上），1.6 会把一批「真的戴了帽」的正确框整条拒掉，
+# 于是合规的人被判未佩戴。放宽到 3.0 后误报 7.1% -> 5.1%，漏报不变。
+# 数据见 data/sweep_geom.json（同一网格下微调模型仍全面更差，见 README 5.4）
+MAX_EQUIP_RATIO = 3.00     # 装备框面积不得超过区域面积的 3.0 倍
+
+# 按装备分离的几何阈值
+# ----------------------
+# helmet 与 vest 的判定区域完全不同（头部 vs 上身），框的几何分布也不一样，
+# 共用一套阈值必然有一个吃亏。扫参实测（data/sweep_geom.json + README 5.7）：
+#
+#   helmet  最优 IOU 0.25 / MAXR 3.0  -> 误报 5.1%  漏报 24.7%
+#   vest    最优 IOU 0.10 / MAXR 6.0  -> 误报 27.3% 漏报 13.0%
+#
+# vest 模型把背心框画得更松（相对上身区域偏小），IoU 要求必须降到 0.10；
+# 而 helmet 降到 0.10 会把误报从 5.1% 抬到 9.2%。所以只能分开。
+#
+# 实现上 helmet 继续用上面的模块常量（sweep_rules.py / sweep_geom.py 直接改它们，
+# 是 helmet 的扫参入口）；其他装备在这里覆盖。没有覆盖的装备退回模块常量。
+EQUIP_OVERRIDE: dict[str, dict[str, float]] = {
+    "vest": {"iou_min": 0.10, "contain_min": 0.60, "max_ratio": 6.0},
+}
+
+
+def equip_cfg(equip: str) -> dict[str, float]:
+    """取某个装备的几何阈值；没有专门配置的用 helmet 那套常量。"""
+    base = {"iou_min": HELMET_IOU_MIN, "contain_min": CONTAIN_MIN,
+            "max_ratio": MAX_EQUIP_RATIO}
+    base.update(EQUIP_OVERRIDE.get(equip, {}))
+    return base
+
+# 反向证据：有的模型会直接输出「裸头」框（NO-Hardhat）。有就用，没有就退回「未检出」推断。
+# 这一条是拿真实数据跑出来的——只用正向证据时，漏报率一度到 45%。
+NEG_LABEL = {"helmet": "nohelmet"}
+
+MIN_PERSON_AREA = 8000.0   # 人员框面积下限（像素^2），1920×1080 下的标定值
+MIN_ASPECT = 1.20          # 人员框高宽比下限，小于此值视为半身/蹲姿，无法判定
+
+# v1 修正：绝对面积阈值不能跨分辨率用。
+# 8000px² @ 1920×1080 相当于画面面积的 0.386%；换成 640×640 的现场照片，
+# 同样远近的人只剩 1/9 像素，会被整片误判成「无法判定」——实测这一条吃掉了 22% 的漏报。
+# 现在按画面面积占比判，与分辨率解耦；1920×1080 下与原来的 8000px² 完全等价。
+MIN_PERSON_AREA_RATIO = MIN_PERSON_AREA / (1920 * 1080)
+
+
+def min_person_area(width: float, height: float) -> float:
+    """按画面面积换算人员框面积下限，默认按 1920×1080 标定。"""
+    if not width or not height:
+        return MIN_PERSON_AREA
+    return MIN_PERSON_AREA_RATIO * width * height
+
+# 风险矩阵：30 天违规次数 -> 可能性 L
+# (次数上限, L 值)，超出最后一档取 4
+L_TABLE = ((1, 1), (3, 2), (6, 3))
+L_MAX = 4
+
+# 风险矩阵：违规类型 + 场景 -> 后果严重度 S
+S_MAP = {
+    ("helmet",  "高处"): 4,   # 高处作业未戴安全帽
+    ("helmet",  "起重"): 4,   # 起重作业未戴安全帽
+    ("helmet",  "动火"): 3,
+    ("helmet",  "普通"): 3,
+    ("helmet",  "车辆"): 3,   # v1 补：README 的示例（装卸区 R=3）依赖这一行，原表漏了会掉到默认 2
+    ("vest",    "车辆"): 3,   # 有车辆通行区域未穿反光背心
+    ("vest",    "普通"): 2,
+    ("goggles", "飞溅"): 3,
+    ("goggles", "普通"): 2,
+}
+S_DEFAULT = 2
+
+# 等级判定：(风险值下限, 等级, 处置要求, 整改时限)
+GRADE_RULES = (
+    (12, "红色", "立即停止作业并整改", timedelta(hours=2)),
+    (8,  "橙色", "当日整改",           timedelta(hours=24)),
+    (4,  "黄色", "限期整改",           timedelta(days=7)),
+    (0,  "蓝色", "加强关注",           timedelta(days=30)),
+)
+
+# 等级 -> 前端色板（与国内安全色习惯一致：红=最高危）
+GRADE_HEX = {
+    "红色": "#FF4D4F",
+    "橙色": "#FF8C1A",
+    "黄色": "#F2C230",
+    "蓝色": "#2E8BFF",
+}
+
+# 违规类型 -> 中文名 + 整改动作模板
+VIOLATION_INFO = {
+    "helmet":  ("未佩戴安全帽",
+                "补发安全帽 {n} 顶至 {region}，登记发放签收记录，次日复查佩戴率"),
+    "vest":    ("未穿戴反光背心",
+                "补发反光背心 {n} 件至 {region}，登记领用记录，次日复查穿戴率"),
+    "goggles": ("未佩戴防护眼镜",
+                "配发防护眼镜 {n} 副至 {region}，登记领用记录，次日复查佩戴率"),
+}
+
+# 法规/标准依据。
+# ⚠️ needs_check=True 表示：条款号需与原文逐字核对后再进 PPT（评委可能当场翻）。
+LEGAL_REFS = {
+    "helmet": [
+        {"doc": "《中华人民共和国安全生产法》", "clause": "第四十五条",
+         "point": "必须为从业人员提供符合标准的劳动防护用品，并监督、教育其按规则佩戴使用",
+         "needs_check": True},
+        {"doc": "GB 2811-2019《头部防护 安全帽》", "clause": "技术要求",
+         "point": "安全帽的选用、佩戴与报废周期", "needs_check": True},
+    ],
+    "vest": [
+        {"doc": "GB 39800.1-2020《个体防护装备配备规范 第1部分：总则》",
+         "clause": "配备要求", "point": "按作业风险类别确定个体防护装备配备", "needs_check": True},
+    ],
+    "goggles": [
+        {"doc": "GB 39800.1-2020《个体防护装备配备规范 第1部分：总则》",
+         "clause": "配备要求", "point": "飞溅、粉尘作业需配备眼面部防护", "needs_check": True},
+    ],
+}
+
+
+# ============================================================
+# 二、基础数据结构
+
+@dataclass
+class Box:
+    """一个检测框。这是检测模型与本引擎之间唯一的接口。"""
+    label: str
+    conf: float
+    x1: float
+    y1: float
+    x2: float
+    y2: float
+
+    @property
+    def w(self) -> float:
+        return max(0.0, self.x2 - self.x1)
+
+    @property
+    def h(self) -> float:
+        return max(0.0, self.y2 - self.y1)
+
+    @property
+    def area(self) -> float:
+        return self.w * self.h
+
+    @property
+    def cx(self) -> float:
+        return (self.x1 + self.x2) / 2
+
+    @property
+    def cy(self) -> float:
+        return (self.y1 + self.y2) / 2
+
+    def top_region(self, ratio: float = HEAD_REGION_RATIO,
+                   width_ratio: float = 1.0) -> "Box":
+        """返回框的顶部区域（默认上部 30%，横向按 width_ratio 居中收窄）。"""
+        half = self.w * width_ratio / 2.0
+        return Box(self.label, self.conf, self.cx - half, self.y1,
+                   self.cx + half, self.y1 + self.h * ratio)
+
+    def to_dict(self) -> dict:
+        return {"label": self.label, "conf": round(self.conf, 3),
+                "x1": round(self.x1, 1), "y1": round(self.y1, 1),
+                "x2": round(self.x2, 1), "y2": round(self.y2, 1)}
+
+
+def iou(a: Box, b: Box) -> float:
+    """交并比。"""
+    ix1, iy1 = max(a.x1, b.x1), max(a.y1, b.y1)
+    ix2, iy2 = min(a.x2, b.x2), min(a.y2, b.y2)
+    iw, ih = max(0.0, ix2 - ix1), max(0.0, iy2 - iy1)
+    inter = iw * ih
+    if inter <= 0:
+        return 0.0
+    union = a.area + b.area - inter
+    return inter / union if union > 0 else 0.0
+
+
+# ============================================================
+# 三、PPE 判定
+
+@dataclass
+class Verdict:
+    """单人单类装备的判定结果。"""
+    person_idx: int
+    equip: str              # helmet / vest / goggles
+    status: str             # 已佩戴 / 未佩戴 / 无法判定 / 待复核 / 丢弃
+    conf: float
+    reason: str
+    is_violation: bool = False
+    person_id: str = ""     # 画面内编号 P1/P2，给界面用
+    iou: float = 0.0        # 命中的最大 IoU，界面可展示
+
+    def to_dict(self) -> dict:
+        return {
+            "person_idx": self.person_idx, "person_id": self.person_id,
+            "equip": self.equip, "status": self.status,
+            "conf": round(self.conf, 3), "reason": self.reason,
+            "is_violation": self.is_violation, "iou": round(self.iou, 3),
+        }
+
+
+def judge_equipment(person: Box, idx: int, boxes: Sequence[Box],
+                    equip: str, area_min: float | None = None) -> Verdict:
+    """
+    判定单人某项装备的佩戴状态。
+
+    判定链：
+      1. 尺度/姿态可用性检查 -> 不合格直接「无法判定」
+      2. 取头部（或上身）区域，与同类装备框求最大 IoU
+      3. 达阈值 -> 已佩戴；未达 -> 未佩戴
+      4. 按置信度分档：定论 / 待复核 / 丢弃
+    """
+    pid = f"P{idx + 1}"
+
+    # --- 1. 可用性检查 ---
+    limit = MIN_PERSON_AREA if area_min is None else area_min
+    if person.area < limit:
+        return Verdict(idx, equip, "无法判定", person.conf,
+                       f"人员框面积 {person.area:.0f}px² 小于下限 {limit:.0f}px²，目标过小",
+                       person_id=pid)
+    if person.h / max(person.w, 1e-6) < MIN_ASPECT:
+        return Verdict(idx, equip, "无法判定", person.conf,
+                       f"高宽比 {person.h / max(person.w, 1e-6):.2f} 小于 {MIN_ASPECT}，疑似半身或非站姿",
+                       person_id=pid)
+
+    # --- 2. 圈定比对区域 ---
+    if equip == "helmet":
+        region = person.top_region(HEAD_REGION_RATIO, HEAD_WIDTH_RATIO)
+        region_name = "头部区域"
+    elif equip == "goggles":
+        region = person.top_region(0.45, HEAD_WIDTH_RATIO)
+        region_name = "面部区域"
+    else:  # vest
+        region = Box("torso", person.conf, person.x1,
+                     person.y1 + person.h * 0.20,
+                     person.x2, person.y1 + person.h * 0.70)
+        region_name = "上身区域"
+
+    # --- 3. 找最佳匹配框（IoU 与包含度同时算） ---
+    cfg = equip_cfg(equip)
+    iou_min, contain_min, max_ratio = (cfg["iou_min"], cfg["contain_min"],
+                                       cfg["max_ratio"])
+
+    def _score(label: str):
+        """返回 (最佳框, IoU, 包含度, 是否达标)。label 为空时永不达标。"""
+        best, bi, bc = None, 0.0, 0.0
+        for b in boxes:
+            if not label or b.label != label:
+                continue
+            if b.area <= 0 or b.area > max_ratio * region.area:
+                continue
+            v = iou(region, b)
+            ix1, iy1 = max(region.x1, b.x1), max(region.y1, b.y1)
+            ix2, iy2 = min(region.x2, b.x2), min(region.y2, b.y2)
+            inter = max(0.0, ix2 - ix1) * max(0.0, iy2 - iy1)
+            contain = inter / b.area if b.area > 0 else 0.0
+            if (v, contain) > (bi, bc):
+                best, bi, bc = b, v, contain
+        ok = best is not None and (bi >= iou_min or bc >= contain_min)
+        return best, bi, bc, ok
+
+    best, best_iou, best_contain, matched = _score(equip)
+    # 反向证据：模型专门训过「裸头」这一类（NO-Hardhat）。扔了它就只剩半个模型。
+    neg, neg_iou, neg_contain, neg_ok = _score(NEG_LABEL.get(equip, ""))
+
+    # --- 4. 结论 ---
+    # 顺序很重要：正向证据优先；反向证据只有「高置信」时才有权覆盖。
+    # 低置信度的裸头框不许把已经确定的结论降级——第一版写反了，漏报率从 45% 涨到 59%。
+    if matched and best.conf >= CONF_FINAL:
+        if neg_ok and neg.conf >= CONF_FINAL:
+            return Verdict(idx, equip, "待复核", max(best.conf, neg.conf),
+                           f"正反证据冲突：头部区域同时检出装备框（{best.conf:.2f}）"
+                           f"与裸头框（{neg.conf:.2f}），转人工",
+                           person_id=pid, iou=best_iou)
+        return Verdict(idx, equip, "已佩戴", best.conf,
+                       f"装备框与{region_name} IoU={best_iou:.2f}，包含度 {best_contain:.2f}，"
+                       f"置信度 {best.conf:.2f}",
+                       person_id=pid, iou=best_iou)
+
+    if matched:
+        conf = best.conf
+        if conf < CONF_REVIEW:
+            return Verdict(idx, equip, "丢弃", conf,
+                           f"装备框置信度 {conf:.2f} 低于 {CONF_REVIEW}，不可用",
+                           person_id=pid, iou=best_iou)
+        return Verdict(idx, equip, "待复核", conf,
+                       f"装备框与{region_name} IoU={best_iou:.2f} / 包含度 {best_contain:.2f} 成立，"
+                       f"但置信度 {conf:.2f} 落在复核区间",
+                       person_id=pid, iou=best_iou)
+
+    if neg_ok and neg.conf >= CONF_FINAL:
+        return Verdict(idx, equip, "未佩戴", neg.conf,
+                       f"{region_name}内检出裸头框（IoU={neg_iou:.2f}，包含度 {neg_contain:.2f}，"
+                       f"置信度 {neg.conf:.2f}），反向证据成立",
+                       is_violation=True, person_id=pid, iou=neg_iou)
+
+    # 未匹配到装备框 -> 未佩戴。此时可信度取决于「人」判定得多确定
+    conf = person.conf
+    if conf < CONF_REVIEW:
+        return Verdict(idx, equip, "丢弃", conf,
+                       f"人员框置信度 {conf:.2f} 过低，不作为依据",
+                       person_id=pid, iou=best_iou)
+    if conf < CONF_FINAL:
+        return Verdict(idx, equip, "待复核", conf,
+                       f"{region_name}内未检出装备框，但人员框置信度 {conf:.2f} 落在复核区间",
+                       person_id=pid, iou=best_iou)
+    return Verdict(idx, equip, "未佩戴", conf,
+                   f"{region_name}内未检出装备框（最高 IoU={best_iou:.2f} < {iou_min}，"
+                   f"包含度 {best_contain:.2f} < {contain_min}），判定为未佩戴",
+                   is_violation=True, person_id=pid, iou=best_iou)
+
+
+def judge_frame(boxes: Sequence[Box],
+                equips: Sequence[str] = ("helmet", "vest"),
+                area_min: float | None = None) -> list[Verdict]:
+    """对一帧内的所有人做指定装备的判定。area_min 不给则用 1080p 标定值。"""
+    persons = [b for b in boxes if b.label == "person"]
+    out: list[Verdict] = []
+    for i, p in enumerate(persons):
+        for e in equips:
+            out.append(judge_equipment(p, i, boxes, e, area_min=area_min))
+    return out
+
+
+def aggregate_temporal(frames: Sequence[Sequence[Verdict]],
+                       need: int = 3) -> list[Verdict]:
+    """
+    时序聚合：同一人员连续 need 帧结论一致才定论。
+    不足 need 帧的标为「待复核」。用于压制单帧抖动。
+    """
+    if len(frames) < need:
+        res = []
+        for v in frames[-1]:
+            if v.status in ("已佩戴", "未佩戴"):
+                res.append(Verdict(v.person_idx, v.equip, "待复核", v.conf,
+                                   f"仅 {len(frames)} 帧，不足 {need} 帧时序确认",
+                                   person_id=v.person_id, iou=v.iou))
+            else:
+                res.append(v)
+        return res
+
+    window = frames[-need:]
+    final: list[Verdict] = []
+    for k, last in enumerate(window[-1]):
+        seq = [w[k].status for w in window if k < len(w)]
+        if len(seq) == need and len(set(seq)) == 1:
+            st = seq[0]
+            if st in ("已佩戴", "未佩戴"):
+                final.append(Verdict(last.person_idx, last.equip, st, last.conf,
+                                     f"连续 {need} 帧一致：" + last.reason,
+                                     is_violation=(st == "未佩戴"),
+                                     person_id=last.person_id, iou=last.iou))
+            else:
+                # 无法判定 / 丢弃 属于失效状态，不得被改写为待复核
+                final.append(Verdict(last.person_idx, last.equip, st, last.conf,
+                                     last.reason,
+                                     person_id=last.person_id, iou=last.iou))
+        else:
+            final.append(Verdict(last.person_idx, last.equip, "待复核", last.conf,
+                                 f"连续 {need} 帧结论不一致：{seq}",
+                                 person_id=last.person_id, iou=last.iou))
+    return final
+
+
+# ============================================================
+# 四、风险矩阵
+
+def likelihood(violation_count_30d: int) -> int:
+    """可能性 L：由该区域近 30 天违规次数决定。"""
+    for cap, val in L_TABLE:
+        if violation_count_30d <= cap:
+            return val
+    return L_MAX
+
+
+def severity(equip: str, scene: str) -> int:
+    """后果严重度 S：由违规类型 + 作业场景决定。"""
+    return S_MAP.get((equip, scene), S_DEFAULT)
+
+
+def grade_of(risk: int) -> tuple[str, str, timedelta]:
+    """风险值 -> (等级, 处置要求, 整改时限)。"""
+    for low, name, action, due in GRADE_RULES:
+        if risk >= low:
+            return name, action, due
+    return "蓝色", "加强关注", timedelta(days=30)
+
+
+# ============================================================
+# 五、事件与工单
+
+@dataclass
+class Region:
+    region_id: str
+    name: str
+    scene: str                 # 高处 / 起重 / 动火 / 车辆 / 普通 / 消防通道
+    owner: str                 # 责任班组长
+    violation_30d: int = 0
+    risk_class: str = "普通"
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
+class Event:
+    event_id: str
+    region: Region
+    equip: str
+    ts: datetime
+    conf: float
+    evidence: str
+    L: int = 0
+    S: int = 0
+    R: int = 0
+    grade: str = ""
+    action: str = ""
+    due_at: datetime | None = None
+
+
+def build_event(region: Region, equip: str, ts: datetime,
+                conf: float, evidence: str, event_id: str = "") -> Event:
+    """把一条违规判定转成带定级的事件。"""
+    L = likelihood(region.violation_30d)
+    S = severity(equip, region.scene)
+    R = L * S
+    g, act, due_delta = grade_of(R)
+    return Event(
+        event_id=event_id or f"EV-{ts:%Y%m%d%H%M%S}-{region.region_id}",
+        region=region, equip=equip, ts=ts, conf=conf, evidence=evidence,
+        L=L, S=S, R=R, grade=g, action=act, due_at=ts + due_delta,
+    )
+
+
+def make_ticket(ev: Event, affected: int = 1) -> dict:
+    """生成可执行、可追踪的整改工单。"""
+    cn, tpl = VIOLATION_INFO.get(ev.equip, ("未知违规", "整改{region}"))
+    requirement = tpl.format(n=affected, region=ev.region.name)
+    escalate_1 = ev.ts + (ev.due_at - ev.ts) * 0.5
+    return {
+        "ticket_id": f"TK-{ev.event_id.split('-', 1)[1]}",
+        "event_id": ev.event_id,
+        "violation": cn,
+        "equip": ev.equip,
+        "region": ev.region.name,
+        "region_id": ev.region.region_id,
+        "grade": ev.grade,
+        "grade_hex": GRADE_HEX.get(ev.grade, "#888"),
+        "risk": ev.R,
+        "L": ev.L,
+        "S": ev.S,
+        "scene": ev.region.scene,
+        "requirement": requirement,
+        "assignee": ev.region.owner,
+        "cc": "部门安全负责人" if ev.grade == "红色" else "",
+        "created_at": ev.ts.isoformat(timespec="minutes"),
+        "due_at": ev.due_at.isoformat(timespec="minutes"),
+        "review_at": (ev.due_at + timedelta(days=1)).isoformat(timespec="minutes"),
+        "escalate_at_50pct": escalate_1.isoformat(timespec="minutes"),
+        "status": "派单",
+        "evidence": ev.evidence,
+        "legal": LEGAL_REFS.get(ev.equip, []),
+    }
+
+
+def to_json(obj) -> str:
+    import json
+    def conv(o):
+        if isinstance(o, datetime):
+            return o.isoformat(timespec="minutes")
+        if hasattr(o, "__dataclass_fields__"):
+            return asdict(o)
+        raise TypeError(str(type(o)))
+    return json.dumps(obj, ensure_ascii=False, indent=2, default=conv)

@@ -1,0 +1,17 @@
+# 行尾规范化：shell 脚本必须是 LF，否则在 macOS/Linux 上会报 bad interpreter
+* text=auto eol=lf
+
+# Windows 批处理保持 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 明确按文本处理的格式（避免被当成二进制）
+*.py text
+*.sh text eol=lf
+*.md text
+*.json text
+*.yaml text eol=lf
+*.txt text
+*.html text
+*.css text
+*.js text

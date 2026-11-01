@@ -1,0 +1,27 @@
+[
+  {
+    "batch": 1,
+    "total_ms": 19.5,
+    "per_frame_ms": 19.5
+  },
+  {
+    "batch": 2,
+    "total_ms": 30.3,
+    "per_frame_ms": 15.2
+  },
+  {
+    "batch": 4,
+    "total_ms": 54.8,
+    "per_frame_ms": 13.7
+  },
+  {
+    "batch": 8,
+    "total_ms": 118.0,
+    "per_frame_ms": 14.8
+  },
+  {
+    "batch": 16,
+    "total_ms": 224.9,
+    "per_frame_ms": 14.1
+  }
+]
