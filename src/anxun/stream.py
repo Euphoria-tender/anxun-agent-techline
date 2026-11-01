@@ -363,6 +363,29 @@ class VideoInspector:
         return self.stats
 
 
+# 落盘时不写的字段：这些是「本次运行的性能」，不是账本内容。
+# 同一条视频在两台机器上跑，耗时必然不同 —— 写进账本只会让文件无谓地变脏，
+# 而且会让人误以为判定结果变了。性能数字看 metrics_real.json 与 verify_report。
+_TIMING_KEYS = ("infer_ms_total", "avg_infer_ms", "wall_s", "realtime_factor")
+
+
+def rel_source(src: str) -> str:
+    """本地文件写成相对仓库根的路径；RTSP 地址原样保留。
+
+    绝对路径进 JSON 等于把「换台电脑就跑不动」写进数据文件里，
+    和 data.yaml 不许写死 `D:/` 是同一条原则。
+    """
+    try:
+        return Path(src).resolve().relative_to(ROOT).as_posix()
+    except (ValueError, OSError):
+        return src
+
+
+def ledger_stats(stats: dict) -> dict:
+    """只留账本口径的字段：帧数、人次、告警。"""
+    return {k: v for k, v in stats.items() if k not in _TIMING_KEYS}
+
+
 def _event_dict(ev, v, tr, t_video: float) -> dict:
     t = make_ticket(ev, affected=1)
     return {
@@ -443,8 +466,8 @@ def main() -> int:
 
     if args.out:
         Path(args.out).write_text(json.dumps(
-            {"source": args.source, "region": region.name, "fps": args.fps,
-             "stats": stats, "events": insp.events,
+            {"source": rel_source(args.source), "region": region.name, "fps": args.fps,
+             "stats": ledger_stats(stats), "events": insp.events,
              "ledger": insp.pipe.ledger}, ensure_ascii=False, indent=2),
             encoding="utf-8")
         print(f"-> {args.out}")

@@ -76,7 +76,7 @@ def line_chart(trend: list[dict], w: int = 560, h: int = 190) -> str:
     for t in trend:
         if not t["persons"]:
             continue
-        bh = (t["persons"] / max_p) * ih * 0.42
+        bh = (t["persons"] / max_p) * ih * 0.30
         x0, x1 = x(t["t_start_s"]), x(t["t_end_s"])
         bw = max(1.5, x1 - x0 - 1)
         bars.append(f'<rect x="{x0:.1f}" y="{pad_t + ih - bh:.1f}" '
@@ -118,19 +118,25 @@ def line_chart(trend: list[dict], w: int = 560, h: int = 190) -> str:
 def bar_chart(rows: list[dict], w: int = 460, h: int = 190,
               label_key: str = "grade", value_key: str = "count",
               color_key: str | None = None) -> str:
-    """横向条形图。rows 需已排好序。"""
+    """横向条形图。rows 需已排好序。
+
+    条高与间距都是固定值、整组垂直居中 —— 不能按「可用高度 / 条数」去摊，
+    否则只有 2 条时会摊成两条相隔 60px 的横线，看着像坏了。
+    """
     if not rows:
         return '<div class="empty">无数据</div>'
-    pad_l, pad_r, pad_t = 66, 46, 10
+    pad_l, pad_r, pad_t = 66, 46, 8
     iw = w - pad_l - pad_r
     n = len(rows)
-    bh = min(26, (h - pad_t - 10) / max(1, n) - 6)
-    gap = ((h - pad_t - 10) - bh * n) / max(1, n)
+    bh = 22.0
+    gap = 13.0
+    total = bh * n + gap * (n - 1)
+    top0 = pad_t + max(0.0, (h - pad_t - 10 - total) / 2)
     mx = max((r[value_key] for r in rows), default=1) or 1
 
     out = []
     for k, r in enumerate(rows):
-        top = pad_t + k * (bh + gap)
+        top = top0 + k * (bh + gap)
         bl = max(2.0, (r[value_key] / mx) * iw)
         color = r.get(color_key) if color_key else "#0f766e"
         out.append(
@@ -151,11 +157,13 @@ GRADE_COLOR = {"红色": "#dc2626", "橙色": "#ea580c", "黄色": "#ca8a04",
 # ============================================================
 # 页面
 
-def kpi_card(label: str, value: str, sub: str, accent: str = "#0f766e") -> str:
+def kpi_card(label: str, value: str, sub: str, accent: str = "#0f766e",
+             note: str = "") -> str:
+    note_html = f'<div class="kpi-note">{_esc(note)}</div>' if note else ""
     return (f'<div class="kpi" style="border-top-color:{accent}">'
             f'<div class="kpi-label">{_esc(label)}</div>'
             f'<div class="kpi-value" style="color:{accent}">{_esc(value)}</div>'
-            f'<div class="kpi-sub">{_esc(sub)}</div></div>')
+            f'<div class="kpi-sub">{_esc(sub)}</div>{note_html}</div>')
 
 
 def render(vm: dict, events: list[dict] | None = None) -> str:
@@ -168,17 +176,19 @@ def render(vm: dict, events: list[dict] | None = None) -> str:
 
     cards = "".join([
         kpi_card("巡检覆盖率", f"{_num(cov['value'])}×",
-                 f"系统 {cov['system_minutes']:g} 分钟 vs 人工 {cov['manual_minutes']:g} 分钟（推演）",
-                 "#0f766e"),
+                 f"系统 {cov['system_minutes']:g} 分钟 vs 人工 {cov['manual_minutes']:g} 分钟",
+                 "#0f766e", note="排班推演，非实测"),
         kpi_card("判定覆盖率", _pct(ver["value"]),
                  f"{ver['judged']}/{ver['persons_total']} 人次有定论", "#2563eb"),
         kpi_card("告警降噪率", _pct(den["value"]),
                  f"{den['raw']} 次逐帧告警 → {den['events']} 条事件", "#7c3aed"),
         kpi_card("合规率", _pct(comp["value"]),
                  f"{comp['ok']} 合规 / {comp['violation']} 违规（n={comp['n']}）",
-                 "#dc2626" if comp["violation"] > comp["ok"] else "#16a34a"),
+                 "#dc2626" if comp["violation"] > comp["ok"] else "#16a34a",
+                 note="素材为违规演示样本，非现场水平"),
         kpi_card("违规持续时长", f"{_num(dur['p50'])}s",
-                 f"P95 {dur['p95']}s · 最长 {dur['max']}s · n={dur['n']}", "#ea580c"),
+                 f"P95 {dur['p95']}s · 最长 {dur['max']}s · n={dur['n']}",
+                 "#ea580c", note="素材无整改过程，非整改耗时"),
     ])
 
     # 等级分布：从事件里数
@@ -246,6 +256,7 @@ def render(vm: dict, events: list[dict] | None = None) -> str:
   .kpi-value {{ font-size: 27px; font-weight: 700; margin: 5px 0 4px;
                font-variant-numeric: tabular-nums; }}
   .kpi-sub {{ font-size: 10.5px; color: #94a3b8; line-height: 1.45; }}
+  .kpi-note {{ font-size: 9.5px; color: #b45309; line-height: 1.35; margin-top: 3px; }}
   .charts {{ display: grid; grid-template-columns: 1.22fr 1fr; gap: 16px; margin-top: 20px; }}
   .card {{ border: 1px solid #e6ebf2; border-radius: 6px; padding: 13px 14px 10px; }}
   .card h2 {{ margin: 0 0 8px; font-size: 13px; color: #334155; font-weight: 600; }}
@@ -313,12 +324,125 @@ def render(vm: dict, events: list[dict] | None = None) -> str:
 </html>"""
 
 
+def render_slide(vm: dict, events: list[dict] | None = None) -> str:
+    """1280×720 单页版，给 PPT 第 15 页直接贴。
+
+    和 `render()` 的区别：去掉事件明细表（投影上看不清，明细在完整版里），
+    保留五张 KPI 卡 + 两张图 + 一行口径。高度写死在 720 —— 不是靠
+    `overflow:hidden` 硬裁，是靠分配好每块高度让它自然放得下。
+    """
+    m = vm["metrics"]
+    b = vm["basis"]
+    cov, ver = m["coverage_ratio"], m["verdict_coverage"]
+    den, comp = m["denoise_ratio"], m["compliance_rate"]
+    dur = m["violation_duration_s"]
+
+    cards = "".join([
+        kpi_card("巡检覆盖率", f"{_num(cov['value'])}×",
+                 f"{cov['system_minutes']:g} 分钟 vs 人工 {cov['manual_minutes']:g} 分钟",
+                 "#0f766e", note="排班推演"),
+        kpi_card("判定覆盖率", _pct(ver["value"]),
+                 f"{ver['judged']}/{ver['persons_total']} 人次有定论", "#2563eb"),
+        kpi_card("告警降噪率", _pct(den["value"]),
+                 f"{den['raw']} 次 → {den['events']} 条", "#7c3aed"),
+        kpi_card("合规率", _pct(comp["value"]),
+                 f"{comp['ok']} 合规 / {comp['violation']} 违规",
+                 "#dc2626" if comp["violation"] > comp["ok"] else "#16a34a",
+                 note="违规演示素材"),
+        kpi_card("违规持续时长", f"{_num(dur['p50'])}s",
+                 f"P95 {dur['p95']}s · n={dur['n']}",
+                 "#ea580c", note="非整改耗时"),
+    ])
+
+    grades: dict[str, int] = {}
+    for e in (events or []):
+        g = e.get("grade") or "未定级"
+        grades[g] = grades.get(g, 0) + 1
+    order = ["红色", "橙色", "黄色", "蓝色", "未定级"]
+    grade_rows = [{"grade": g, "count": grades[g], "color": GRADE_COLOR.get(g, "#94a3b8")}
+                  for g in order if grades.get(g)]
+    grade_rows.sort(key=lambda r: -r["count"])
+
+    regions = vm.get("region_ranking") or []
+    region_rows = [{"region": r.get("region_id") or r["region"][:6],
+                    "count": r["events"]} for r in regions[:5]]
+
+    return f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>安巡 Agent · 巡检价值简报 16:9</title>
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{ background: #eef1f5; font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+         color: #0f172a; display: flex; justify-content: center; padding: 16px; }}
+  .slide {{ width: 1280px; height: 720px; background: #fff; padding: 28px 36px;
+           box-shadow: 0 2px 14px rgba(15,23,42,.10); display: flex; flex-direction: column; }}
+  .top {{ display: flex; justify-content: space-between; align-items: baseline; }}
+  h1 {{ font-size: 23px; letter-spacing: .5px; }}
+  .meta {{ font-size: 11.5px; color: #64748b; }}
+  .meta b {{ color: #0f766e; font-weight: 600; }}
+  .rule {{ height: 3px; background: linear-gradient(90deg,#0f766e,#2563eb 55%,#e2e8f0);
+          margin: 10px 0 14px; border-radius: 2px; }}
+  .kpis {{ display: grid; grid-template-columns: repeat(5,1fr); gap: 11px; height: 150px; }}
+  .kpi {{ background: #fbfcfd; border: 1px solid #e6ebf2; border-top: 3px solid;
+         border-radius: 6px; padding: 12px; display: flex; flex-direction: column;
+         justify-content: center; }}
+  .kpi-label {{ font-size: 11.5px; color: #64748b; }}
+  .kpi-value {{ font-size: 30px; font-weight: 700; margin: 3px 0 2px;
+               font-variant-numeric: tabular-nums; line-height: 1.1; }}
+  .kpi-sub {{ font-size: 10px; color: #94a3b8; line-height: 1.4; }}
+  .kpi-note {{ font-size: 9.5px; color: #b45309; line-height: 1.3; margin-top: 2px; }}
+  .charts {{ display: grid; grid-template-columns: 1.18fr 1fr; gap: 14px;
+            margin-top: 14px; height: 452px; }}
+  .card {{ border: 1px solid #e6ebf2; border-radius: 6px; padding: 10px 12px 6px; }}
+  .card h2 {{ font-size: 12.5px; color: #334155; font-weight: 600; margin-bottom: 5px; }}
+  .empty {{ font-size: 11px; color: #94a3b8; padding: 40px 8px; text-align: center; }}
+  .foot {{ margin-top: 12px; background: #fbfcfd; border: 1px solid #e6ebf2;
+          border-left: 3px solid #f59e0b; border-radius: 5px; padding: 9px 14px;
+          font-size: 10.5px; color: #57534e; line-height: 1.62; }}
+  .foot b {{ color: #92400e; font-weight: 600; }}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="top">
+    <h1>安巡 Agent · 巡检价值简报</h1>
+    <div class="meta">样本 <b>{b['video_s']:g}s</b> · {b['streams']} 路 ·
+      出现 <b>{b['persons_total']}</b> 人次 · 逐帧告警 <b>{b['raw_alarms']}</b> 次 ·
+      事件 <b>{b['events']}</b> 条</div>
+  </div>
+  <div class="rule"></div>
+
+  <div class="kpis">{cards}</div>
+
+  <div class="charts">
+    <div class="card"><h2>合规率时段趋势</h2>{line_chart(vm.get('trend') or [], w=640, h=402)}</div>
+    <div class="card"><h2>告警等级分布 / 区域排行</h2>
+      {bar_chart(grade_rows, w=520, h=192, color_key="color") if grade_rows else '<div class="empty">无告警事件</div>'}
+      {bar_chart(region_rows, w=520, h=192, label_key="region", value_key="count") if len(region_rows) > 1 else ''}
+    </div>
+  </div>
+
+  <div class="foot">
+    <b>读图须知</b>：巡检覆盖率是<b>排班推演</b>（人工每班 2 次 × 15 分钟），非实测；
+    合规率 {_pct(comp['value'])} 来自<b>违规演示素材</b>，不代表现场水平；
+    违规持续时长是<b>单次告警持续</b>，素材无整改过程，故非整改耗时。
+    判定覆盖率 {_pct(ver['value'])} 低是轨迹碎片化（720p 素材 13.5% / 1080p 100%），不是模型不准。
+  </div>
+</div>
+</body>
+</html>"""
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="安巡 Agent 巡检价值报告")
     ap.add_argument("--metrics", required=True, help="stats.py 输出的价值指标 JSON")
     ap.add_argument("--events", default="", nargs="*",
                     help="事件 JSON（用于明细表与等级分布），可多份")
     ap.add_argument("--out", required=True, help="输出 HTML 路径")
+    ap.add_argument("--slide", action="store_true",
+                    help="输出 1280×720 单页版（贴 PPT 用），而不是完整文档版")
     args = ap.parse_args()
 
     vm = json.loads(Path(args.metrics).read_text(encoding="utf-8"))
@@ -327,10 +451,11 @@ def main() -> int:
         d = json.loads(Path(p).read_text(encoding="utf-8"))
         events.extend(d.get("events") or [])
 
-    out = render(vm, events)
+    out = render_slide(vm, events) if args.slide else render(vm, events)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(out, encoding="utf-8")
-    print(f"-> {args.out}  ({len(out) / 1024:.1f} KB, {len(events)} 条事件)")
+    print(f"-> {args.out}  ({len(out) / 1024:.1f} KB, {len(events)} 条事件, "
+          f"{'16:9 单页' if args.slide else '完整文档'})")
     return 0
 
 

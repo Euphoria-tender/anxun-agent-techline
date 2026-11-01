@@ -330,7 +330,9 @@ def compute(bundles: list[dict], *, hours: float = 8.0,
     n_streams = int(streams) if streams else max(1, int(st.get("streams") or 1))
     return {
         "schema": SCHEMA,
-        "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        # 只到日期，不到分钟：这份 JSON 要入库，精确到分钟会让「同一条视频跑两次」
+        # 产生不同的文件，每次提交都带上一个无意义的 diff。需要精确时间看 git 提交。
+        "generated_at": datetime.now().strftime("%Y-%m-%d"),
         "sources": m["sources"],
         "basis": {
             "video_s": st.get("video_s", 0.0),

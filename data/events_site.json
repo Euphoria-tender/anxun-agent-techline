@@ -7,15 +7,11 @@
     "frames_processed": 21,
     "frames_skipped": 99,
     "gate_skipped": 11,
-    "infer_ms_total": 563.0900000000001,
     "events": 6,
     "raw_alarms": 12,
     "persons_total": 37,
     "ledger": 15,
-    "realtime_factor": 33.43,
-    "wall_s": 1.8,
-    "video_s": 60.0,
-    "avg_infer_ms": 26.8
+    "video_s": 60.0
   },
   "events": [
     {

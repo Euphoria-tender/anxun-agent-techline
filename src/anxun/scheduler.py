@@ -36,7 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from anxun.catalog import REGION_MAP                       # noqa: E402
 from anxun import backend as backend_mod                 # noqa: E402
-from anxun.stream import StreamPipeline                    # noqa: E402
+from anxun.stream import StreamPipeline, ledger_stats, rel_source   # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -244,8 +244,9 @@ def main() -> int:
 
     if args.out:
         Path(args.out).write_text(json.dumps(
-            {"sources": srcs, "batch": args.batch, "fps": args.fps,
-             "stats": stats, "events": sch.events, "ledger": sch.ledger},
+            {"sources": [rel_source(s) for s in srcs],
+             "batch": args.batch, "fps": args.fps,
+             "stats": ledger_stats(stats), "events": sch.events, "ledger": sch.ledger},
             ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"-> {args.out}")
     return 0

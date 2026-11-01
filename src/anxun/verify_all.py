@@ -539,18 +539,21 @@ def verify_value() -> None:
     got = set((vm.get("metrics") or {}).keys())
     check("价值", "价值指标五项齐全", want <= got, f"缺 {sorted(want - got)}" if want - got else "")
 
-    # ④ 报告里的数字必须来自这份 JSON，不能是另一套
-    rp = ROOT / "docs" / "figs" / "value_report.html"
-    if not rp.exists():
-        check("价值", "价值报告已生成", False, "缺 docs/figs/value_report.html，跑 report.py")
-    else:
+    # ④ 两版报告里的数字必须都来自这份 JSON，不能各说各的
+    m = vm["metrics"]
+    exp = [f"{m['denoise_ratio']['value'] * 100:.1f}%",
+           f"{m['verdict_coverage']['value'] * 100:.1f}%",
+           f"{m['compliance_rate']['value'] * 100:.1f}%"]
+    for fn, name in (("value_report.html", "完整版"),
+                     ("value_report_16x9.html", "16:9 单页")):
+        rp = ROOT / "docs" / "figs" / fn
+        if not rp.exists():
+            check("价值", f"{name}报告已生成", False,
+                  f"缺 docs/figs/{fn}，跑 tools/make_value_report.py")
+            continue
         t = rp.read_text(encoding="utf-8")
-        m = vm["metrics"]
-        exp = [f"{m['denoise_ratio']['value'] * 100:.1f}%",
-               f"{m['verdict_coverage']['value'] * 100:.1f}%",
-               f"{m['compliance_rate']['value'] * 100:.1f}%"]
         miss = [s for s in exp if s not in t]
-        check("价值", "报告 KPI 与指标 JSON 一致", not miss,
+        check("价值", f"{name}报告 KPI 与指标 JSON 一致", not miss,
               f"报告缺 {miss}" if miss else "降噪 / 判定覆盖 / 合规率")
 
     # ⑤ README 承诺的数字要真的在 README 里（v1.2.0 漏过一次同步）

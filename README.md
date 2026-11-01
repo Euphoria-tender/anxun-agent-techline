@@ -37,8 +37,8 @@ python src/anxun/verify_all.py
 
 | 场景 | 结果 |
 | :--- | :--- |
-| 克隆仓库直接跑 | **52 项：49 PASS · 0 FAIL · 3 SKIP** |
-| 补齐训练集与 1080p 素材后 | **52 项：52 PASS · 0 FAIL** |
+| 克隆仓库直接跑 | **53 项：50 PASS · 0 FAIL · 3 SKIP** |
+| 补齐训练集与 1080p 素材后 | **53 项：53 PASS · 0 FAIL** |
 
 3 项 SKIP 是体积原因没入库的大件（60MB 训练集、51MB 复验素材），脚本把「缺件」和「东西坏了」分开报，不算失败。
 验收脚本会真起服务、真跑推理、真读 JSON、真数技术页的页数与数字，不是检查文件存不存在。
@@ -137,13 +137,13 @@ ONNX 版是自己实现的 letterbox + 解码 + NMS（`onnx_backend.py`，纯 nu
 
 ```bash
 pip install -r requirements-cpu.txt    # 约 80 MB，不需要 torch
-python src/anxun/verify_all.py         # 合计 52 项：PASS 49 · FAIL 0 · SKIP 3（--no-serve 时 51 项）
+python src/anxun/verify_all.py         # 合计 53 项：PASS 50 · FAIL 0 · SKIP 3（--no-serve 时 52 项）
 python src/anxun/evaluate_real.py      # 复现四个指标，实测与原 JSON 一字不差
 ```
 
 那 3 项 SKIP 都是**体积原因没随仓库走的大件**（helmet_p2 训练集 2 项、1080p 复验素材 1 项），
 **不计失败** —— 缺件不等于东西坏了，`verify_all.py` 把这两件事分开报。
-把 `tools/fetch_helmet_p2.py`、`tools/make_1080_stream.py` 跑一遍补齐，就是 **52 项全 PASS**。
+把 `tools/fetch_helmet_p2.py`、`tools/make_1080_stream.py` 跑一遍补齐，就是 **53 项全 PASS**。
 
 > 想换成 GPU 跑：`pip install -r requirements-gpu.txt`（torch 约 2 GB）。  
 > 只想要 ONNX：`models/onnx/` 三个文件已经够，`requirements-cpu.txt` 就能跑。
@@ -797,12 +797,25 @@ python src/anxun/scheduler.py --sources rtsp://cam1,rtsp://cam2,cam3.mp4 --fps 1
 所以「合规率」没有分母，「降噪率」没有分子。v2.0 把每一次定论都记下来：
 
 ```bash
-# 一条命令：跑视频 → 出账本 → 算指标 → 出报告
+# 一条命令：视频 → 账本 → 五个指标 → 两版报告
+python tools/make_value_report.py
+
+# 视频跑过了、只想重出报告
+python tools/make_value_report.py --no-video
+```
+
+它会依次跑 `stream.py` → `stats.py` → `report.py`，任何一步失败就停在原地打印原因。
+想看清楚每一步在干什么，也可以手敲：
+
+```bash
 python src/anxun/stream.py --source datasets/site_demo.mp4 --fps 2 --region B-01 --out data/events_site.json
 python src/anxun/stats.py  --events data/events_site.json data/events_1080.json --out data/value_metrics.json
 python src/anxun/report.py --metrics data/value_metrics.json \
                            --events  data/events_site.json data/events_1080.json \
                            --out     docs/figs/value_report.html
+python src/anxun/report.py --metrics data/value_metrics.json \
+                           --events  data/events_site.json data/events_1080.json \
+                           --out     docs/figs/value_report_16x9.html --slide
 ```
 
 > 📌 **两步都能跑，看你想要哪一层。**
@@ -846,13 +859,19 @@ python src/anxun/report.py --metrics data/value_metrics.json \
 
 ### 7.3 报告长什么样
 
-`docs/figs/value_report.html`，1280 宽，一页可截图直接贴 PPT 第 15 页（价值量化）：
+**两版，因为用途不同。**
 
-- 五张 KPI 卡（就是 7.1 那五个数）
-- 合规率时段趋势：柱子是各时段人次，折线是合规率，虚线是 60% 参考线
-- 告警等级分布 / 区域风险排行
-- 事件明细（时间 / 区域 / 违规 / 等级 / R 值 / 责任人 / 处置要求）
-- 底部「口径与局限」——**引用这些数字时请连它一起截进去**
+| 文件 | 尺寸 | 用途 |
+| :--- | :--- | :--- |
+| `docs/figs/value_report_16x9.html` | **1280×720** | **贴 PPT 第 15 页**：五张 KPI 卡 + 两张图 + 一行读图须知 |
+| `docs/figs/value_report.html` | 1280 宽 / 约 1200 高 | 完整文档：多一张事件明细表和四条口径说明，发给队友或存档用 |
+
+不合成一个的原因：720 的页面塞不下明细表，硬塞要么裁掉内容、要么字小到投影看不清。
+（第一版就是这么干的，实测 720 高度只显示到第 4 条事件，底部「口径与局限」整块丢掉。）
+
+两版共同的内容：五张 KPI 卡、合规率时段趋势、告警等级分布 / 区域风险排行。
+KPI 卡上直接标了口径性质——「排班推演」「违规演示素材」「非整改耗时」，
+省得数字被单独摘出去引用。
 
 图是内联 SVG，没有 CDN、没有 matplotlib，离线打开就是最终样子；数字仍在 DOM 里，
 不是烧死在像素上。
@@ -904,7 +923,7 @@ anxun-v1/
 │   ├── onnx_backend.py     ONNX 推理（letterbox / 解码 / NMS，不依赖 torch）
 │   ├── export_onnx.py      .pt → .onnx（一次性）
 │   ├── data_card.py        全量数据卡片
-│   ├── verify_all.py       交付物验收（52 项，含起服务与真图推理）
+│   ├── verify_all.py       交付物验收（53 项，含起服务与真图推理）
 │   └── app.py              推理服务（HTTP）
 ├── tools/                 数据拉取 · 训练准备 · 基准与复验
 │   ├── fetch_ppe_test.py / fetch_helmet_p2.py / repair_labels.py
@@ -914,15 +933,18 @@ anxun-v1/
 │   ├── bench_arch.py            模型架构开销基准（喂 4.1 的表）
 │   ├── plot_metrics.py          混淆矩阵 / PR 曲线 / 风险矩阵出图（喂 P11、P13）
 │   ├── metric_ci.py             误报漏报的 Wilson 置信区间（回答「100 张够不够」）
+│   ├── make_value_report.py     一条命令：视频 → 账本 → 五指标 → 两版报告
 │   └── collect_selfdata.py      现场视频抽帧 → 可标注目录（自采数据的入口）
 ├── config/thresholds.json  判定阈值的唯一事实来源（measured / conservative）
-├── tests/test_techline.py  回归测试（择优单调 / 装备清单 / 时序对齐 / 指标口径）
+├── tests/                  回归测试（37 条）：test_techline.py 规则与编排 ·
+│                           test_stats.py 价值指标口径
 │                           python -m unittest discover -s tests
 ├── docs/                  技术页_10-13.html · 技术口径.md · 指标置信区间.md
 │                          数据集卡片.md · 模型卡片.md · figs/（三张成品图）
 ├── data/                  四指标与实验数据（metrics_real / metrics_onnx / metrics_vest
 │                          sweep / sweep_rules / sweep_geom / arch_bench / batch_bench
-│                          verify_report / verify_trigger_1080）
+│                          verify_report / verify_trigger_1080
+│                          events_site / events_1080 / value_metrics ← v2.0 账本与指标）
 ├── install.bat / .sh      一键安装（CPU 版，任意电脑）
 ├── run.bat / .sh          一键启动（自动选后端）
 └── requirements-cpu.txt / requirements-gpu.txt
