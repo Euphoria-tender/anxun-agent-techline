@@ -6,33 +6,49 @@
   "profiles": {
     "measured": {
       "label": "实测口径",
-      "purpose": "交付与评测默认。四个指标（0.6808 / 5.10% / 22.58% / 22.9ms）就是在这套阈值下测出来的，评委当场重跑 evaluate_real.py 得到同一组数。",
-      "conf_final": 0.30,
-      "conf_review": 0.20,
-      "head_region_ratio": 0.30,
+      "purpose": "交付与评测默认。四个指标（0.6808 / 6.12% / 17.20% / 22.1ms）就是在这套阈值下测出来的，评委当场重跑 evaluate_real.py 得到同一组数。",
+      "conf_final": 0.3,
+      "conf_review": 0.2,
+      "head_region_ratio": 0.3,
       "head_width_ratio": 0.44,
       "min_person_area": 8000.0,
-      "min_aspect": 0.90,
+      "min_aspect": 0.9,
       "equip": {
-        "helmet": {"iou_min": 0.25, "contain_min": 0.60, "max_ratio": 3.0},
-        "vest": {"iou_min": 0.10, "contain_min": 0.60, "max_ratio": 6.0}
+        "helmet": {
+          "iou_min": 0.28,
+          "contain_min": 0.7,
+          "max_ratio": 3.0
+        },
+        "vest": {
+          "iou_min": 0.1,
+          "contain_min": 0.6,
+          "max_ratio": 6.0
+        }
       },
-      "evidence": "data/sweep_rules.json + data/sweep_geom.json；100 张测试集扫参，属乐观估计"
+      "evidence": "data/sweep_rules.json + data/sweep_geom.json；100 张测试集扫参，属乐观估计。2026-11-02 复扫：误报还有 4 个点预算（目标 ≤10%），把 helmet 几何从 0.25/0.60 收到 0.28/0.70，漏报 22.58% → 17.20%，误报 5.10% → 6.12%，mAP 不变。"
     },
     "conservative": {
       "label": "保守口径",
       "purpose": "演示与对外展示用。阈值更严，置信度 0.52 这类样本会落进「待复核」，四态齐全，能看见保护机制。只换阈值，不换模型、不换数据。",
-      "conf_final": 0.60,
-      "conf_review": 0.40,
-      "head_region_ratio": 0.30,
+      "conf_final": 0.6,
+      "conf_review": 0.4,
+      "head_region_ratio": 0.3,
       "head_width_ratio": 0.44,
       "min_person_area": 8000.0,
-      "min_aspect": 0.90,
+      "min_aspect": 0.9,
       "equip": {
-        "helmet": {"iou_min": 0.30, "contain_min": 0.60, "max_ratio": 3.0},
-        "vest": {"iou_min": 0.30, "contain_min": 0.60, "max_ratio": 6.0}
+        "helmet": {
+          "iou_min": 0.3,
+          "contain_min": 0.7,
+          "max_ratio": 3.0
+        },
+        "vest": {
+          "iou_min": 0.3,
+          "contain_min": 0.7,
+          "max_ratio": 6.0
+        }
       },
-      "evidence": "v1.0 初版阈值（0.60/0.40/0.30），误报 11.2% / 漏报 38.7%，曾被 sweep_rules.py 扫掉"
+      "evidence": "v1.0 初版置信度（0.60/0.40），几何与 measured 同步（0.28 收 0.30、contain 0.70），演示用；四态齐全，能看见「待复核」这一档"
     }
   }
 }

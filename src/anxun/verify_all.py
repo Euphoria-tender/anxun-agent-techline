@@ -454,8 +454,12 @@ def verify_slides() -> None:
     check("技术页", "16:9 版式", "1280" in t and "720" in t, "1280×720 画布")
     # 数字比对要按边界匹配：`"5.1" in html` 连 15.1 / 25.19 都会过，
     # 那是「字符串出现过」不是「数字对得上」。
+    # 期望值从 metrics_real.json 取，不再写死——阈值一改，这里跟着变，
+    # 省得每次调参都要记得同步这个元组（v1.2.0 就漏过一次）。
     import re as _re
-    for num in ("5.1", "22.6", "0.681"):
+    _real = json.loads((ROOT / "data/metrics_real.json").read_text(encoding="utf-8"))["results"]
+    expected = (f"{_real['fp_rate']:.1f}", f"{_real['fn_rate']:.1f}", f"{_real['mAP50']:.3f}")
+    for num in expected:
         hit = bool(_re.search(rf"(?<![\d.]){_re.escape(num)}(?![\d])", t))
         check("技术页", f"数字 {num} 与实测一致", hit, "")
 

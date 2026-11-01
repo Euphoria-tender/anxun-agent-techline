@@ -6,6 +6,7 @@
     "conf": 0.25,
     "backend": "torch",
     "rules_profile": "measured",
+    "metric_scope": "matched",
     "device": "GPU cuda:0 NVIDIA GeForce RTX 5060 Laptop GPU（torch 2.14.1+cu130）"
   },
   "dataset": {
@@ -17,7 +18,7 @@
     "persons_pred": 292,
     "eval_note": "真值佩戴状态由标注框推导：Hardhat 落在头部区域=合规，只检出 NO-Hardhat=违规；两者都无则跳过。判定由引擎给出。"
   },
-  "generated_at": "2026-11-02T00:25:54",
+  "generated_at": "2026-11-02T03:01:23",
   "results": {
     "n_images": 100,
     "n_boxes": 547,
@@ -2777,16 +2778,48 @@
         }
       ]
     },
-    "fp_rate": 5.1,
-    "fn_rate": 24.73,
+    "metric_scope": "matched",
+    "fp_rate": 7.14,
+    "fn_rate": 18.28,
     "confusion": {
-      "tp": 70,
-      "fn": 23,
-      "fp": 5,
-      "tn": 93
+      "tp": 76,
+      "fn": 17,
+      "fp": 7,
+      "tn": 91
     },
     "n_compliant": 98,
     "n_violating": 93,
+    "scope_detail": {
+      "matched": {
+        "fp_rate": 7.14,
+        "fn_rate": 18.28,
+        "n_compliant": 98,
+        "n_violating": 93,
+        "confusion": {
+          "tp": 76,
+          "fn": 17,
+          "fp": 7,
+          "tn": 91
+        }
+      },
+      "e2e": {
+        "fp_rate": 6.54,
+        "fn_rate": 27.62,
+        "n_compliant": 107,
+        "n_violating": 105,
+        "confusion": {
+          "tp": 76,
+          "fn": 29,
+          "fp": 7,
+          "tn": 100
+        }
+      }
+    },
+    "coverage": {
+      "n_truth_known": 212,
+      "n_judged": 191,
+      "rate": 90.09
+    },
     "fn_cases": [
       {
         "image_id": "0209-00176-076b1_jpg.rf.bf4a342fb9fad43ac51f6f4fac9e677e",
@@ -2819,13 +2852,6 @@
       {
         "image_id": "147_jpg.rf.09f3b8ee4afb9ee71c32d647f1f8b34b",
         "person": "G2",
-        "equip": "helmet",
-        "judged": "已佩戴",
-        "why": ""
-      },
-      {
-        "image_id": "147_jpg.rf.09f3b8ee4afb9ee71c32d647f1f8b34b",
-        "person": "G0",
         "equip": "helmet",
         "judged": "已佩戴",
         "why": ""
@@ -2866,7 +2892,14 @@
         "why": ""
       },
       {
-        "image_id": "174_jpg.rf.9b54717e3408d8a708ab45569406296f",
+        "image_id": "22_jpg.rf.41ebab33bdb99f5a9015caa635cd5647",
+        "person": "G2",
+        "equip": "helmet",
+        "judged": "已佩戴",
+        "why": ""
+      },
+      {
+        "image_id": "29_jpg.rf.7fecac1dba9aaaa7aa2d0dd699cd62c7",
         "person": "G1",
         "equip": "helmet",
         "judged": "待复核",
@@ -2874,9 +2907,9 @@
       }
     ],
     "latency": {
-      "mean_ms": 44.78,
-      "p95_ms": 54.14,
-      "max_ms": 142.31,
+      "mean_ms": 41.53,
+      "p95_ms": 45.95,
+      "max_ms": 119.06,
       "n": 100,
       "pipeline_mean_ms": null
     },
