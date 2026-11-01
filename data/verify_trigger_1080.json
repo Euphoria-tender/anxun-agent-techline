@@ -1,43 +1,7 @@
 {
   "real1080.mp4": {
     "label": "1080p 纯静态切换",
-    "threshold_sweep": {
-      "3.0": {
-        "frames_skipped": 180,
-        "forwards": 59,
-        "saving": 0.9017,
-        "events": 45,
-        "consistent": true
-      },
-      "6.0": {
-        "frames_skipped": 180,
-        "forwards": 59,
-        "saving": 0.9017,
-        "events": 45,
-        "consistent": true
-      },
-      "10.0": {
-        "frames_skipped": 180,
-        "forwards": 59,
-        "saving": 0.9017,
-        "events": 45,
-        "consistent": true
-      },
-      "15.0": {
-        "frames_skipped": 180,
-        "forwards": 59,
-        "saving": 0.9017,
-        "events": 45,
-        "consistent": true
-      },
-      "25.0": {
-        "frames_skipped": 180,
-        "forwards": 59,
-        "saving": 0.9017,
-        "events": 45,
-        "consistent": true
-      }
-    },
+    "threshold_sweep": {},
     "resolution": "1920x1920（真实照片 3 倍上采样）",
     "frame_diff": {
       "n": 208,
@@ -49,21 +13,21 @@
       "skip_ratio": 0.9087
     },
     "full": {
-      "events": 45,
+      "events": 50,
       "frames_processed": 200,
       "forwards": 600,
-      "avg_ms": 41.2,
-      "wall_s": 25.14
+      "avg_ms": 45.8,
+      "wall_s": 24.19
     },
     "triggered": {
-      "events": 45,
+      "events": 50,
       "frames_processed": 20,
       "frames_skipped": 180,
       "gate_skipped": 1,
       "forwards": 59,
       "saving": 0.9017,
-      "avg_ms": 30.8,
-      "wall_s": 16.37,
+      "avg_ms": 32.4,
+      "wall_s": 18.2,
       "event_keys": [
         [
           "vest",
@@ -71,36 +35,6 @@
           8
         ],
         [
-          "helmet",
-          "红色",
-          16
-        ],
-        [
-          "vest",
-          "橙色",
-          8
-        ],
-        [
-          "vest",
-          "橙色",
-          8
-        ],
-        [
-          "vest",
-          "橙色",
-          8
-        ],
-        [
-          "vest",
-          "橙色",
-          8
-        ],
-        [
-          "vest",
-          "橙色",
-          8
-        ],
-        [
           "vest",
           "橙色",
           8
@@ -109,16 +43,6 @@
           "helmet",
           "红色",
           16
-        ],
-        [
-          "vest",
-          "橙色",
-          8
-        ],
-        [
-          "vest",
-          "橙色",
-          8
         ],
         [
           "helmet",
@@ -161,6 +85,31 @@
           8
         ],
         [
+          "helmet",
+          "红色",
+          16
+        ],
+        [
+          "vest",
+          "橙色",
+          8
+        ],
+        [
+          "vest",
+          "橙色",
+          8
+        ],
+        [
+          "helmet",
+          "红色",
+          16
+        ],
+        [
+          "vest",
+          "橙色",
+          8
+        ],
+        [
           "vest",
           "橙色",
           8
@@ -216,6 +165,36 @@
           8
         ],
         [
+          "vest",
+          "橙色",
+          8
+        ],
+        [
+          "vest",
+          "橙色",
+          8
+        ],
+        [
+          "vest",
+          "橙色",
+          8
+        ],
+        [
+          "vest",
+          "橙色",
+          8
+        ],
+        [
+          "helmet",
+          "红色",
+          16
+        ],
+        [
+          "vest",
+          "橙色",
+          8
+        ],
+        [
           "helmet",
           "红色",
           16
@@ -239,6 +218,16 @@
           "helmet",
           "红色",
           16
+        ],
+        [
+          "helmet",
+          "红色",
+          16
+        ],
+        [
+          "vest",
+          "橙色",
+          8
         ],
         [
           "vest",
@@ -299,36 +288,6 @@
         8
       ],
       [
-        "helmet",
-        "红色",
-        16
-      ],
-      [
-        "vest",
-        "橙色",
-        8
-      ],
-      [
-        "vest",
-        "橙色",
-        8
-      ],
-      [
-        "vest",
-        "橙色",
-        8
-      ],
-      [
-        "vest",
-        "橙色",
-        8
-      ],
-      [
-        "vest",
-        "橙色",
-        8
-      ],
-      [
         "vest",
         "橙色",
         8
@@ -337,16 +296,6 @@
         "helmet",
         "红色",
         16
-      ],
-      [
-        "vest",
-        "橙色",
-        8
-      ],
-      [
-        "vest",
-        "橙色",
-        8
       ],
       [
         "helmet",
@@ -389,6 +338,31 @@
         8
       ],
       [
+        "helmet",
+        "红色",
+        16
+      ],
+      [
+        "vest",
+        "橙色",
+        8
+      ],
+      [
+        "vest",
+        "橙色",
+        8
+      ],
+      [
+        "helmet",
+        "红色",
+        16
+      ],
+      [
+        "vest",
+        "橙色",
+        8
+      ],
+      [
         "vest",
         "橙色",
         8
@@ -444,6 +418,36 @@
         8
       ],
       [
+        "vest",
+        "橙色",
+        8
+      ],
+      [
+        "vest",
+        "橙色",
+        8
+      ],
+      [
+        "vest",
+        "橙色",
+        8
+      ],
+      [
+        "vest",
+        "橙色",
+        8
+      ],
+      [
+        "helmet",
+        "红色",
+        16
+      ],
+      [
+        "vest",
+        "橙色",
+        8
+      ],
+      [
         "helmet",
         "红色",
         16
@@ -467,6 +471,16 @@
         "helmet",
         "红色",
         16
+      ],
+      [
+        "helmet",
+        "红色",
+        16
+      ],
+      [
+        "vest",
+        "橙色",
+        8
       ],
       [
         "vest",
@@ -527,43 +541,7 @@
   },
   "real1080_jitter.mp4": {
     "label": "1080p + 机位抖动",
-    "threshold_sweep": {
-      "3.0": {
-        "frames_skipped": 78,
-        "forwards": 364,
-        "saving": 0.3933,
-        "events": 51,
-        "consistent": true
-      },
-      "6.0": {
-        "frames_skipped": 152,
-        "forwards": 143,
-        "saving": 0.7617,
-        "events": 49,
-        "consistent": true
-      },
-      "10.0": {
-        "frames_skipped": 171,
-        "forwards": 86,
-        "saving": 0.8567,
-        "events": 51,
-        "consistent": true
-      },
-      "15.0": {
-        "frames_skipped": 180,
-        "forwards": 59,
-        "saving": 0.9017,
-        "events": 50,
-        "consistent": true
-      },
-      "25.0": {
-        "frames_skipped": 180,
-        "forwards": 59,
-        "saving": 0.9017,
-        "events": 50,
-        "consistent": true
-      }
-    },
+    "threshold_sweep": {},
     "resolution": "1920x1920（真实照片 3 倍上采样）",
     "frame_diff": {
       "n": 208,
@@ -575,21 +553,21 @@
       "skip_ratio": 0.3317
     },
     "full": {
-      "events": 49,
+      "events": 54,
       "frames_processed": 200,
       "forwards": 600,
-      "avg_ms": 30.5,
-      "wall_s": 20.9
+      "avg_ms": 32.1,
+      "wall_s": 21.26
     },
     "triggered": {
-      "events": 51,
+      "events": 55,
       "frames_processed": 122,
       "frames_skipped": 78,
       "gate_skipped": 2,
       "forwards": 364,
       "saving": 0.3933,
-      "avg_ms": 31.0,
-      "wall_s": 18.46,
+      "avg_ms": 32.7,
+      "wall_s": 17.84,
       "event_keys": [
         [
           "vest",
@@ -607,6 +585,16 @@
           16
         ],
         [
+          "vest",
+          "橙色",
+          8
+        ],
+        [
+          "helmet",
+          "红色",
+          16
+        ],
+        [
           "helmet",
           "红色",
           16
@@ -797,9 +785,9 @@
           16
         ],
         [
-          "vest",
-          "橙色",
-          8
+          "helmet",
+          "红色",
+          16
         ],
         [
           "vest",
@@ -840,6 +828,16 @@
           "helmet",
           "红色",
           16
+        ],
+        [
+          "vest",
+          "橙色",
+          8
+        ],
+        [
+          "vest",
+          "橙色",
+          8
         ],
         [
           "vest",
@@ -855,6 +853,16 @@
         8
       ],
       [
+        "vest",
+        "橙色",
+        8
+      ],
+      [
+        "helmet",
+        "红色",
+        16
+      ],
+      [
         "helmet",
         "红色",
         16
@@ -1050,14 +1058,19 @@
         8
       ],
       [
-        "vest",
-        "橙色",
-        8
+        "helmet",
+        "红色",
+        16
       ],
       [
         "vest",
         "橙色",
         8
+      ],
+      [
+        "helmet",
+        "红色",
+        16
       ],
       [
         "vest",
@@ -1088,6 +1101,16 @@
         "helmet",
         "红色",
         16
+      ],
+      [
+        "vest",
+        "橙色",
+        8
+      ],
+      [
+        "vest",
+        "橙色",
+        8
       ],
       [
         "vest",
@@ -1102,8 +1125,13 @@
     }
   },
   "_gt_expect": {
-    "images_with_violation": 19,
-    "helmet_person_frames": 1,
-    "vest_person_frames": 22
+    "images_with_violation": 72,
+    "helmet_person_frames": 105,
+    "vest_person_frames": 225,
+    "consistency": {
+      "metrics_1080_n_violating": 93,
+      "ratio": 1.129,
+      "ok": true
+    }
   }
 }

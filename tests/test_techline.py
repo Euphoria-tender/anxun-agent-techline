@@ -217,5 +217,47 @@ class TestMetricScope(unittest.TestCase):
         self.assertEqual(res["coverage"]["rate"], 66.67)
 
 
+class TestDeliverableGuards(unittest.TestCase):
+    """交付文件的写保护与服务的请求体上限 —— 都是「一碰就出事、出事没提示」的地方。"""
+
+    def test_default_out_follows_backend(self):
+        """--backend onnx 不能默认写 metrics_real.json（那是 GPU 交付指标）。"""
+        from anxun import evaluate_real as E
+        self.assertEqual(E._default_out("torch").name, "metrics_real.json")
+        self.assertEqual(E._default_out("onnx").name, "metrics_onnx.json")
+
+    def test_body_cap_rejects_oversize(self):
+        """声明超大的 Content-Length 必须当场回 413，不能先把内存读满。"""
+        import io
+        from anxun import app as A
+
+        sent = {}
+
+        class Fake:
+            pass
+
+        h = Fake()
+        h.headers = {"Content-Length": str(A.MAX_BODY_BYTES + 1)}
+        h.rfile = io.BytesIO(b"{}")
+        h._json = lambda obj, code=200: sent.update(obj=obj, code=code)
+
+        self.assertIsNone(A.Handler._body(h))
+        self.assertEqual(sent["code"], 413)
+        self.assertIn("上限", sent["obj"]["error"])
+
+    def test_body_cap_allows_normal(self):
+        import io
+        from anxun import app as A
+
+        class Fake:
+            pass
+
+        h = Fake()
+        h.headers = {"Content-Length": "7"}
+        h.rfile = io.BytesIO(b'{"a":1}')
+        h._json = lambda obj, code=200: None
+        self.assertEqual(A.Handler._body(h), {"a": 1})
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

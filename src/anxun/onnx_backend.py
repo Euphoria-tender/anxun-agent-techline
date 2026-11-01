@@ -190,6 +190,11 @@ class OnnxDetector:
 
     # ---------- 内部 ----------
 
+    def close(self) -> None:
+        """释放 onnxruntime 会话（session 持有原生内存与线程池）。"""
+        self.sess = None
+        self._cache.clear()
+
     def preprocess(self, frame: np.ndarray) -> tuple[np.ndarray, float, tuple[int, int]]:
         """letterbox + 归一化，返回 (输入张量, 缩放比, 填充)。
 
@@ -370,6 +375,31 @@ class OnnxDualDetector:
 
     def detect_batch(self, frames: list) -> list[dict]:
         return [self.detect_frame(f) for f in frames]
+
+    def close(self) -> None:
+        """释放并发线程池。
+
+        验收脚本会反复构造 detector（每个后端一次），不回收的线程会一路累积；
+        长驻服务换后端时同理。显式 close 比等解释器回收可靠。
+        """
+        if self._pool is not None:
+            self._pool.shutdown(wait=False)
+            self._pool = None
+            self.parallel = False
+        for m in self._models():
+            c = getattr(m, "close", None)
+            if callable(c):
+                c()
+
+    def _models(self) -> list:
+        return [self.person, self.ppe] + ([self.vest] if self.vest is not None else [])
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+        return False
 
     def detect(self, scene: dict, frame_idx: int = 0) -> dict:
         return self.detect_image(scene["image"], frame_idx)

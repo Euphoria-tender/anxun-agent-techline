@@ -33,7 +33,13 @@ from anxun.rules_engine import (Box, HEAD_REGION_RATIO, HEAD_WIDTH_RATIO,
                                 judge_frame, min_person_area)
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "data" / "metrics_real.json"
+OUT = ROOT / "data" / "metrics_real.json"      # torch 后端的交付指标
+OUT_ONNX = ROOT / "data" / "metrics_onnx.json"  # CPU / ONNX 后端的交付指标
+
+
+def _default_out(backend: str) -> Path:
+    """按后端决定默认落盘文件，避免两条链路互相覆盖。"""
+    return OUT if backend == "torch" else OUT_ONNX
 
 # 真值类别 → 引擎类别。键统一成「小写 + 连字符」，不同数据集的写法都能对上。
 GT_MAP = {
@@ -267,7 +273,9 @@ def main() -> int:
     ap.add_argument("--device", default="")
     ap.add_argument("--backend", default="torch", choices=("torch", "onnx"),
                     help="onnx = 不依赖 torch 的 CPU 后端（可移植版）")
-    ap.add_argument("--out", default="", help="结果 json 路径，默认 data/metrics_real.json")
+    ap.add_argument("--out", default="",
+                    help="结果 json 路径；留空按后端落盘（torch → data/metrics_real.json，"
+                         "onnx → data/metrics_onnx.json）。写另一个后端的交付文件需加 --force")
     ap.add_argument("--vest", default="", help="额外加载 vest 权重，用来验证「加模型不影响 helmet 判定」")
     ap.add_argument("--metric-scope", default="matched", choices=("matched", "e2e"),
                     help="误报/漏报的口径：matched=只算已检出的人（默认，衡量判定层）；"
@@ -276,7 +284,19 @@ def main() -> int:
     ap.add_argument("--profile", default="", choices=("", "measured", "conservative"),
                     help="判定阈值口径；留空用 config 默认（measured）。"
                          "报数只能用 measured，换口径的结果不能和交付数字比")
+    ap.add_argument("--force", action="store_true",
+                    help="允许把非 torch 后端的结果写进 metrics_real.json（默认拒绝）")
     args = ap.parse_args()
+
+    # 落盘前先把「会不会覆盖别人的交付指标」判掉，别等跑完整套推理才拒绝。
+    out_path = Path(args.out) if args.out else _default_out(args.backend)
+    if args.backend != "torch" and out_path.resolve() == OUT.resolve() and not args.force:
+        # 原来 --backend onnx 默认也写 metrics_real.json，等于用 CPU 的结果
+        # 覆盖 GPU 交付指标，而且没有任何提示。踩过一次，加个闸。
+        print(f"拒绝写入：{out_path} 是 torch 后端的交付指标，"
+              f"--backend {args.backend} 的结果请写 "
+              f"{_default_out(args.backend).name}（确实要覆盖就加 --force）")
+        return 2
 
     if args.profile:
         import anxun.rules_engine as R
@@ -330,7 +350,6 @@ def main() -> int:
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "results": res,
     }
-    out_path = Path(args.out) if args.out else OUT
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 

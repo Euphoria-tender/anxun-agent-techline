@@ -47,6 +47,7 @@ from anxun.pipeline import inspect, thresholds
 
 ROOT = Path(__file__).resolve().parents[2]
 METRICS = ROOT / "data" / "metrics_real.json"
+MAX_BODY_BYTES = 16 * 1024 * 1024      # 单请求上限，防超大 base64 把内存吃光
 
 STATE = {"detector": None, "note": "", "boot_at": datetime.now()}
 
@@ -123,10 +124,19 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(raw)
 
-    def _body(self) -> dict:
+    def _body(self) -> dict | None:
+        """读请求体。超限返回 None（已就地回 413），调用方必须判空。
+
+        没有上限时，一个声明的 Content-Length 就能让 `rfile.read(n)` 把整个进程
+        的内存吃光——服务是 ThreadingHTTPServer，一个连接就能拖垮全部线程。
+        base64 传图本身也不该超过几 MB，16 MB 足够 4K 单帧。
+        """
         n = int(self.headers.get("Content-Length") or 0)
         if not n:
             return {}
+        if n > MAX_BODY_BYTES:
+            self._json({"error": f"请求体 {n} 字节超过上限 {MAX_BODY_BYTES}"}, 413)
+            return None
         try:
             return json.loads(self.rfile.read(n).decode("utf-8"))
         except Exception:
@@ -178,6 +188,8 @@ class Handler(BaseHTTPRequestHandler):
         p = urlparse(self.path).path
         try:
             body = self._body()
+            if body is None:                  # 已回 413，别再往下走
+                return
             if p == "/api/inspect":
                 return self._json(run_inspect(body.get("scene_id", "")))
             if p == "/detect_b64":
@@ -313,6 +325,13 @@ def main():
         srv.serve_forever()
     except KeyboardInterrupt:
         print("\n已停止")
+    finally:
+        # ONNX 后端的并发线程池与 session 都要显式回收；
+        # 验收脚本会在同一进程里反复起停服务，不回收就会累积线程。
+        close = getattr(det, "close", None)
+        if callable(close):
+            close()
+        srv.server_close()
     return 0
 
 

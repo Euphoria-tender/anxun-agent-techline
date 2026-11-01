@@ -97,6 +97,19 @@
   都不是线程安全的）没有任何互斥，并发请求会串结果。加推理锁；临时文件改用 `mkstemp`；
   `/docs/` 与 `image_path` 的路径校验从字符串前缀改成 `Path.is_relative_to`；
   `/health` 的 `uptime_s` 改用 `total_seconds()`（原来跑满一天归零）。
+- **`--backend onnx` 会覆盖 GPU 交付指标**（`evaluate_real`）：默认落盘写死
+  `data/metrics_real.json`，跑一次 CPU 口径就把 GPU 的四个交付数字换成另一套，且没有任何提示。
+  改成按后端决定默认文件（torch → `metrics_real.json`，onnx → `metrics_onnx.json`）；
+  显式指向另一个后端的交付文件时直接拒绝，要覆盖得加 `--force`。
+- **1080 复验的真值口径与指标不是一套**（`tools/verify_trigger_1080.py`）：原来用
+  「装备框与人员框 IoU ≥ 0.5」判真值，helmet 只算出 **1 人次**，而同一批图的指标是 93 人次
+  （真值 105）——「触发层有没有跳掉真违规」这项检查等于空跑却一直 PASS。现已改用与
+  `evaluate_real.truth_of` 同一判据（装备框中心落在人员对应区域），helmet 105 人次，
+  与 `metrics_1080.json` 的 e2e 分母对齐。
+- **请求体无上限、ONNX 线程池不回收**（`app.py` / `onnx_backend.py`）：一个声明的
+  `Content-Length` 就能让 `rfile.read(n)` 吃光内存（服务是 `ThreadingHTTPServer`，
+  一个连接拖垮全部线程），加 16 MB 上限并回 413；`OnnxDualDetector` 补 `close()`
+  释放并发池与 session，服务退出时调用（验收脚本会反复构造 detector，不回收会累积线程）。
 
 ### ONNX-CPU 三模型并发：72.7 → 46 ms（输出逐框不变）
 

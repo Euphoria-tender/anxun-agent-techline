@@ -42,8 +42,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from anxun import backend as backend_mod                       # noqa: E402
 from anxun.catalog import REGION_MAP                           # noqa: E402
-from anxun.evaluate_real import (iou_box, list_images, load_gt,  # noqa: E402
-                                 read_names, truth_of)
+from anxun.evaluate_real import (list_images, load_gt, read_names,  # noqa: E402
+                                 truth_of)
 from anxun.rules_engine import Region                           # noqa: E402
 from anxun.stream import VideoInspector                        # noqa: E402
 
@@ -104,35 +104,50 @@ def event_key(ev: dict) -> tuple:
 
 
 def expected_violations() -> dict:
-    """按 evaluate_real 的口径算测试集里每张图的违规人次（helmet + vest）。"""
+    """按 evaluate_real 的真值口径算每张图应有的违规人次（helmet + vest）。
+
+    真值判定只有一条：**装备标注框的中心落在该人员的对应区域里**（头盔→头部区域，
+    背心→上身区域），有正向类算佩戴、只有否定类算未佩戴、两者都没有则不进统计。
+    这与 `evaluate_real.truth_of` 是同一个函数，所以算出来的分母和
+    `data/metrics_1080.json` 对得上。
+
+    旧版用「装备框与人员框 IoU ≥ 0.5」当判据，量纲对不上：helmet 只算出 1 人次，
+    而同一批图的指标是 93 人次（真值 105），差两个数量级——「触发层有没有跳掉
+    真违规」这项检查等于空跑，却是 PASS。
+    """
     names = read_names(DATA)
     gt_expect = {}
     for fp in list_images(DATA / "images"):
         gt = load_gt(DATA / "labels" / f"{fp.stem}.txt", names, 1920, 1920)
         n_h = sum(1 for g in gt if g["label"] == "person"
-                  and _worn(gt, g, "helmet") is False)
+                  and truth_of(gt, g) is False)
         n_v = sum(1 for g in gt if g["label"] == "person"
-                  and _worn(gt, g, "vest") is False)
+                  and _truth_of_vest(gt, g) is False)
         if n_h or n_v:
             gt_expect[fp.stem] = {"helmet": n_h, "vest": n_v}
     return gt_expect
 
 
-def _worn(gt: list[dict], person: dict, equip: str) -> bool | None:
-    """该人员是否佩戴了装备；没有对应标注时返回 None。"""
-    pos, neg = f"{equip}", f"no{equip}"
-    best_pos = best_neg = 0.5
+def _truth_of_vest(gt: list[dict], person: dict) -> bool | None:
+    """背心真值：与 rules_engine 的上身区域（y 20%~70%）同一几何。
+
+    `truth_of` 只覆盖头盔，这里按同一判据补一条，两者不要各写一套。
+    """
+    y1, y2 = person["y1"], person["y2"]
+    h = y2 - y1
+    tx1, tx2 = person["x1"], person["x2"]
+    ty1, ty2 = y1 + h * 0.20, y1 + h * 0.70
+    worn, seen = False, False
     for g in gt:
-        if g["label"] not in (pos, neg):
+        if g["label"] not in ("vest", "novest"):
             continue
-        v = iou_box(person, g)
-        if g["label"] == pos:
-            best_pos = max(best_pos, v)
-        else:
-            best_neg = max(best_neg, v)
-    if best_pos < 0.5 and best_neg < 0.5:
-        return None
-    return best_pos >= best_neg
+        cx = (g["x1"] + g["x2"]) / 2
+        cy = (g["y1"] + g["y2"]) / 2
+        if tx1 <= cx <= tx2 and ty1 <= cy <= ty2:
+            seen = True
+            if g["label"] == "vest":
+                worn = True
+    return worn if seen else None
 
 
 def main() -> int:
@@ -254,6 +269,27 @@ def main() -> int:
           f"人次 · vest {results['_gt_expect']['vest_person_frames']} 人次")
     print("（视频链路易出的是「告警条数」而非「违规人次」，两者不直接相等："
           "三帧聚合 + 事件去重会合并同一个人。）")
+
+    # 自检：真值人次必须和 metrics_1080.json 的违规分母同量级。
+    # 旧版真值口径写错时这里是 1 人次 vs 93 人次，两项差两个数量级却一路 PASS，
+    # 谁也没发现「触发层有没有跳掉真违规」其实什么都没检查。这一行就是为了别再犯。
+    m1080 = ROOT / "data" / "metrics_1080.json"
+    if m1080.exists():
+        try:
+            r = json.loads(m1080.read_text(encoding="utf-8"))["results"]
+            gt_h = results["_gt_expect"]["helmet_person_frames"]
+            judged = r["n_violating"]
+            ratio = gt_h / judged if judged else 0
+            ok = 0.8 <= ratio <= 1.5
+            print(f"口径自检：真值 {gt_h} 人次 vs 指标分母 {judged} 人次（比值 {ratio:.2f}）"
+                  f" -> {'一致' if ok else '不一致，检查真值判定口径'}")
+            results["_gt_expect"]["consistency"] = {
+                "metrics_1080_n_violating": judged, "ratio": round(ratio, 3), "ok": ok}
+            if not ok:
+                print("  提示：真值应略多于指标分母（差值 = 检测层没检出的人），"
+                      "若少很多说明两套判据又分叉了。")
+        except Exception as e:
+            print(f"口径自检跳过：{type(e).__name__}: {e}")
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
