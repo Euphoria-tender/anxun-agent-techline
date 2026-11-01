@@ -668,59 +668,40 @@ python src/anxun/scheduler.py --sources rtsp://cam1,rtsp://cam2,cam3.mp4 --fps 1
 
 ```
 anxun-v1/
-├── models/            best.pt（安全帽）· yolov8n.pt（人体）      ← 不入库
-├── datasets/          ppe_test（100 张带标注 + 1920 模拟集）· demo.mp4 · site_demo.mp4
 ├── src/anxun/
 │   ├── rules_engine.py    四态 + 时序聚合 + 风险矩阵 + 工单（纯标准库）
-│   ├── detectors.py       YoloDetector / DualDetector + 类别映射 + 人员门控 + 批前向
-│   ├── stream.py          单路巡查：三级触发 + StreamPipeline（判定状态机）
+│   ├── detectors.py       三模型串联 + 类别映射 + 人员门控 + 批前向
+│   ├── stream.py          单路巡查：三级触发 + 判定状态机
 │   ├── scheduler.py       多路巡查：锁步攒批 + 各路独立状态机
 │   ├── pipeline.py        单图链路：检测 → 判定 → 聚合 → 定级 → 工单
 │   ├── metrics.py         mAP@0.5 / 误报率 / 漏报率 / 耗时 + PR 曲线
 │   ├── evaluate_real.py   真实照片评测（指标数字的唯一来源）
-│   ├── sweep.py           配置扫参（模型规模 × 分辨率 × 吞吐）
-│   ├── sweep_rules.py     判定阈值扫参（误报/漏报权衡曲线）
-│   ├── finetune.py        安全帽模型微调（2 类迁移 + 独立测试评估）
-│   ├── evaluate_vest.py  反光背心独立评测（口径与 helmet 对齐）
-│   ├── backend.py         后端分发：有显卡用显卡，没有用 ONNX CPU
-│   ├── onnx_backend.py    ONNX 推理（letterbox / 解码 / NMS，不依赖 torch）
-│   ├── export_onnx.py     .pt -> .onnx（一次性，运行不需要）
-│   ├── cascade.py         级联 ROI 精查 —— 已验证不采用（见 6.4）
-│   ├── fusion.py          双模型 WBF 融合 —— 已验证不采用（见 6.4）
-│   ├── data_card.py       全量数据卡片（3 数据源 5 集合 1900 张）
-│   ├── verify_all.py      交付物验收（35 项，含起服务与真图推理）
-│   └── app.py             推理服务（HTTP）
-├── tools/
-│   ├── fetch_ppe_test.py  拉带标注的测试集
-│   ├── make_site_video.py 生成固定机位空场景视频（验证触发层）
-│   ├── bench_cascade.py   级联对比实验
-│   └── bench_cascade_1080.py  1080p 下的级联对比
-├── install.bat / .sh  一键安装（CPU 版，任意电脑）
-├── run.bat / .sh      一键启动（自动选后端）
-├── requirements-cpu.txt / requirements-gpu.txt
-├── models/onnx/       两个 ONNX 模型 + manifest（55MB，入库）
-├── docs/              技术页_10-13.html · 数据集卡片.md · 模型卡片.md
-└── data/              metrics_real.json · metrics_onnx.json · metrics_vest.json
-                       sweep*.json · verify_report.json · verify_trigger_1080.json
+│   ├── evaluate_vest.py   反光背心独立评测（口径与 helmet 对齐）
+│   ├── sweep.py            模型规模 × 分辨率 × 吞吐
+│   ├── sweep_rules.py      判定阈值（置信度）
+│   ├── sweep_geom.py       判定阈值（几何：IoU / 包含度 / 面积上限）
+│   ├── finetune.py         装备模型微调（含强增强模式）
+│   ├── backend.py          后端分发：有显卡用显卡，没有用 ONNX CPU
+│   ├── onnx_backend.py     ONNX 推理（letterbox / 解码 / NMS，不依赖 torch）
+│   ├── export_onnx.py      .pt → .onnx（一次性）
+│   ├── data_card.py        全量数据卡片
+│   ├── verify_all.py       交付物验收（35 项，含起服务与真图推理）
+│   ├── cascade.py          级联 ROI 精查 —— 已验证不采用（见 6.4）
+│   ├── fusion.py           双模型 WBF 融合 —— 已验证不采用（见 6.4）
+│   └── app.py              推理服务（HTTP）
+├── tools/                 数据拉取 · 训练准备 · 基准与复验
+│   ├── fetch_ppe_test.py / fetch_helmet_p2.py / repair_labels.py
+│   ├── make_vest.py / make_mix.py
+│   ├── make_demo_video.py / make_site_video.py / make_1080_stream.py
+│   ├── bench_arch.py / bench_cascade.py / bench_cascade_1080.py
+│   └── verify_trigger_1080.py   触发层复验（含阈值扫描）
+├── docs/                  技术页_10-13.html · 数据集卡片.md · 模型卡片.md
+├── data/                  四指标与实验数据（metrics_real / metrics_onnx / metrics_vest
+│                          sweep / sweep_rules / sweep_geom / arch_bench / batch_bench
+│                          verify_report / verify_trigger_1080）
+├── install.bat / .sh      一键安装（CPU 版，任意电脑）
+├── run.bat / .sh          一键启动（自动选后端）
+└── requirements-cpu.txt / requirements-gpu.txt
+
+models/ 与 datasets/ 不入库（体积大 / 二进制），获取方式见 2.3 与 docs/模型卡片.md
 ```
-
----
-
-## 十、下一步
-
-1. ~~微调 helmet 模型~~ 已做两轮，都是负面结果（见 5.4 / 5.5）：AP 涨 31% 但业务指标全面变差，
-   根因是**框几何变了而判定阈值没跟着重标定**。结论不是「别微调」，而是
-   **微调必须和 `sweep_geom.py` 绑定做**——只报 AP 会选出更差的模型。
-2. ~~自采现场数据~~ 已取消：不做现场采集，改用现有公开数据把装备种类补齐。
-3. ~~补 vest 模型~~ ✅ 已完成：规则引擎早支持 vest，但一直没有权重，本轮训了一个并接进三模型链路（见 5.7）。
-4. **vest 精度**：已从误报 25%/漏报 17.3% 优化到 **27.3%/13.0%**（重增强 + 按装备分离阈值）。
-   HF 镜像上已无带 vest 标注的可用数据源（查了 6 个候选仓库全是空的），这条路到头了。
-3. ~~用真实 1080p 素材复验触发层~~ ✅ 已完成（见 6.1.1）：**发现帧差阈值 3.0 在现场会失效**
-   （机位晃动把帧差推到 3.86，节省从 90% 掉到 39%），已改为 10.0（节省回到 86%，告警一致）。
-   遗留边界：素材是静态照片，没有真人运动，阈值上限仍需现场录像确认
-4. ~~GPU 部署~~ ✅ 已完成：RTX 5060 上 25.7ms、单进程 25 路
-5. ~~判定与推理解耦 / 多路批处理~~ ✅ 已完成：三级触发省 84% 前向，批处理 1.40×
-
-**已经确认走不通、不必再试的**（都有实测数据）：换更大模型、提高输入分辨率、
-级联 ROI 放大精查、多模型 WBF 融合、拿公开数据微调（两轮）。前四条不动权重本身，
-第五条动了权重但输在域不匹配。**在自有数据到位前，漏报 24.7% 就是这个配置的合理水位。**

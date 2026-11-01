@@ -3,7 +3,7 @@
 全量数据卡片：把项目用到的所有数据源汇总成一份文档
 ===================================================
 
-原来的 `dataset_card.py` 一次只能描述一个目录，而项目现在有三个数据源：
+早期版本一次只能描述一个目录，而项目现在有三个数据源：
 
     datasets/ppe_test   Chapian/PPE_detection（train 100 / test 100）  helmet + vest + person
     datasets/helmet_p2  toborobot/Safety-helmet-dataset（train 1200 / val 400）helmet 两类
