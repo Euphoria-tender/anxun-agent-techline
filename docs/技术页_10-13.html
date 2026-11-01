@@ -155,7 +155,7 @@
 <!-- ==================== 10 系统架构 ==================== -->
 <section class="slide">
   <div class="head"><span class="pno">10</span><h1 class="h1">系统架构：三级触发 —— 先决定「哪些帧值得算」，再决定「算得准不准」</h1></div>
-  <div class="sub">现场是固定机位、大部分时间空画面。真正的算力浪费不在模型慢，而在「算了不需要算的帧」。<br>后端三选一自动切换：<b>没显卡 → ONNX CPU（53.5 ms）</b>，<b>有显卡 → CUDA（25.7 ms）</b>，代码一行不改。</div>
+  <div class="sub">现场是固定机位、大部分时间空画面。真正的算力浪费不在模型慢，而在「算了不需要算的帧」。<br>后端三选一自动切换：<b>没显卡 → ONNX CPU（72.7 ms）</b>，<b>有显卡 → CUDA（22.9 ms）</b>，代码一行不改。</div>
 
   <div class="pipe">
     <div class="stage">
@@ -203,20 +203,20 @@
     <div><b>1080p</b> 单帧 30.5ms（640 输入 6.9ms）</div>
   </div>
 
-  <div class="foot"><span>安巡 Agent · 厂区安全巡检多智能体系统</span><span>P10 / 系统架构</span></div>
+  <div class="foot"><span>安巡 Agent · 厂区安全巡检多智能体系统</span><span>P10 / 系统架构 · 交付形态：HTTP 服务（/api/inspect）+ 视频巡查 CLI</span></div>
 </section>
 
 <!-- ==================== 11 指标 ==================== -->
 <section class="slide">
   <div class="head"><span class="pno">11</span><h1 class="h1">指标：四个数，一个说得清的口径</h1>
-    <span class="tag ok" >真模型实测 · 100 张真实照片</span></div>
+    <span class="tag ok" >真模型实测 · 100 张测试图 · 3 源 5 集 1900 张标注</span></div>
   <div class="sub">指标不是为了好看，是为了说清「哪里不行」。误报率比 mAP 更该强调——工业现场误报多了，人就把告警关掉。</div>
 
   <div class="kpis">
     <div class="kpi deco"><div class="k">mAP@0.5</div><div class="v" data-f="map">0.681</div><div class="t">目标 <i>≥ 0.85</i> · person 0.80 / helmet 0.56</div></div>
     <div class="kpi"><div class="k">误报率</div><div class="v" data-f="fp" style="color:#0B6E4F">5.1<small>%</small></div><div class="t">目标 <i>≤ 10%</i> · 合规被判违规</div></div>
-    <div class="kpi"><div class="k">漏报率</div><div class="v" data-f="fn" style="color:#C62828">24.7<small>%</small></div><div class="t">目标 <i>≤ 5%</i> · 主动披露</div></div>
-    <div class="kpi"><div class="k">单帧耗时</div><div class="v" data-f="lat" style="color:#0B6E4F">26.0<small>ms</small></div><div class="t">目标 <i>≤ 50 ms</i> ✅ · RTX 5060 · 单进程 ≈25 路</div></div>
+    <div class="kpi"><div class="k">漏报率</div><div class="v" data-f="fn" style="color:#C62828">22.6<small>%</small></div><div class="t">目标 <i>≤ 5%</i> · 主动披露</div></div>
+    <div class="kpi"><div class="k">单帧耗时</div><div class="v" data-f="lat" style="color:#0B6E4F">22.9<small>ms</small></div><div class="t">目标 <i>≤ 50 ms</i> ✅ · RTX 5060 · 单进程 ≈25 路</div></div>
   </div>
 
   <div class="two">
@@ -224,46 +224,44 @@
       <div class="box-h">混淆矩阵<span>按「人 × 装备」计，295 个标注人员</span></div>
       <div class="cm" id="cm">
         <div class="h"></div><div class="h">判违规</div><div class="h">未判违规</div>
-        <div class="h">实际违规</div><div class="tp">70<small>命中</small></div><div class="fn">23<small>漏报</small></div>
+        <div class="h">实际违规</div><div class="tp">72<small>命中</small></div><div class="fn">21<small>漏报</small></div>
         <div class="h">实际合规</div><div class="fp">5<small>误报</small></div><div class="tn">93<small>正确放行</small></div>
       </div>
     </div>
 
     <div class="box">
-      <div class="box-h">漏报去哪了<span>23 例逐条归因（2026-10-31 实测），不是「模型不准」一句带过</span></div>
+      <div class="box-h">漏报去哪了<span>21 例逐条归因（2026-11-01 实测），不是「模型不准」一句带过</span></div>
       <div class="err">
-        <b>① 模型真的看错 15 例（65%）</b>
-        <div class="bar"><i style="width:65%;background:#C62828"></i></div>
+        <b>① 模型真的看错 15 例（71%）</b>
+        <div class="bar"><i style="width:71%;background:#C62828"></i></div>
         确实戴着帽却被判成没戴。阈值已经调到最松，这块救不回来，只能靠更好的权重。
         <br><br>
-        <b>② 远距离小目标 6 例（26%）</b>
-        <div class="bar"><i style="width:26%"></i></div>
-        人员框小于画面面积的 0.386%，判「无法判定」。
+        <b>② 小目标 / 半身 4 例（19%）</b>
+        <div class="bar"><i style="width:19%"></i></div>
+        人员框过小或高宽比失衡，头部不在框上部，判「无法判定」。
         <br><br>
-        <b>③ 灰区待复核 2 例（9%）</b>
-        <div class="bar"><i style="width:9%"></i></div>
+        <b>③ 灰区待复核 2 例（10%）</b>
+        <div class="bar"><i style="width:10%"></i></div>
         置信度落在 0.20–0.30，按规则不硬判。
         <br><br>
-        <b>结论：调参到头了。</b>剩 23 例里 65% 是真看错，下一轮只能换权重。
+        <b>结论：调参到头了。</b>剩 21 例里 71% 是真看错，下一轮只能换权重。
       </div>
     </div>
   </div>
 
   <div class="note">
-    <b>怎么读这组数：</b>这是公开权重 <code>yolov8s-hard-hat</code> 直接推理的结果，<b>没有在我们的数据上微调</b>，
-    域不匹配导致置信度整体偏低，于是大量样本落进 0.4–0.6 灰区。
-    真正的判断错误只有 2 例（5%），说明<b>判定链没问题，问题在模型置信度分布</b>——自采数据微调后这一块会先收敛。
-    <br><b>五步优化：</b>面积阈值按画面占比换算 → 裸头框作反向证据 → CONF_FINAL 0.60→0.40 → IOU_MIN 0.30→0.25 → <b>装备框面积上限 1.6→3.0</b>。
-    倒数第二步拿 1 个点漏报换 4 个点误报（首次达标）；最后一步把装备框面积上限从 1.6 放到 3.0，
-    <b>误报 7.1%→5.1%，漏报不变</b>——原因是这个模型把帽框画得偏大，1.6 的上限会把一批真戴帽的正确框整条拒掉。
-    选它的依据不是单点数字，而是把测试集对半切开后误报只波动 1 个点（旧配置波动 7 个点）。
-    <br><b>微调实验（已做，暂不采用）：</b>用 80 张训练后 helmet AP 从 0.579 涨到 0.766，但误报/漏报反而变差——
-    置信度整体下移，真帽子掉到检测阈值以下。说明 AP 和业务指标之间隔着一层校准，数据量不够时不能硬换。
-    <br><b>扫参 6 组（模型规模 × 输入分辨率）：</b>换 yolov8m 掉 14 个点（跨数据集权重口径对不上），
-    提到 960 掉 3.4 个点且慢 2.2 倍（模型在 640 上训，放大推理离开训练分布）。
-    <b>s@640 已是这批权重的最优点</b>；要带更多路数可切 480，快 35%、CPU 上 7 路/进程，代价是误报升到 15.8%。
-    <br><b>设备：</b>上 RTX 5060 后单帧 138 → 25.7 ms（5.4 倍），三个精度指标一字不差——
-    换设备只影响速度、不影响判定，目标 ≤50ms 达成。
+    <b>怎么读这组数：</b>公开权重 <code>yolov8s-hard-hat</code> 直接推理的结果，<b>没在我们的数据上微调</b>，
+    域不匹配导致置信度整体偏低，大量样本落进 0.4–0.6 灰区——<b>这是权重的问题，不是判定链的问题</b>。
+    <br><b>六步优化：</b>面积阈值按画面占比换算 → 裸头框作反向证据 → CONF_FINAL 0.60→0.40 → IOU_MIN 0.30→0.25 →
+    <b>装备框面积上限 1.6→3.0</b> → <b>几何闸门 MIN_ASPECT 1.2→0.9</b>。
+    第④步拿 1 个点漏报换 4 个点误报（误报首次达标）；第⑤步这个模型把帽框画得偏大，1.6 会把真戴帽的框整条拒掉，
+    放宽后<b>误报 7.1%→5.1%、漏报不变</b>；第⑥步逐张看过 4 例高宽比告警，蹲姿 2 例恢复判定，
+    <b>漏报 24.7%→22.6%，误报一例没涨</b>。
+    <br><b>微调实验（已做，暂不采用）：</b>80 张训练后 helmet AP 0.579→0.766，但误报/漏报反而变差——
+    置信度整体下移，真帽子掉到检测阈值以下。AP 与业务指标之间隔着一层校准，数据不够时不能硬换。
+    <br><b>扫参 6 组：</b>换 yolov8m 掉 14 个点（跨数据集权重口径对不上），提到 960 掉 3.4 个点且慢 2.2 倍。
+    <b>s@640 已是这批权重的最优点</b>；要多带路数可切 480，快 35%、7 路/进程，代价是误报升到 15.8%。
+    <br><b>设备：</b>上 RTX 5060 后单帧 138 → 22.9 ms（6 倍），三个精度指标一字不差——换设备只影响速度、不影响判定。
   </div>
 
   <div class="foot"><span>安巡 Agent · 厂区安全巡检多智能体系统</span><span>P11 / 指标</span></div>

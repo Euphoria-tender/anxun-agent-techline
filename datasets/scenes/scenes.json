@@ -1,0 +1,54 @@
+[
+  {
+    "scene_id": "R-01",
+    "region_id": "B-01",
+    "file": "real_violation_1.jpg",
+    "title": "现场照片 · 平台作业面",
+    "hint": "高处作业平台，一人未戴安全帽",
+    "equips": [
+      "helmet",
+      "vest"
+    ],
+    "frames": 1,
+    "camera": "CAM-B-01-R1"
+  },
+  {
+    "scene_id": "R-02",
+    "region_id": "A-03",
+    "file": "real_ok_2.jpg",
+    "title": "现场照片 · 车间通道",
+    "hint": "全员正确佩戴，系统应放行",
+    "equips": [
+      "helmet",
+      "vest"
+    ],
+    "frames": 1,
+    "camera": "CAM-A-03-R2"
+  },
+  {
+    "scene_id": "R-03",
+    "region_id": "C-02",
+    "file": "real_multi_3.jpg",
+    "title": "现场照片 · 多人作业",
+    "hint": "多人同时判定，逐个给出结论",
+    "equips": [
+      "helmet",
+      "vest"
+    ],
+    "frames": 1,
+    "camera": "CAM-C-02-R3"
+  },
+  {
+    "scene_id": "R-04",
+    "region_id": "D-05",
+    "file": "real_far_4.jpg",
+    "title": "现场照片 · 远景",
+    "hint": "远距离目标，看「无法判定」怎么拦",
+    "equips": [
+      "helmet",
+      "vest"
+    ],
+    "frames": 1,
+    "camera": "CAM-D-05-R4"
+  }
+]

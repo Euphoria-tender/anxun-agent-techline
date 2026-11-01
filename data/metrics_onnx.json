@@ -1,7 +1,7 @@
 {
   "kind": "model-measured",
   "config": {
-    "weights": "ONNX 双模型：yolov8n.onnx + best.onnx @ CPUExecutionProvider",
+    "weights": "ONNX 三模型：yolov8n.onnx + best.onnx + vest.onnx @ CPUExecutionProvider",
     "imgsz": 640,
     "conf": 0.25,
     "backend": "onnx",
@@ -16,7 +16,7 @@
     "persons_pred": 296,
     "eval_note": "真值佩戴状态由标注框推导：Hardhat 落在头部区域=合规，只检出 NO-Hardhat=违规；两者都无则跳过。判定由引擎给出。"
   },
-  "generated_at": "2026-10-31T23:17:22",
+  "generated_at": "2026-11-01T19:13:36",
   "results": {
     "n_images": 100,
     "n_boxes": 549,
@@ -2786,13 +2786,13 @@
         }
       ]
     },
-    "fp_rate": 7.14,
-    "fn_rate": 24.73,
+    "fp_rate": 5.1,
+    "fn_rate": 22.58,
     "confusion": {
-      "tp": 70,
-      "fn": 23,
-      "fp": 7,
-      "tn": 91
+      "tp": 72,
+      "fn": 21,
+      "fp": 5,
+      "tn": 93
     },
     "n_compliant": 98,
     "n_violating": 93,
@@ -2875,17 +2875,17 @@
         "why": ""
       },
       {
-        "image_id": "169_jpg.rf.c5d27e54d4aee51ac04f7b30c5f9606e",
-        "person": "G0",
+        "image_id": "174_jpg.rf.9b54717e3408d8a708ab45569406296f",
+        "person": "G1",
         "equip": "helmet",
-        "judged": "无法判定",
+        "judged": "已佩戴",
         "why": ""
       }
     ],
     "latency": {
-      "mean_ms": 53.47,
-      "p95_ms": 59.55,
-      "max_ms": 94.44,
+      "mean_ms": 72.69,
+      "p95_ms": 82.39,
+      "max_ms": 103.81,
       "n": 100,
       "pipeline_mean_ms": null
     },

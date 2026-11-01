@@ -1,13 +1,23 @@
-# 模型权重不入库
-#   .pt   —— torch 轮子 2GB，换机器基本装不上，带上去也没用
-#   .onnx —— 68MB 二进制；本仓库经文本通道上传，二进制会损坏
-# 获取：从本机拷贝 models/，或 python src/anxun/export_onnx.py 重新导出（需 torch）
-models/
+# 模型权重**入库**（v1.1.0 起）
+#   没有权重的仓库 clone 下来跑不动：验收掉一大截、HTTP 服务起不来、指标 JSON 从「实测」降级成「声明」。
+#   体积：3 个 .pt（33.7MB）+ 3 个 .onnx（66.5MB）+ manifest ≈ 101 MiB，单文件最大 42.6MB，在 GitHub 100MB 限制内。
+#   仍不入库：hardhat_m.pt（49.6MB，只被 sweep.py 的架构对比表引用）、训练产物 runs/
+models/hardhat_m.pt
+models/*.engine
+models/*.trt
 
-# 数据集媒体不入库
-#   mp4 单个最大 142MB，超过 GitHub 100MB 硬限制；图片可用 tools/ 里的脚本重新拉：
-#   fetch_ppe_test.py / fetch_helmet_p2.py / make_vest.py / make_mix.py
-datasets/
+# 数据集：评测集与演示素材随仓库走，训练用大集合不入库
+#   ppe_test/test（100 张）+ train（100 张）+ data.yaml ≈ 14MB —— 四个指标就测在这 100 张上
+#   scenes（4 张，300KB）—— 控制台「开始巡查」用的场景图
+#   许可证：Chapian/PPE_detection · CC BY 4.0（署名见 docs/数据集卡片.md）
+datasets/*
+!datasets/scenes/
+!datasets/ppe_test/
+# 体积原因仍不入库，用 tools/ 里的脚本重拉
+datasets/ppe_test/test1080/
+datasets/helmet_p2/
+datasets/helmet_p2_dil1.2/
+datasets/vest_all/
 
 # 训练产物（runs/finetune、runs/ft_mix、runs/vest_* 等），可由 finetune.py 重现
 runs/

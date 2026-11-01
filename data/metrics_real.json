@@ -16,7 +16,7 @@
     "persons_pred": 297,
     "eval_note": "真值佩戴状态由标注框推导：Hardhat 落在头部区域=合规，只检出 NO-Hardhat=违规；两者都无则跳过。判定由引擎给出。"
   },
-  "generated_at": "2026-11-01T14:56:20",
+  "generated_at": "2026-11-01T19:13:22",
   "results": {
     "n_images": 100,
     "n_boxes": 550,
@@ -2792,10 +2792,10 @@
       ]
     },
     "fp_rate": 5.1,
-    "fn_rate": 24.73,
+    "fn_rate": 22.58,
     "confusion": {
-      "tp": 70,
-      "fn": 23,
+      "tp": 72,
+      "fn": 21,
       "fp": 5,
       "tn": 93
     },
@@ -2880,17 +2880,17 @@
         "why": ""
       },
       {
-        "image_id": "169_jpg.rf.c5d27e54d4aee51ac04f7b30c5f9606e",
-        "person": "G0",
+        "image_id": "174_jpg.rf.9b54717e3408d8a708ab45569406296f",
+        "person": "G1",
         "equip": "helmet",
-        "judged": "无法判定",
+        "judged": "已佩戴",
         "why": ""
       }
     ],
     "latency": {
-      "mean_ms": 22.09,
-      "p95_ms": 26.73,
-      "max_ms": 92.1,
+      "mean_ms": 22.87,
+      "p95_ms": 25.67,
+      "max_ms": 105.81,
       "n": 100,
       "pipeline_mean_ms": null
     },

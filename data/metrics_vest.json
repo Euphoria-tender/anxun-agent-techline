@@ -1458,23 +1458,16 @@
       ]
     },
     "fp_rate": 27.27,
-    "fn_rate": 12.97,
+    "fn_rate": 11.35,
     "confusion": {
-      "tp": 161,
-      "fn": 24,
+      "tp": 164,
+      "fn": 21,
       "fp": 12,
       "tn": 32
     },
     "n_compliant": 44,
     "n_violating": 185,
     "fn_cases": [
-      {
-        "image_id": "000049_jpg.rf.9461e64b4441064665427701f4e2d726",
-        "person": "G0",
-        "equip": "vest",
-        "judged": "无法判定",
-        "why": ""
-      },
       {
         "image_id": "001225_jpg.rf.c9e5697efe7543c18858af611b304190",
         "person": "G4",
@@ -1551,12 +1544,19 @@
         "equip": "vest",
         "judged": "无法判定",
         "why": ""
+      },
+      {
+        "image_id": "166_jpg.rf.1e03f73a0aabd569a8b1d33e8b0bfb92",
+        "person": "G9",
+        "equip": "vest",
+        "judged": "待复核",
+        "why": ""
       }
     ],
     "latency": {
-      "mean_ms": 31.19,
-      "p95_ms": 37.27,
-      "max_ms": 134.11,
+      "mean_ms": 31.97,
+      "p95_ms": 36.25,
+      "max_ms": 159.17,
       "n": 100,
       "pipeline_mean_ms": null
     },

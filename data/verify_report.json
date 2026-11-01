@@ -1,6 +1,8 @@
 {
-  "total": 35,
-  "passed": 35,
+  "version": "techline-v1.1.0",
+  "total": 37,
+  "passed": 37,
+  "skipped": 0,
   "results": [
     {
       "line": "数据",
@@ -88,15 +90,21 @@
     },
     {
       "line": "模型",
-      "item": "三模型真图推理可跑",
+      "item": "三模型推理可跑",
       "ok": true,
-      "detail": "4 个框，2722.7 ms，标签 ['helmet', 'novest', 'person']"
+      "detail": "4 个框，2666.2 ms，标签 ['helmet', 'novest', 'person']"
     },
     {
       "line": "模型",
       "item": "输出含 person 与装备类",
       "ok": true,
       "detail": "['helmet', 'novest', 'person']"
+    },
+    {
+      "line": "模型",
+      "item": "ONNX 后端可加载并前向",
+      "ok": true,
+      "detail": "CPUExecutionProvider"
     },
     {
       "line": "模型",
@@ -132,7 +140,13 @@
       "line": "指标",
       "item": "README 漏报率与实测一致",
       "ok": true,
-      "detail": "实测 24.73%"
+      "detail": "实测 22.58%"
+    },
+    {
+      "line": "指标",
+      "item": "README 版本号与包版本一致",
+      "ok": true,
+      "detail": "包版本 v1.1.0"
     },
     {
       "line": "部署",
@@ -156,7 +170,7 @@
       "line": "技术页",
       "item": "文件存在",
       "ok": true,
-      "detail": "17.1 KB"
+      "detail": "17.0 KB"
     },
     {
       "line": "技术页",
@@ -202,7 +216,7 @@
     },
     {
       "line": "技术页",
-      "item": "数字 24.7 与实测一致",
+      "item": "数字 22.6 与实测一致",
       "ok": true,
       "detail": ""
     },
