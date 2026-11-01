@@ -1,5 +1,5 @@
 {
-  "version": "techline-v1.1.0",
+  "version": "techline-v1.1.1",
   "total": 37,
   "passed": 37,
   "skipped": 0,
@@ -92,7 +92,7 @@
       "line": "模型",
       "item": "三模型推理可跑",
       "ok": true,
-      "detail": "4 个框，2666.2 ms，标签 ['helmet', 'novest', 'person']"
+      "detail": "4 个框，2695.3 ms，标签 ['helmet', 'novest', 'person']"
     },
     {
       "line": "模型",
@@ -146,7 +146,7 @@
       "line": "指标",
       "item": "README 版本号与包版本一致",
       "ok": true,
-      "detail": "包版本 v1.1.0"
+      "detail": "包版本 v1.1.1"
     },
     {
       "line": "部署",

@@ -1,6 +1,13 @@
 # 最轻量：任意电脑都能跑（无 GPU、无 torch）
 #   pip install -r requirements-cpu.txt
-# 合计下载约 80 MB，安装后磁盘占用约 130 MB
-onnxruntime>=1.17
-opencv-python>=4.8
-numpy>=1.24
+#
+# 版本锁死到「跑出这四个指标的那一套」。为什么锁死：
+# onnxruntime 只写 >=1.17 时，同一台机器、同一份代码，ONNX 单帧从 53.5 ms 漂到 72.7 ms
+#（裸推理其实只要 49.3 ms，差异在后处理与运行环境），排查成本极高、无法归因。
+# 锁版本是让「交付可复现」成立的最低成本手段。
+#   改这几个版本 = 必须重跑 `evaluate_real.py --backend onnx` 并更新 README 2.1 的复测记录。
+#
+# 安装后约 130 MB，不装 torch。
+onnxruntime==1.31.1
+opencv-python==5.0.0
+numpy==2.5.4
