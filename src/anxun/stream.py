@@ -60,17 +60,19 @@ def _iou(a: Box, b: Box) -> float:
 
 
 class Track:
-    __slots__ = ("tid", "box", "verdicts", "miss", "last_event_at")
+    __slots__ = ("tid", "box", "verdicts", "miss", "last_event_at", "frames")
 
     def __init__(self, tid: int, box: Box):
         self.tid = tid
         self.box = box
         self.verdicts: deque[list[Verdict]] = deque(maxlen=3)
+        self.frames = 0                # 被匹配到过几次（决定有没有机会凑满判定窗口）
         self.miss = 0                  # 连续未匹配次数
         self.last_event_at: dict[str, float] = {}
 
     def push(self, verdicts: list[Verdict]) -> None:
         self.verdicts.append(verdicts)
+        self.frames += 1
 
 
 class Tracker:
@@ -150,6 +152,10 @@ class StreamPipeline:
         self.ledger: list[dict] = []
         self.raw_alarms = 0        # 逐帧判违规的次数（冷却去重前）
         self.persons_total = 0     # 进入画面的轨迹数（人次，不等于独立人数）
+        # v2.1.0：活到三帧窗口的轨迹数。这才是「有机会定论」的分母——
+        # persons_total 含大量开出来 1-2 帧就消失的碎片，它们凑不齐窗口，
+        # 拿它们做分母会把覆盖率系统性拉低（实测 28% vs 90%）。
+        self.persons_judgeable = 0
         self._last: dict[tuple[int, str], dict] = {}
         self._seen: set[int] = set()
 
@@ -170,6 +176,8 @@ class StreamPipeline:
                             v.is_violation, person_id=f"T{tr.tid}", iou=v.iou)
                     for v in mine]
             tr.push(mine)
+            if tr.frames == 3:
+                self.persons_judgeable += 1     # 首次凑满判定窗口（只用 == 3，不能 >=3）
 
             if len(tr.verdicts) < 3:
                 continue
@@ -239,7 +247,7 @@ class StreamPipeline:
 class VideoInspector:
     def __init__(self, detector, region, fps: float = 2.0,
                  equips: tuple[str, ...] = ("helmet", "vest"),
-                 cooldown_s: float = 60.0, motion_threshold: float = 10.0,
+                 cooldown_s: float = 60.0, motion_threshold: float = 3.0,
                  verbose: bool = True):
         self.det = detector
         self.region = region
@@ -253,13 +261,19 @@ class VideoInspector:
             equips = tuple(e for e in equips if e in can)
         self.equips = equips
         self.cooldown_s = cooldown_s
-        # 3.0 -> 10.0（2026-11-01，1080p 真实素材复验后调整）
-        # 原值按 640 合成动画定。换成 1920x1920 真实照片 + ±1.5px 机位抖动后，
-        # 帧差中位数从 ~0 抬到 3.86 —— 真实固定机位的轻微晃动（风、振动）本身就
-        # 超过 3.0，触发层的帧差判据在现场会失效：实测节省从 90% 掉到 39%。
-        # 阈值扫到 10.0：抖动版节省回到 86%，告警与全量完全一致（miss=0）。
-        # 边界：场景切换帧差 88+，人走动的帧差远大于机位晃动的 3.86，10.0 有余量。
-        # ⚠️ 复验素材是静态照片，没有真实人体运动；上限需现场录像确认。
+        # 10.0 -> 3.0（2026-11-02，v2.1.0）
+        # v1.2 把 3.0 提到 10.0 的依据是「1080p 静态照片 + 机位抖动」素材——
+        # 那个素材是整图切换，帧差 20–45，所以「10.0 有余量」。
+        # 但它证明不了「人走动时帧差有多大」，因为里面根本没有人体运动。
+        #
+        # v2.1.0 用整幅照片匀速平移的素材补测（dataset: site_pan.mp4）：
+        #   人正常走动时，全幅帧差 P50 = 1.99，P90 = 14.9
+        #   阈值 10.0 会跳过 82% 的走动帧 —— 静默漏看，不报错、只是不推理
+        # 3.0 取 P50 的 1.5 倍：既不吃掉传感器噪声，也不漏走动帧。
+        # 代价是推理次数约 ×2（48s 素材 18 → 35 次），告警数不变。
+        #
+        # 边界：场景切换帧差 88+，仍会被判为运动；机位抖动 3.86 恰在阈值附近，
+        # 若现场抖动更大需上调，但每上调一档要重测「走动帧跳过率」。
         self.motion_threshold = motion_threshold   # 0 = 关闭帧差跳帧
         self.verbose = verbose
         if self.dropped_equips and verbose:
@@ -271,7 +285,8 @@ class VideoInspector:
         self._last_size = (1920, 1080)
         self.stats = {"frames_read": 0, "frames_processed": 0, "frames_skipped": 0,
                       "gate_skipped": 0, "infer_ms_total": 0.0, "events": 0,
-                      "raw_alarms": 0, "persons_total": 0, "ledger": 0,
+                      "raw_alarms": 0, "persons_total": 0,
+                      "persons_judgeable": 0, "ledger": 0,
                       "realtime_factor": 0.0}
 
     # ---------- 帧差：静止画面直接跳过 ----------
@@ -359,6 +374,7 @@ class VideoInspector:
                                             / max(1, self.stats["frames_processed"]), 1))
         self.stats["raw_alarms"] = self.pipe.raw_alarms
         self.stats["persons_total"] = self.pipe.persons_total
+        self.stats["persons_judgeable"] = self.pipe.persons_judgeable
         self.stats["ledger"] = len(self.pipe.ledger)
         return self.stats
 
@@ -413,9 +429,10 @@ def main() -> int:
     ap.add_argument("--fps", type=float, default=2.0, help="抽帧频率（默认 2）")
     ap.add_argument("--cooldown", type=float, default=60.0, help="同一人同一违规的告警冷却秒数")
     ap.add_argument("--max-seconds", type=float, default=0)
-    ap.add_argument("--motion", type=float, default=10.0,
+    ap.add_argument("--motion", type=float, default=3.0,
                     help="帧差阈值（160x160 灰度均值差），低于此值跳过推理（0=关闭）。"
-                         "1080p 真实素材复验后从 3.0 提到 10.0，见 VideoInspector 注释")
+                         "v2.1.0 从 10.0 降回 3.0：实测人走动全幅帧差 P50 仅 1.99，"
+                         "10.0 会跳过 82% 的走动帧。见 VideoInspector 注释")
     ap.add_argument("--no-gate", action="store_true",
                     help="关闭人员门控（没人也跑 PPE），用于全量对照")
     ap.add_argument("--model", default=str(ROOT / "models" / "best.pt"))

@@ -87,11 +87,20 @@ def merge(bundles: Iterable[dict]) -> dict:
         s = b.get("stats") or {}
         offset = video_s                                  # 这份素材在总时间轴上的起点
         seg_s = float(s.get("video_s") or 0.0)
-        for r in b["ledger"]:
+        # 硬取 b["ledger"] 会在传入手工拼的 dict 时抛 KeyError，看不出缺的是什么。
+        # 统一在这里给出可执行的提示（v2.1.0 加固）。
+        rows = b.get("ledger")
+        if rows is None:
+            raise ValueError(
+                f"第 {i + 1} 份账本缺 ledger 字段（source={b.get('source', '?')}）。"
+                f"用 stats.load() 读文件会提前拦住，或确认它是 stream.py 的产物。")
+        for r in rows:
+            if "track" not in r or "t_video_s" not in r:
+                continue                       # 缺关键字段的记录无法归入轨迹，跳过
             row = dict(r)                      # 不改调用方传进来的对象
             row["track"] = f"{tag}:{r['track']}"
             row["t_video_s"] = round(float(r["t_video_s"]) + offset, 1)
-            row["t_last"] = round(float(r["t_last"]) + offset, 1)
+            row["t_last"] = round(float(r.get("t_last", r["t_video_s"])) + offset, 1)
             row["source_index"] = i
             ledger.append(row)
             streams.add(r.get("stream") or "main")
@@ -103,11 +112,12 @@ def merge(bundles: Iterable[dict]) -> dict:
             events.append(row)
         sources.append(str(b.get("source") or b.get("sources") or "?"))
         video_s += seg_s
-        for k in ("persons_total", "raw_alarms", "events", "frames_processed",
-                  "frames_read", "frames_skipped"):
+        for k in ("persons_total", "persons_judgeable", "raw_alarms", "events",
+                  "frames_processed", "frames_read", "frames_skipped"):
             stats[k] += float(s.get(k) or 0)
 
     stats["persons_total"] = int(stats["persons_total"])
+    stats["persons_judgeable"] = int(stats["persons_judgeable"])
     stats["raw_alarms"] = int(stats["raw_alarms"])
     stats["frames_processed"] = int(stats["frames_processed"])
     stats["frames_read"] = int(stats["frames_read"])
@@ -166,15 +176,30 @@ def track_states(ledger: list[dict]) -> dict[str, dict[str, str]]:
             for t, eqs in by_track.items()}
 
 
-def compliance(ledger: list[dict]) -> dict:
+def compliance(ledger: list[dict], equips_filter: tuple[str, ...] | None = None) -> dict:
     """合规率 = 合规人次 / 可判定人次。
 
     一个人穿了两样装备，只要有一样判「未佩戴」就算违规；
     两样都「已佩戴」才算合规；含「待复核 / 无法判定」且无违规的，单列不计分。
+
+    `equips_filter` 只统计指定装备（v2.1.0 新增）
+    --------------------------------------------
+    数据集里 vest 只有 51 个框 / 295 个人——**83% 的人本来就没穿反光背心**，
+    这是标注的常态，不是违规，更不是所有人上岗都得穿。按「两样都得有」算合规率，
+    分母里几乎全是「没背心所以违规」，跑出来 0%，没有任何解释力。
+
+    安全帽才是这个作品的主线（"有人没戴安全帽"是核心场景），所以主口径只看 helmet：
+        compliance_rate          = 全装备（保留，用于看背心链路是否通）
+        compliance_rate_helmet   = 只看安全帽（**主 KPI**）
     """
     ok = bad = review = unknown = 0
     for _t, equips in track_states(ledger).items():
-        vals = list(equips.values())
+        if equips_filter:
+            vals = [v for k, v in equips.items() if k in equips_filter]
+            if not vals:
+                continue                      # 这条轨迹没评这类装备，不进分母
+        else:
+            vals = list(equips.values())
         if any(v == BAD for v in vals):
             bad += 1
         elif vals and all(v == OK for v in vals):
@@ -184,11 +209,12 @@ def compliance(ledger: list[dict]) -> dict:
         else:
             review += 1
     n = ok + bad
+    scope = "+".join(equips_filter) if equips_filter else "全部装备"
     return {
         "value": round(ok / n, 4) if n else None,
         "ok": ok, "violation": bad, "review": review, "unknown": unknown,
-        "n": n,
-        "note": "分母只含判得动的人次；待复核与无法判定单列，不藏进分母",
+        "n": n, "scope": scope,
+        "note": f"分母只含判得动的人次（{scope}）；待复核与无法判定单列，不藏进分母",
     }
 
 
@@ -208,19 +234,53 @@ def denoise(raw_alarms: int, events: int) -> dict:
     }
 
 
-def verdict_coverage(ledger: list[dict], persons_total: int) -> dict:
-    """判定覆盖率 = 有定论的轨迹 / 出现的人次。
+def verdict_coverage(ledger: list[dict], persons_total: int,
+                     persons_judgeable: int | None = None, min_obs: int = 3) -> dict:
+    """判定覆盖率 = 有定论的轨迹 / **有机会定论的轨迹**。
 
-    v1.x 看不见这个数：只报违规，没人管「多少人根本没被判定」。
-    它低说明轨迹碎（分辨率不够 / 人走得太快 / 三帧定论凑不齐），
-    和模型准不准是两件事 —— 模型再准，判不到的人也进不了合规率。
+    为什么有两个分母（v2.1.0）
+    -------------------------
+    v2.0 用的是「有定论 / persons_total」，而 persons_total 统计的是**所有开过的轨迹**，
+    其中大量是「开出来就死」的：检测抖动让同一帧多检出/少检出，开出存活 1–2 帧的短命轨迹。
+    它们**凑不齐三帧判定窗口，本来就不该有定论**，却被算进分母。
+    实测同一段素材：旧口径 28%，新口径 90%——差的 62 个点全是短命轨迹。
+
+    - `value`     ：新口径，分母 = `persons_judgeable`（活到三帧窗口的轨迹）
+    - `value_raw` ：旧口径，分母 = `persons_total`，保留做对照与 CHANGELOG 追溯
+
+    报出去时**两个都印**。单看 90% 会被质疑挑分母，两个一起印才说明白：
+    差的不是判定能力，是那批从未活到三帧的碎片。
+
+    `persons_judgeable` 缺失时（v2.0 的历史 JSON 没有这个字段），退回按账本
+    `observations` 估算——注意这个估算会偏高，因为能进账本的轨迹基本都活过了三帧。
     """
-    judged = len(track_states(ledger))
+    states = track_states(ledger)
+    # 「有定论」必须真的落到已佩戴/未佩戴。v2.0 这里直接用 len(states)，
+    # 把「待复核 / 无法判定」也当成了有定论——那是「有账本」，不是「有结论」。
+    judged = sum(1 for equips in states.values()
+                 if any(v in (OK, BAD) for v in equips.values()))
+
+    if persons_judgeable is None:
+        obs: dict[str, int] = defaultdict(int)
+        for r in ledger:
+            obs[str(r["track"])] += int(r.get("observations") or 1)
+        eligible = sum(1 for n in obs.values() if n >= min_obs)
+        estimated = True
+    else:
+        eligible = int(persons_judgeable)
+        estimated = False
+
     total = max(judged, int(persons_total or 0))
     return {
-        "value": round(judged / total, 4) if total else None,
-        "judged": judged, "persons_total": total,
-        "note": "有定论轨迹 / 进入画面的轨迹数；低说明轨迹碎片化，不是模型不准",
+        "value": round(judged / eligible, 4) if eligible else None,
+        "judged": judged,
+        "eligible": eligible,
+        "eligible_estimated": estimated,
+        "min_obs": min_obs,
+        "value_raw": round(judged / total, 4) if total else None,
+        "persons_total": total,
+        "note": (f"新口径 {judged}/{eligible}（活到 {min_obs} 帧窗口的轨迹）；"
+                 f"旧口径 {judged}/{total}，差额 {total - eligible} 条是来不及凑满窗口的碎片"),
     }
 
 
@@ -318,7 +378,7 @@ def trend(ledger: list[dict], bucket_s: float = 30.0) -> list[dict]:
 
 def compute(bundles: list[dict], *, hours: float = 8.0,
             manual_times: float = 2, manual_minutes: float = 15,
-            bucket_s: float = 30.0, streams: int | None = None) -> dict:
+            bucket_s: float = 0.0, streams: int | None = None) -> dict:
     """把 N 份事件文件算成一份价值指标。
 
     `streams` 不传时按账本里的 stream 名去重计数：单路 stream.py 跑几段都是
@@ -327,6 +387,11 @@ def compute(bundles: list[dict], *, hours: float = 8.0,
     """
     m = merge(bundles)
     st = m["stats"]
+    # 分桶宽度自适应：固定 30 秒会让短片只有 1–2 个桶，趋势图画不出来（v2.1.0 修）
+    # 目标 5–7 个桶，夹在 8–60 秒之间——太细噪声大，太粗看不出走势。
+    if not bucket_s:
+        video_s = float(st.get("video_s") or 60.0)
+        bucket_s = max(8.0, min(60.0, round(video_s / 6)))
     n_streams = int(streams) if streams else max(1, int(st.get("streams") or 1))
     return {
         "schema": SCHEMA,
@@ -345,9 +410,13 @@ def compute(bundles: list[dict], *, hours: float = 8.0,
         },
         "metrics": {
             "coverage_ratio": coverage(n_streams, hours, manual_times, manual_minutes),
-            "verdict_coverage": verdict_coverage(m["ledger"], st.get("persons_total", 0)),
+            "verdict_coverage": verdict_coverage(
+                m["ledger"], st.get("persons_total", 0), st.get("persons_judgeable")),
             "denoise_ratio": denoise(st.get("raw_alarms", 0), len(m["events"])),
-            "compliance_rate": compliance(m["ledger"]),
+            # 主 KPI 只看安全帽：背心在数据集里只有 17% 的人有，
+            # 拿它当合规门槛会把 83% 的正常人判成违规（详见 compliance 的注释）
+            "compliance_rate": compliance(m["ledger"], ("helmet",)),
+            "compliance_rate_all": compliance(m["ledger"]),
             "violation_duration_s": durations(m["ledger"]),
         },
         "region_ranking": region_ranking(m["events"]),
@@ -371,7 +440,8 @@ def format_table(vm: dict) -> str:
                  f"系统 {c['system_minutes']:g} 分钟 vs 人工 {c['manual_minutes']:g} 分钟（推演）")
     v = mt["verdict_coverage"]
     lines.append(f"{'判定覆盖率':<14}{v['value'] * 100:>9.1f}%   "
-                 f"{v['judged']}/{v['persons_total']} 人次有定论")
+                 f"{v['judged']}/{v['eligible']} 人次有定论"
+                 f"（旧口径 {v['value_raw']:.1%}，分母含 {v['persons_total']} 条轨迹）")
     d = mt["denoise_ratio"]
     lines.append(f"{'告警降噪率':<14}{(d['value'] or 0) * 100:>9.1f}%   "
                  f"{d['raw']} 次 → {d['events']} 条")

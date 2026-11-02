@@ -120,7 +120,8 @@ class MultiStreamScheduler:
         self.stats = {"samples": 0, "inferred": 0, "skipped": 0, "ticks": 0,
                       "batch_max": 0, "infer_ms_total": 0.0,
                       "wall_s": 0.0, "events": 0,
-                      "raw_alarms": 0, "persons_total": 0, "ledger": 0}
+                      "raw_alarms": 0, "persons_total": 0,
+                      "persons_judgeable": 0, "ledger": 0}
 
     def add(self, reader: StreamReader) -> "MultiStreamScheduler":
         self.readers.append(reader)
@@ -178,6 +179,7 @@ class MultiStreamScheduler:
             throughput_fps=round(self.stats["inferred"] / wall, 1) if wall else 0,
             raw_alarms=sum(r.pipe.raw_alarms for r in self.readers),
             persons_total=sum(r.pipe.persons_total for r in self.readers),
+            persons_judgeable=sum(r.pipe.persons_judgeable for r in self.readers),
             ledger=len(ledger),
         )
         self.events = events

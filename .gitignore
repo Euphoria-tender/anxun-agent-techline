@@ -16,6 +16,8 @@ datasets/*
 # 演示视频随仓库走（8.8MB）：价值指标要能被评委从头跑一遍。
 # real1080.mp4（59MB）仍不入库，用 tools/make_1080_stream.py 重建。
 !datasets/site_demo.mp4
+# site_pan.mp4：v2.1.0 的评测素材（整图平移），体积小、指标靠它复现
+!datasets/site_pan.mp4
 # 体积原因仍不入库，用 tools/ 里的脚本重拉
 datasets/ppe_test/test1080/
 datasets/helmet_p2/
@@ -30,6 +32,9 @@ runs/
 
 # 本地推送助手（含个人账号，不入库）
 push-to-github.bat
+
+# sweep_stream.py 的中间产物（每次重跑覆盖）
+.sweep_tmp/
 
 # 缓存与临时文件
 __pycache__/

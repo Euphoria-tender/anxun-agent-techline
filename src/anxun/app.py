@@ -131,9 +131,22 @@ class Handler(BaseHTTPRequestHandler):
         的内存吃光——服务是 ThreadingHTTPServer，一个连接就能拖垮全部线程。
         base64 传图本身也不该超过几 MB，16 MB 足够 4K 单帧。
         """
-        n = int(self.headers.get("Content-Length") or 0)
-        if not n:
+        raw = self.headers.get("Content-Length") or "0"
+        try:
+            n = int(raw)
+        except (TypeError, ValueError):
+            # "abc" / "1e999" 这类畸形头直接 400。
+            # 不接住会冒到 do_POST 的兜底 except，回一个语焉不详的 500。
+            self._json({"error": f"Content-Length 不是合法整数：{raw!r}"}, 400)
+            return None
+        if n == 0:
             return {}
+        if n < 0:
+            # **必须显式挡住**：`rfile.read(-1)` 会一直读到 EOF，
+            # 于是 `Content-Length: -5` 就绕过了上面的 16 MB 上限——
+            # 服务是 ThreadingHTTPServer，一个连接能把内存吃光（v2.1.0 修）。
+            self._json({"error": f"Content-Length 不能为负：{n}"}, 400)
+            return None
         if n > MAX_BODY_BYTES:
             self._json({"error": f"请求体 {n} 字节超过上限 {MAX_BODY_BYTES}"}, 413)
             return None

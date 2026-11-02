@@ -2,17 +2,16 @@
   "schema": 1,
   "generated_at": "2026-11-02",
   "sources": [
-    "datasets/site_demo.mp4",
-    "datasets/real1080.mp4"
+    "datasets/site_pan.mp4"
   ],
   "basis": {
-    "video_s": 160.0,
+    "video_s": 34.8,
     "streams": 1,
-    "persons_total": 81,
-    "raw_alarms": 550,
-    "events": 56,
-    "ledger": 115,
-    "frames_processed": 41
+    "persons_total": 28,
+    "raw_alarms": 195,
+    "events": 13,
+    "ledger": 27,
+    "frames_processed": 72
   },
   "metrics": {
     "coverage_ratio": {
@@ -25,100 +24,90 @@
       "note": "推演值：人工基线是排班假设，不是实测；换真实制度后重算"
     },
     "verdict_coverage": {
-      "value": 0.6049,
-      "judged": 49,
-      "persons_total": 81,
-      "note": "有定论轨迹 / 进入画面的轨迹数；低说明轨迹碎片化，不是模型不准"
+      "value": 0.7692,
+      "judged": 10,
+      "eligible": 13,
+      "eligible_estimated": false,
+      "min_obs": 3,
+      "value_raw": 0.3571,
+      "persons_total": 28,
+      "note": "新口径 10/13（活到 3 帧窗口的轨迹）；旧口径 10/28，差额 15 条是来不及凑满窗口的碎片"
     },
     "denoise_ratio": {
-      "value": 0.8982,
-      "raw": 550,
-      "events": 56,
+      "value": 0.9333,
+      "raw": 195,
+      "events": 13,
       "note": "1 - 去重后事件数 / 去重前逐帧告警次数"
     },
     "compliance_rate": {
-      "value": 0.0465,
-      "ok": 2,
-      "violation": 41,
+      "value": 0.5714,
+      "ok": 4,
+      "violation": 3,
       "review": 4,
       "unknown": 2,
-      "n": 43,
-      "note": "分母只含判得动的人次；待复核与无法判定单列，不藏进分母"
+      "n": 7,
+      "scope": "helmet",
+      "note": "分母只含判得动的人次（helmet）；待复核与无法判定单列，不藏进分母"
+    },
+    "compliance_rate_all": {
+      "value": 0.0,
+      "ok": 0,
+      "violation": 10,
+      "review": 1,
+      "unknown": 2,
+      "n": 10,
+      "scope": "全部装备",
+      "note": "分母只含判得动的人次（全部装备）；待复核与无法判定单列，不藏进分母"
     },
     "violation_duration_s": {
-      "p50": 3.5,
-      "p95": 13.5,
-      "max": 13.5,
-      "n": 54,
+      "p50": 3.4,
+      "p95": 3.6,
+      "max": 3.6,
+      "n": 11,
       "note": "单次违规的持续时间；素材无整改过程，故未体现「违规→合规」的整改耗时"
     }
   },
   "region_ranking": [
     {
-      "region": "3 号车间东侧通道",
-      "region_id": "A-03",
-      "events": 50,
-      "r_sum": 339,
-      "r_avg": 6.8,
-      "grades": {
-        "黄色": 37,
-        "橙色": 13
-      }
-    },
-    {
       "region": "2 号车间高处作业平台",
       "region_id": "B-01",
-      "events": 6,
-      "r_sum": 64,
-      "r_avg": 10.7,
+      "events": 13,
+      "r_sum": 136,
+      "r_avg": 10.5,
       "grades": {
-        "橙色": 4,
-        "红色": 2
+        "红色": 4,
+        "橙色": 9
       }
     }
   ],
   "trend": [
     {
       "t_start_s": 0.0,
-      "t_end_s": 30.0,
-      "persons": 3,
-      "violations": 2,
-      "compliance": 0.333
-    },
-    {
-      "t_start_s": 30.0,
-      "t_end_s": 60.0,
-      "persons": 2,
-      "violations": 2,
+      "t_end_s": 8.0,
+      "persons": 1,
+      "violations": 1,
       "compliance": 0.0
     },
     {
-      "t_start_s": 60.0,
-      "t_end_s": 90.0,
-      "persons": 16,
-      "violations": 14,
-      "compliance": 0.125
-    },
-    {
-      "t_start_s": 90.0,
-      "t_end_s": 120.0,
-      "persons": 9,
-      "violations": 8,
-      "compliance": 0.111
-    },
-    {
-      "t_start_s": 120.0,
-      "t_end_s": 150.0,
-      "persons": 16,
-      "violations": 15,
-      "compliance": 0.062
-    },
-    {
-      "t_start_s": 150.0,
-      "t_end_s": 154.5,
+      "t_start_s": 8.0,
+      "t_end_s": 16.0,
       "persons": 4,
-      "violations": 1,
-      "compliance": 0.75
+      "violations": 4,
+      "compliance": 0.0
+    },
+    {
+      "t_start_s": 16.0,
+      "t_end_s": 24.0,
+      "persons": 6,
+      "violations": 3,
+      "compliance": 0.5
+    },
+    {
+      "t_start_s": 24.0,
+      "t_end_s": 31.0,
+      "persons": 2,
+      "violations": 2,
+      "compliance": 0.0
     }
   ]
 }

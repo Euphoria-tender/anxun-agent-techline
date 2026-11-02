@@ -1,0 +1,124 @@
+{
+  "schema": 1,
+  "generated_at": "2026-11-02",
+  "sources": [
+    "datasets/site_demo.mp4",
+    "datasets/real1080.mp4"
+  ],
+  "basis": {
+    "video_s": 160.0,
+    "streams": 1,
+    "persons_total": 81,
+    "raw_alarms": 550,
+    "events": 56,
+    "ledger": 115,
+    "frames_processed": 41
+  },
+  "metrics": {
+    "coverage_ratio": {
+      "value": 16.0,
+      "system_minutes": 480.0,
+      "manual_minutes": 30,
+      "streams": 1,
+      "hours": 8.0,
+      "assumption": "人工每班 2 次 × 15 分钟，单路连续 8 小时",
+      "note": "推演值：人工基线是排班假设，不是实测；换真实制度后重算"
+    },
+    "verdict_coverage": {
+      "value": 0.6049,
+      "judged": 49,
+      "persons_total": 81,
+      "note": "有定论轨迹 / 进入画面的轨迹数；低说明轨迹碎片化，不是模型不准"
+    },
+    "denoise_ratio": {
+      "value": 0.8982,
+      "raw": 550,
+      "events": 56,
+      "note": "1 - 去重后事件数 / 去重前逐帧告警次数"
+    },
+    "compliance_rate": {
+      "value": 0.0465,
+      "ok": 2,
+      "violation": 41,
+      "review": 4,
+      "unknown": 2,
+      "n": 43,
+      "note": "分母只含判得动的人次；待复核与无法判定单列，不藏进分母"
+    },
+    "violation_duration_s": {
+      "p50": 3.5,
+      "p95": 13.5,
+      "max": 13.5,
+      "n": 54,
+      "note": "单次违规的持续时间；素材无整改过程，故未体现「违规→合规」的整改耗时"
+    }
+  },
+  "region_ranking": [
+    {
+      "region": "3 号车间东侧通道",
+      "region_id": "A-03",
+      "events": 50,
+      "r_sum": 339,
+      "r_avg": 6.8,
+      "grades": {
+        "黄色": 37,
+        "橙色": 13
+      }
+    },
+    {
+      "region": "2 号车间高处作业平台",
+      "region_id": "B-01",
+      "events": 6,
+      "r_sum": 64,
+      "r_avg": 10.7,
+      "grades": {
+        "橙色": 4,
+        "红色": 2
+      }
+    }
+  ],
+  "trend": [
+    {
+      "t_start_s": 0.0,
+      "t_end_s": 30.0,
+      "persons": 3,
+      "violations": 2,
+      "compliance": 0.333
+    },
+    {
+      "t_start_s": 30.0,
+      "t_end_s": 60.0,
+      "persons": 2,
+      "violations": 2,
+      "compliance": 0.0
+    },
+    {
+      "t_start_s": 60.0,
+      "t_end_s": 90.0,
+      "persons": 16,
+      "violations": 14,
+      "compliance": 0.125
+    },
+    {
+      "t_start_s": 90.0,
+      "t_end_s": 120.0,
+      "persons": 9,
+      "violations": 8,
+      "compliance": 0.111
+    },
+    {
+      "t_start_s": 120.0,
+      "t_end_s": 150.0,
+      "persons": 16,
+      "violations": 15,
+      "compliance": 0.062
+    },
+    {
+      "t_start_s": 150.0,
+      "t_end_s": 154.5,
+      "persons": 4,
+      "violations": 1,
+      "compliance": 0.75
+    }
+  ]
+}

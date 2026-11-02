@@ -12,9 +12,9 @@
 为什么要有这个脚本：README 第七节写了四条命令，第二条还要把两个 `--events`
 参数逐个写对。评委或队友漏一个参数，跑出来的数就和文档对不上，然后怀疑是代码坏了。
 
-默认用 `datasets/site_demo.mp4`（随仓库分发）。`datasets/real1080.mp4`
-（59MB，不入库）如果在就跑，不在就跳过 —— 只用一段素材时判定覆盖率会从
-60.5% 掉到 13.5%，脚本会把这件事说出来，不让人误以为算错了。
+默认用 `datasets/site_pan.mp4`（v2.1.0 的评测素材，3.4MB 随仓库分发）。
+抽帧率默认取 **5fps**——那是三档表里的推荐档（覆盖率 82.3%，成本 124 次/分）。
+换成 2fps 覆盖率会降到 75%，换 10fps 只多 1 条定论却翻倍成本，见 docs/抽帧与触发口径.md。
 
 只用已有账本重算、不跑视频：加 `--no-video`。
 """
@@ -32,11 +32,11 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from anxun import report, stats                            # noqa: E402
 
-SITE = ROOT / "datasets" / "site_demo.mp4"
-HD = ROOT / "datasets" / "real1080.mp4"
-EV_SITE = ROOT / "data" / "events_site.json"
-EV_HD = ROOT / "data" / "events_1080.json"
+SITE = ROOT / "datasets" / "site_pan.mp4"
+EV_SITE = ROOT / "data" / "events_pan.json"
 VM = ROOT / "data" / "value_metrics.json"
+# v2.0 的旧账本（site_demo / real1080）已移到 data/archive/：
+# 那两段素材测不出真实判定能力，留着主目录会让人误当当前口径。
 OUT_DOC = ROOT / "docs" / "figs" / "value_report.html"
 OUT_SLIDE = ROOT / "docs" / "figs" / "value_report_16x9.html"
 
@@ -45,10 +45,10 @@ def step(n: int, total: int, title: str) -> None:
     print(f"\n[{n}/{total}] {title}")
 
 
-def run_stream(source: Path, region: str, out: Path) -> bool:
+def run_stream(source: Path, region: str, out: Path, fps: str = "5") -> bool:
     """跑一遍视频巡查。失败不抛异常，返回 False 让调用方决定是否继续。"""
     cmd = [sys.executable, str(ROOT / "src" / "anxun" / "stream.py"),
-           "--source", str(source), "--fps", "2", "--region", region,
+           "--source", str(source), "--fps", fps, "--region", region,
            "--out", str(out)]
     print(f"  $ stream.py --source {source.name} --region {region}")
     r = subprocess.run(cmd, cwd=str(ROOT), capture_output=True, text=True,
@@ -87,31 +87,15 @@ def main() -> int:
             if not run_stream(SITE, "B-01", EV_SITE):
                 return 3
         used.append(EV_SITE)
-
-        if HD.exists():
-            if not (args.keep_events and EV_HD.exists()):
-                if not run_stream(HD, "A-03", EV_HD):
-                    print("  ! 1080p 这段失败，退回只用 site_demo 继续")
-            if EV_HD.exists():
-                used.append(EV_HD)
-        else:
-            print(f"  · 跳过 {HD.name}（59MB，未随仓库分发；"
-                  f"需要就跑 python tools/make_1080_stream.py）")
-            if EV_HD.exists():
-                print("    仓库里已有 events_1080.json，仍然计入 —— 指标不会降级。")
-                used.append(EV_HD)
-            else:
-                print("    ⚠️ 只剩 site_demo 一段时，判定覆盖率是 13.5% 而不是 60.5%，"
-                      "这是 720p 轨迹碎片化，不是算错。")
     else:
         step(1, 1, "使用已有账本")
-        for p in (EV_SITE, EV_HD):
-            if p.exists():
-                used.append(p)
-                print(f"  · {p.relative_to(ROOT)}")
+        if EV_SITE.exists():
+            used.append(EV_SITE)
+            print(f"  · {EV_SITE.relative_to(ROOT)}")
 
     if not used:
-        print("\n✗ 没有任何账本可用。去掉 --no-video 跑一次，或先 seed data/events_*.json。")
+        print("\n✗ 没有任何账本可用。去掉 --no-video 跑一次，"
+              "或用 python tools/make_motion_video.py 重建素材。")
         return 4
 
     # ---- 2. 指标 ----
