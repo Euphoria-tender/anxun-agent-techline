@@ -1,7 +1,7 @@
 {
-  "version": "techline-v2.2.0",
-  "total": 62,
-  "passed": 59,
+  "version": "techline-v3.0.0",
+  "total": 59,
+  "passed": 56,
   "skipped": 3,
   "results": [
     {
@@ -62,12 +62,6 @@
       "line": "模型",
       "item": "models/best.pt 存在",
       "ok": true,
-      "detail": "22.5 MB"
-    },
-    {
-      "line": "模型",
-      "item": "models/vest.pt 存在",
-      "ok": true,
       "detail": "6.3 MB"
     },
     {
@@ -79,12 +73,6 @@
     {
       "line": "模型",
       "item": "models/onnx/best.onnx 存在",
-      "ok": true,
-      "detail": "44.72 MB"
-    },
-    {
-      "line": "模型",
-      "item": "models/onnx/vest.onnx 存在",
       "ok": true,
       "detail": "12.24 MB"
     },
@@ -102,9 +90,9 @@
     },
     {
       "line": "模型",
-      "item": "三模型推理可跑",
+      "item": "双模型推理可跑",
       "ok": true,
-      "detail": "4 个框，2390.4 ms，标签 ['helmet', 'novest', 'person']"
+      "detail": "3 个框，2338.2 ms，标签 ['helmet', 'novest', 'person']"
     },
     {
       "line": "模型",
@@ -152,13 +140,13 @@
       "line": "指标",
       "item": "README 误报率与实测一致",
       "ok": true,
-      "detail": "实测 6.1%"
+      "detail": "实测 10.2%"
     },
     {
       "line": "指标",
       "item": "README 漏报率与实测一致",
       "ok": true,
-      "detail": "实测 17.20%"
+      "detail": "实测 16.13%"
     },
     {
       "line": "指标",
@@ -182,13 +170,13 @@
       "line": "指标",
       "item": "README 版本号与包版本一致",
       "ok": true,
-      "detail": "包版本 v2.2.0"
+      "detail": "包版本 v3.0.0"
     },
     {
       "line": "指标",
       "item": "代码阈值与 config/thresholds.json 一致",
       "ok": true,
-      "detail": "口径 measured：0.2/0.3（比对 6 个字段）"
+      "detail": "口径 v3：0.2/0.59（比对 6 个字段）"
     },
     {
       "line": "指标",
@@ -204,7 +192,7 @@
     },
     {
       "line": "指标",
-      "item": "交付指标标注了阈值口径（measured）",
+      "item": "交付指标标注了阈值口径（v3）",
       "ok": true,
       "detail": "metrics_real / metrics_onnx 均已标注"
     },
@@ -224,13 +212,7 @@
       "line": "部署",
       "item": "HTTP 服务启动并响应 /health",
       "ok": true,
-      "detail": ""
-    },
-    {
-      "line": "部署",
-      "item": "/api/inspect 返回判定与事件",
-      "ok": true,
-      "detail": "人 1 · 违规 1 · 事件 1"
+      "detail": "（--no-serve 跳过）"
     },
     {
       "line": "技术页",
@@ -276,19 +258,19 @@
     },
     {
       "line": "技术页",
-      "item": "数字 6.1 与实测一致",
+      "item": "数字 10.2 与实测一致",
       "ok": true,
       "detail": ""
     },
     {
       "line": "技术页",
-      "item": "数字 17.2 与实测一致",
+      "item": "数字 16.1 与实测一致",
       "ok": true,
       "detail": ""
     },
     {
       "line": "技术页",
-      "item": "数字 0.681 与实测一致",
+      "item": "数字 0.776 与实测一致",
       "ok": true,
       "detail": ""
     },
@@ -296,7 +278,7 @@
       "line": "技术页",
       "item": "页脚标注了判定阈值口径",
       "ok": true,
-      "detail": "0.20 / 0.30"
+      "detail": "0.20 / 0.59"
     },
     {
       "line": "技术页",
