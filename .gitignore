@@ -18,6 +18,7 @@ datasets/*
 !datasets/site_demo.mp4
 # site_pan.mp4：v2.1.0 的评测素材（整图平移），体积小、指标靠它复现
 !datasets/site_pan.mp4
+!datasets/site_pan_v2.mp4
 # 体积原因仍不入库，用 tools/ 里的脚本重拉
 datasets/ppe_test/test1080/
 datasets/helmet_p2/

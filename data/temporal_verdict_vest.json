@@ -1,53 +1,88 @@
 {
   "kind": "temporal-verdict",
   "equip": "vest",
-  "source": "site_pan.mp4",
-  "ledger": "events_pan_v3.json",
+  "source": "site_pan_v2.mp4",
+  "ledger": "events_pan_v2.json",
   "window_s": 1.0,
   "iou_min": 0.25,
   "match": "spatial",
-  "n_persons": 12,
-  "n_compliant": 1,
-  "n_violating": 7,
-  "n_undecided": 4,
-  "n_unmatched_records": 3,
+  "n_persons": 26,
+  "n_compliant": 2,
+  "n_violating": 11,
+  "n_undecided": 13,
+  "n_unmatched_records": 9,
   "confusion": {
-    "tp": 7,
-    "fn": 0,
-    "fp": 0,
+    "tp": 10,
+    "fn": 1,
+    "fp": 1,
     "tn": 1
   },
-  "fp_rate": 0.0,
-  "fn_rate": 0.0,
+  "fp_rate": 50.0,
+  "fn_rate": 9.09,
   "detail": [
     {
       "id": "S1P1",
-      "truth": "穿了",
-      "verdict": "已佩戴",
-      "n_records": 1,
-      "result": "正确(合规)",
-      "match_iou": [
-        0.621
-      ],
-      "conf": [
-        0.85
-      ]
-    },
-    {
-      "id": "S2P1",
       "truth": "没穿",
       "verdict": "未佩戴",
       "n_records": 1,
       "result": "正确(违规)",
       "match_iou": [
-        0.395
+        0.54
       ],
       "conf": [
-        0.613
+        0.663
       ]
     },
     {
+      "id": "S1P2",
+      "truth": "穿了",
+      "verdict": "已佩戴",
+      "n_records": 1,
+      "result": "正确(合规)",
+      "match_iou": [
+        0.595
+      ],
+      "conf": [
+        0.772
+      ]
+    },
+    {
+      "id": "S2P1",
+      "truth": "没穿",
+      "verdict": "待复核",
+      "n_records": 1,
+      "result": "未定论"
+    },
+    {
       "id": "S2P2",
+      "truth": "没穿",
+      "verdict": "已佩戴",
+      "n_records": 1,
+      "result": "漏报",
+      "match_iou": [
+        0.416
+      ],
+      "conf": [
+        0.628
+      ]
+    },
+    {
+      "id": "S2P3",
+      "truth": "没穿",
+      "verdict": "未佩戴",
+      "n_records": 2,
+      "result": "正确(违规)",
+      "match_iou": [
+        0.372,
+        0.382
+      ],
+      "conf": [
+        0.253,
+        0.417
+      ]
+    },
+    {
+      "id": "S2P4",
       "truth": "没穿",
       "verdict": "无记录",
       "n_records": 0,
@@ -56,15 +91,9 @@
     {
       "id": "S3P1",
       "truth": "没穿",
-      "verdict": "未佩戴",
-      "n_records": 1,
-      "result": "正确(违规)",
-      "match_iou": [
-        0.624
-      ],
-      "conf": [
-        0.926
-      ]
+      "verdict": "无记录",
+      "n_records": 0,
+      "result": "未定论"
     },
     {
       "id": "S3P2",
@@ -73,10 +102,10 @@
       "n_records": 1,
       "result": "正确(违规)",
       "match_iou": [
-        0.611
+        0.56
       ],
       "conf": [
-        0.887
+        0.906
       ]
     },
     {
@@ -89,14 +118,25 @@
     {
       "id": "S4P1",
       "truth": "没穿",
-      "verdict": "未佩戴",
+      "verdict": "待复核",
       "n_records": 1,
-      "result": "正确(违规)",
+      "result": "未定论"
+    },
+    {
+      "id": "S4P2",
+      "truth": "穿了",
+      "verdict": "未佩戴",
+      "n_records": 3,
+      "result": "误报",
       "match_iou": [
-        0.586
+        0.307,
+        0.419,
+        0.454
       ],
       "conf": [
-        0.856
+        0.811,
+        0.823,
+        0.82
       ]
     },
     {
@@ -106,36 +146,46 @@
       "n_records": 1,
       "result": "正确(违规)",
       "match_iou": [
-        0.574
+        0.376
       ],
       "conf": [
-        0.75
+        0.839
       ]
     },
     {
       "id": "S5P2",
       "truth": "没穿",
-      "verdict": "未佩戴",
-      "n_records": 1,
-      "result": "正确(违规)",
-      "match_iou": [
-        0.516
-      ],
-      "conf": [
-        0.867
-      ]
+      "verdict": "无记录",
+      "n_records": 0,
+      "result": "未定论"
+    },
+    {
+      "id": "S5P3",
+      "truth": "没穿",
+      "verdict": "无记录",
+      "n_records": 0,
+      "result": "未定论"
+    },
+    {
+      "id": "S5P4",
+      "truth": "没穿",
+      "verdict": "无记录",
+      "n_records": 0,
+      "result": "未定论"
     },
     {
       "id": "S6P1",
       "truth": "没穿",
       "verdict": "未佩戴",
-      "n_records": 1,
+      "n_records": 2,
       "result": "正确(违规)",
       "match_iou": [
-        0.575
+        0.405,
+        0.387
       ],
       "conf": [
-        0.935
+        0.509,
+        0.584
       ]
     },
     {
@@ -146,7 +196,95 @@
       "result": "未定论"
     },
     {
-      "id": "S6P3",
+      "id": "S7P1",
+      "truth": "没穿",
+      "verdict": "未佩戴",
+      "n_records": 1,
+      "result": "正确(违规)",
+      "match_iou": [
+        0.628
+      ],
+      "conf": [
+        0.937
+      ]
+    },
+    {
+      "id": "S7P2",
+      "truth": "没穿",
+      "verdict": "未佩戴",
+      "n_records": 1,
+      "result": "正确(违规)",
+      "match_iou": [
+        0.598
+      ],
+      "conf": [
+        0.915
+      ]
+    },
+    {
+      "id": "S7P3",
+      "truth": "没穿",
+      "verdict": "无记录",
+      "n_records": 0,
+      "result": "未定论"
+    },
+    {
+      "id": "S8P1",
+      "truth": "没穿",
+      "verdict": "无记录",
+      "n_records": 0,
+      "result": "未定论"
+    },
+    {
+      "id": "S9P1",
+      "truth": "没穿",
+      "verdict": "未佩戴",
+      "n_records": 1,
+      "result": "正确(违规)",
+      "match_iou": [
+        0.577
+      ],
+      "conf": [
+        0.857
+      ]
+    },
+    {
+      "id": "S9P2",
+      "truth": "没穿",
+      "verdict": "未佩戴",
+      "n_records": 1,
+      "result": "正确(违规)",
+      "match_iou": [
+        0.546
+      ],
+      "conf": [
+        0.85
+      ]
+    },
+    {
+      "id": "S10P1",
+      "truth": "没穿",
+      "verdict": "未佩戴",
+      "n_records": 2,
+      "result": "正确(违规)",
+      "match_iou": [
+        0.403,
+        0.579
+      ],
+      "conf": [
+        0.302,
+        0.945
+      ]
+    },
+    {
+      "id": "S10P2",
+      "truth": "没穿",
+      "verdict": "无记录",
+      "n_records": 0,
+      "result": "未定论"
+    },
+    {
+      "id": "S10P3",
       "truth": "没穿",
       "verdict": "无记录",
       "n_records": 0,

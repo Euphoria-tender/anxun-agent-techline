@@ -1,0 +1,405 @@
+{
+  "source": "site_pan_v2.mp4",
+  "fps": 10,
+  "size": [
+    1920,
+    720
+  ],
+  "seconds": 88.0,
+  "truth_source": "generator",
+  "canvas": "整幅照片匀速平移",
+  "pan_px": 320,
+  "pan_s": 3.0,
+  "persons": [
+    {
+      "id": "S1P1",
+      "img": "00345_jpg.rf.547c61593fe59c0ddc977f973b7a95c3.jpg",
+      "equip": "未佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.4234,
+        0.3156,
+        0.7859,
+        1.0
+      ],
+      "t_enter": 3.0,
+      "t_exit": 11.2
+    },
+    {
+      "id": "S1P2",
+      "img": "00345_jpg.rf.547c61593fe59c0ddc977f973b7a95c3.jpg",
+      "equip": "已佩戴",
+      "vest": true,
+      "fully_ok": true,
+      "box_norm": [
+        0.0187,
+        0.0078,
+        0.4297,
+        1.0
+      ],
+      "t_enter": 3.0,
+      "t_exit": 11.2
+    },
+    {
+      "id": "S2P1",
+      "img": "123_jpg.rf.1d4ecdf159c898bd928be9b3dc35e896.jpg",
+      "equip": "已佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.1156,
+        0.175,
+        0.4234,
+        0.8406
+      ],
+      "t_enter": 11.2,
+      "t_exit": 19.4
+    },
+    {
+      "id": "S2P2",
+      "img": "123_jpg.rf.1d4ecdf159c898bd928be9b3dc35e896.jpg",
+      "equip": "未佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.7469,
+        0.2062,
+        0.9563,
+        1.0
+      ],
+      "t_enter": 11.2,
+      "t_exit": 19.4
+    },
+    {
+      "id": "S2P3",
+      "img": "123_jpg.rf.1d4ecdf159c898bd928be9b3dc35e896.jpg",
+      "equip": "未佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.5516,
+        0.1859,
+        0.7641,
+        0.6734
+      ],
+      "t_enter": 11.2,
+      "t_exit": 19.4
+    },
+    {
+      "id": "S2P4",
+      "img": "123_jpg.rf.1d4ecdf159c898bd928be9b3dc35e896.jpg",
+      "equip": "已佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.3703,
+        0.1922,
+        0.6422,
+        0.7641
+      ],
+      "t_enter": 11.2,
+      "t_exit": 19.4
+    },
+    {
+      "id": "S3P1",
+      "img": "12_jpg.rf.21999cb7da7f1b5a7940c063d4f293a6.jpg",
+      "equip": "未佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.5625,
+        0.3094,
+        0.6672,
+        0.5609
+      ],
+      "t_enter": 19.4,
+      "t_exit": 27.6
+    },
+    {
+      "id": "S3P2",
+      "img": "12_jpg.rf.21999cb7da7f1b5a7940c063d4f293a6.jpg",
+      "equip": "未佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.0844,
+        0.0781,
+        0.3688,
+        0.5625
+      ],
+      "t_enter": 19.4,
+      "t_exit": 27.6
+    },
+    {
+      "id": "S3P3",
+      "img": "12_jpg.rf.21999cb7da7f1b5a7940c063d4f293a6.jpg",
+      "equip": "未佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.7078,
+        0.575,
+        0.7812,
+        0.8406
+      ],
+      "t_enter": 19.4,
+      "t_exit": 27.6
+    },
+    {
+      "id": "S4P1",
+      "img": "13_jpg.rf.39ad35991322494671fbc724f9af3ef3.jpg",
+      "equip": "未佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.3438,
+        0.4609,
+        0.425,
+        0.7641
+      ],
+      "t_enter": 27.6,
+      "t_exit": 35.8
+    },
+    {
+      "id": "S4P2",
+      "img": "13_jpg.rf.39ad35991322494671fbc724f9af3ef3.jpg",
+      "equip": "未佩戴",
+      "vest": true,
+      "fully_ok": false,
+      "box_norm": [
+        0.4859,
+        0.4766,
+        0.5609,
+        0.7688
+      ],
+      "t_enter": 27.6,
+      "t_exit": 35.8
+    },
+    {
+      "id": "S5P1",
+      "img": "147_jpg.rf.09f3b8ee4afb9ee71c32d647f1f8b34b.jpg",
+      "equip": "未佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.1625,
+        0.1187,
+        0.2687,
+        0.3781
+      ],
+      "t_enter": 35.8,
+      "t_exit": 44.0
+    },
+    {
+      "id": "S5P2",
+      "img": "147_jpg.rf.09f3b8ee4afb9ee71c32d647f1f8b34b.jpg",
+      "equip": "未佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.3359,
+        0.1609,
+        0.45,
+        0.3937
+      ],
+      "t_enter": 35.8,
+      "t_exit": 44.0
+    },
+    {
+      "id": "S5P3",
+      "img": "147_jpg.rf.09f3b8ee4afb9ee71c32d647f1f8b34b.jpg",
+      "equip": "未佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.6719,
+        0.1266,
+        0.7969,
+        0.325
+      ],
+      "t_enter": 35.8,
+      "t_exit": 44.0
+    },
+    {
+      "id": "S5P4",
+      "img": "147_jpg.rf.09f3b8ee4afb9ee71c32d647f1f8b34b.jpg",
+      "equip": "未佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.9094,
+        0.1703,
+        1.0,
+        0.4297
+      ],
+      "t_enter": 35.8,
+      "t_exit": 44.0
+    },
+    {
+      "id": "S6P1",
+      "img": "000049_jpg.rf.9461e64b4441064665427701f4e2d726.jpg",
+      "equip": "已佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.0828,
+        0.2313,
+        0.7578,
+        0.8953
+      ],
+      "t_enter": 44.0,
+      "t_exit": 52.2
+    },
+    {
+      "id": "S6P2",
+      "img": "000049_jpg.rf.9461e64b4441064665427701f4e2d726.jpg",
+      "equip": "已佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.3203,
+        0.6359,
+        0.8359,
+        1.0
+      ],
+      "t_enter": 44.0,
+      "t_exit": 52.2
+    },
+    {
+      "id": "S7P1",
+      "img": "000155_jpg.rf.bc8c535fc00ab0c43c4e75e02e693010.jpg",
+      "equip": "已佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.0031,
+        0.0969,
+        0.2906,
+        1.0
+      ],
+      "t_enter": 52.2,
+      "t_exit": 60.4
+    },
+    {
+      "id": "S7P2",
+      "img": "000155_jpg.rf.bc8c535fc00ab0c43c4e75e02e693010.jpg",
+      "equip": "已佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.3344,
+        0.1313,
+        0.6188,
+        1.0
+      ],
+      "t_enter": 52.2,
+      "t_exit": 60.4
+    },
+    {
+      "id": "S7P3",
+      "img": "000155_jpg.rf.bc8c535fc00ab0c43c4e75e02e693010.jpg",
+      "equip": "已佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.6547,
+        0.2094,
+        0.9594,
+        1.0
+      ],
+      "t_enter": 52.2,
+      "t_exit": 60.4
+    },
+    {
+      "id": "S8P1",
+      "img": "000504_jpg.rf.5d65421c9b03fa474444b05e49028f15.jpg",
+      "equip": "已佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.1562,
+        0.3391,
+        0.2734,
+        1.0
+      ],
+      "t_enter": 60.4,
+      "t_exit": 68.6
+    },
+    {
+      "id": "S9P1",
+      "img": "000619_jpg.rf.6f43715c86f196a714e7bdf91015788c.jpg",
+      "equip": "已佩戴",
+      "vest": null,
+      "fully_ok": false,
+      "box_norm": [
+        0.2422,
+        0.0,
+        0.7625,
+        1.0
+      ],
+      "t_enter": 68.6,
+      "t_exit": 76.8
+    },
+    {
+      "id": "S9P2",
+      "img": "000619_jpg.rf.6f43715c86f196a714e7bdf91015788c.jpg",
+      "equip": "已佩戴",
+      "vest": null,
+      "fully_ok": false,
+      "box_norm": [
+        0.7063,
+        0.5109,
+        0.9062,
+        0.9266
+      ],
+      "t_enter": 68.6,
+      "t_exit": 76.8
+    },
+    {
+      "id": "S10P1",
+      "img": "000863_jpg.rf.1642d9e71c8bbda9b73e2c2dfcded5be.jpg",
+      "equip": "已佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.0203,
+        0.0891,
+        0.4078,
+        1.0
+      ],
+      "t_enter": 76.8,
+      "t_exit": 85.0
+    },
+    {
+      "id": "S10P2",
+      "img": "000863_jpg.rf.1642d9e71c8bbda9b73e2c2dfcded5be.jpg",
+      "equip": "已佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.3469,
+        0.2687,
+        0.775,
+        0.9984
+      ],
+      "t_enter": 76.8,
+      "t_exit": 85.0
+    },
+    {
+      "id": "S10P3",
+      "img": "000863_jpg.rf.1642d9e71c8bbda9b73e2c2dfcded5be.jpg",
+      "equip": "已佩戴",
+      "vest": false,
+      "fully_ok": false,
+      "box_norm": [
+        0.7328,
+        0.3391,
+        0.8984,
+        0.9266
+      ],
+      "t_enter": 76.8,
+      "t_exit": 85.0
+    }
+  ]
+}

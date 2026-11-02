@@ -163,6 +163,8 @@ def main() -> int:
                     help="段间空画面时长（秒）。必须大于 Tracker 的 max_miss÷fps，"
                          "否则上一场景的人会被下一场景继承——实测 T3 横跨 4 个场景")
     ap.add_argument("--scenes", type=int, default=6)
+    ap.add_argument("--violation-scenes", type=float, default=0.0,
+                    help="含「头盔未佩戴」场景的占比（0~1）。默认 0 保持旧行为；\n                         测漏报必须调到 0.3 以上——旧采样按文件名顺序取，\n                         12 个人头盔全是合规的，只测得了误报")
     ap.add_argument("--canvas-w", type=int, default=1920)
     args = ap.parse_args()
 
@@ -175,13 +177,22 @@ def main() -> int:
     #
     # 这里保证至少 1 个全合规场景（否则合规率恒为 0，等于采样错误），
     # 其余按文件顺序取，整体比例贴近 11.7%。
-    all_ok = [s for s in scenes if s["tier"] == "all_ok"]
-    others = [s for s in scenes if s["tier"] != "all_ok"]
-    if not all_ok:
-        raise SystemExit("数据集里没有「帽+背心」全合规的场景，无法生成含合规样本的素材")
-    picked = all_ok[:1] + others[:max(0, args.scenes - 1)]
-    if len(picked) < args.scenes:
-        raise SystemExit(f"可用场景不足：{len(picked)} < {args.scenes}")
+    # 分层采样：按「头盔是否违规」分开挑，而不是按文件名顺序。
+    #
+    # 旧做法（all_ok[:1] + others[:n-1]）按文件顺序取，采到的 12 个人头盔全是合规的，
+    # 只能测误报、测不了漏报——而漏报才是安全场景真正在意的那个数。
+    viol = [s for s in scenes if any(p["equip"] == "未佩戴" for p in s["persons"])]
+    comp = [s for s in scenes if all(p["equip"] == "已佩戴" for p in s["persons"])]
+    n_viol = max(0, round(args.scenes * args.violation_scenes))
+    n_comp = args.scenes - n_viol
+    if args.violation_scenes > 0 and n_viol == 0:
+        n_viol, n_comp = 1, args.scenes - 1
+    if len(viol) < n_viol or len(comp) < n_comp:
+        raise SystemExit(f"场景不足：需违规 {n_viol}/有 {len(viol)}，"
+                         f"需合规 {n_comp}/有 {len(comp)}")
+    picked = viol[:n_viol] + comp[:n_comp]
+    if not picked:
+        raise SystemExit("没挑出任何场景")
 
     tot = sum(s["n"] for s in picked)
     good = sum(s["good"] for s in picked)
