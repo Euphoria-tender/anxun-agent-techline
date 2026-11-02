@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """价值指标回归测试（纯账本，不依赖模型权重）。
 
-跑法：在 techline-v2.0.0 目录下
+跑法：在技术线目录下
 
     python -m unittest discover -s tests -v
 
