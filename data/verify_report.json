@@ -1,8 +1,8 @@
 {
   "version": "techline-v2.1.0",
-  "total": 58,
-  "passed": 58,
-  "skipped": 0,
+  "total": 59,
+  "passed": 56,
+  "skipped": 3,
   "results": [
     {
       "line": "数据",
@@ -19,14 +19,14 @@
     {
       "line": "数据",
       "item": "helmet_p2/train 图片/标注配对",
-      "ok": true,
-      "detail": "1200 图 / 1277 标注 / 配对 1200"
+      "ok": null,
+      "detail": "该集合未随仓库分发（训练用，体积大）"
     },
     {
       "line": "数据",
       "item": "helmet_p2/valid 图片/标注配对",
-      "ok": true,
-      "detail": "400 图 / 400 标注 / 配对 400"
+      "ok": null,
+      "detail": "该集合未随仓库分发（训练用，体积大）"
     },
     {
       "line": "数据",
@@ -42,15 +42,15 @@
     },
     {
       "line": "数据",
-      "item": "1080p 复验素材分辨率",
-      "ok": true,
-      "detail": "1920×1920"
+      "item": "1080p 复验素材",
+      "ok": null,
+      "detail": "51MB，未随仓库分发；补齐：python tools/make_1080_stream.py（或加 --fetch 自动跑）"
     },
     {
       "line": "数据",
       "item": "data.yaml 不含本机绝对路径",
       "ok": true,
-      "detail": "6 份均为相对路径，换机器不用改"
+      "detail": "1 份均为相对路径，换机器不用改"
     },
     {
       "line": "模型",
@@ -104,7 +104,7 @@
       "line": "模型",
       "item": "三模型推理可跑",
       "ok": true,
-      "detail": "4 个框，2774.5 ms，标签 ['helmet', 'novest', 'person']"
+      "detail": "4 个框，3238.5 ms，标签 ['helmet', 'novest', 'person']"
     },
     {
       "line": "模型",
@@ -206,7 +206,13 @@
       "line": "部署",
       "item": "HTTP 服务启动并响应 /health",
       "ok": true,
-      "detail": "（--no-serve 跳过）"
+      "detail": ""
+    },
+    {
+      "line": "部署",
+      "item": "/api/inspect 返回判定与事件",
+      "ok": true,
+      "detail": "人 1 · 违规 1 · 事件 1"
     },
     {
       "line": "技术页",

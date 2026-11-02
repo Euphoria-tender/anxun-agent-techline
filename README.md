@@ -37,8 +37,8 @@ python src/anxun/verify_all.py
 
 | 场景 | 结果 |
 | :--- | :--- |
-| 克隆仓库直接跑 | **53 项：50 PASS · 0 FAIL · 3 SKIP** |
-| 补齐训练集与 1080p 素材后 | **53 项：53 PASS · 0 FAIL** |
+| 克隆仓库直接跑 | **59 项：56 PASS · 0 FAIL · 3 SKIP** |
+| 补齐训练集与 1080p 素材后 | **59 项：59 PASS · 0 FAIL** |
 
 3 项 SKIP 是体积原因没入库的大件（60MB 训练集、51MB 复验素材），脚本把「缺件」和「东西坏了」分开报，不算失败。
 验收脚本会真起服务、真跑推理、真读 JSON、真数技术页的页数与数字，不是检查文件存不存在。
@@ -126,24 +126,25 @@ ONNX 版是自己实现的 letterbox + 解码 + NMS（`onnx_backend.py`，纯 nu
 | 内容 | 在仓库里 | 说明 |
 | --- | --- | --- |
 | `src/` · `docs/` · `data/` | ✅ | 代码、技术页、指标 JSON |
-| `models/*.pt`（33.7 MB） | ✅ | v1.1.0 起随仓库走 —— 没有权重，clone 下来是跑不动的 |
-| `models/onnx/*.onnx`（66.5 MB） | ✅ | 同上。单文件最大 42.6 MB，在 GitHub 100 MB 硬限制内 |
+| `models/*.pt`（35.3 MB） | ✅ | v1.1.0 起随仓库走 —— 没有权重，clone 下来是跑不动的 |
+| `models/onnx/*.onnx`（69.8 MB） | ✅ | 同上。单文件最大 44.7 MB，在 GitHub 100 MB 硬限制内 |
 | `datasets/scenes/`（300 KB） | ✅ | 控制台演示的 4 张场景图，没有它点「开始巡查」是空的 |
 | `datasets/ppe_test/`（14 MB） | ✅ | 100 张测试图 + 100 张训练图 + 标注（CC BY 4.0）。**四个指标就测在这 100 张上**，不带它指标无法复现 |
-| `datasets/site_demo.mp4`（8.8 MB） | ✅ | 60s / 720p 现场素材。**价值指标要能被从头跑一遍**，不带它 `events_site.json` 只能读不能重建 |
-| `datasets/real1080.mp4`（59 MB）· `datasets/helmet_p2/`（60 MB）· `test1080/`（51 MB） | ❌ | 1080p 复验素材与训练集，体积原因不入库；`tools/make_1080_stream.py` · `fetch_helmet_p2.py` 可重建 |
+| `datasets/site_demo.mp4`（9.2 MB） | ✅ | 60s / 720p 现场素材。**价值指标要能被从头跑一遍**，不带它 `events_site.json` 只能读不能重建 |
+| `datasets/real1080.mp4`（61 MB）· `datasets/helmet_p2/`（60 MB）· `test1080/`（53 MB） | ❌ | 1080p 复验素材与训练集，体积原因不入库；`tools/make_1080_stream.py` · `fetch_helmet_p2.py` 可重建 |
+| `models/hardhat_m.pt`（52 MB） | ❌ | 仅 4.1 架构对比那三行用（`src/anxun/sweep.py` 的 `m @480/640/960`），不入库；结果已存在 `data/sweep.json`，不影响交付指标 |
 
 克隆下来直接跑，不需要额外找权重：
 
 ```bash
 pip install -r requirements-cpu.txt    # 约 80 MB，不需要 torch
-python src/anxun/verify_all.py         # 合计 53 项：PASS 50 · FAIL 0 · SKIP 3（--no-serve 时 52 项）
+python src/anxun/verify_all.py         # 合计 59 项：PASS 56 · FAIL 0 · SKIP 3（--no-serve 时 58 项）
 python src/anxun/evaluate_real.py      # 复现四个指标，实测与原 JSON 一字不差
 ```
 
 那 3 项 SKIP 都是**体积原因没随仓库走的大件**（helmet_p2 训练集 2 项、1080p 复验素材 1 项），
 **不计失败** —— 缺件不等于东西坏了，`verify_all.py` 把这两件事分开报。
-把 `tools/fetch_helmet_p2.py`、`tools/make_1080_stream.py` 跑一遍补齐，就是 **53 项全 PASS**。
+把 `tools/fetch_helmet_p2.py`、`tools/make_1080_stream.py` 跑一遍补齐，就是 **59 项全 PASS**。
 
 > 想换成 GPU 跑：`pip install -r requirements-gpu.txt`（torch 约 2 GB）。  
 > 只想要 ONNX：`models/onnx/` 三个文件已经够，`requirements-cpu.txt` 就能跑。
@@ -942,7 +943,7 @@ anxun-v1/
 │   ├── onnx_backend.py     ONNX 推理（letterbox / 解码 / NMS，不依赖 torch）
 │   ├── export_onnx.py      .pt → .onnx（一次性）
 │   ├── data_card.py        全量数据卡片
-│   ├── verify_all.py       交付物验收（53 项，含起服务与真图推理）
+│   ├── verify_all.py       交付物验收（59 项，含起服务与真图推理）
 │   └── app.py              推理服务（HTTP）
 ├── tools/                 数据拉取 · 训练准备 · 基准与复验
 │   ├── fetch_ppe_test.py / fetch_helmet_p2.py / repair_labels.py
@@ -955,7 +956,7 @@ anxun-v1/
 │   ├── make_value_report.py     一条命令：视频 → 账本 → 五指标 → 两版报告
 │   └── collect_selfdata.py      现场视频抽帧 → 可标注目录（部署时用）
 ├── config/thresholds.json  判定阈值的唯一事实来源（measured / conservative）
-├── tests/                  回归测试（37 条）：test_techline.py 规则与编排 ·
+├── tests/                  回归测试（42 条）：test_techline.py 规则与编排 ·
 │                           test_stats.py 价值指标口径
 │                           python -m unittest discover -s tests
 ├── docs/                  技术页_10-13.html · 技术口径.md · 指标置信区间.md
