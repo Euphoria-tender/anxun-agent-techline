@@ -29,8 +29,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from anxun.detectors import DualDetector, YoloDetector, pick_device
 from anxun.metrics import evaluate
-from anxun.rules_engine import (Box, HEAD_REGION_RATIO, HEAD_WIDTH_RATIO,
-                                judge_frame, min_person_area)
+from anxun.rules_engine import Box, judge_frame, min_person_area
+
+# 真值推导专用的头部区域，**刻意不跟随判定口径**。
+# 为什么：truth_of 要回答的是「标注里这个人头上到底有没有帽子框」，这是数据事实，
+# 不该随判定阈值变。原来直接用 rules_engine.HEAD_REGION_RATIO，既在 import 时被快照
+# （切换 profile 不更新），又让真值与判定共享同一套几何——等于自己给自己出题。
+# 钉死成 v2.2.0 measured 口径的值，历史上所有数字都不变，换口径后分母也仍然可比。
+TRUTH_HEAD_REGION = 0.30
+TRUTH_HEAD_WIDTH = 0.44
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "data" / "metrics_real.json"      # torch 后端的交付指标
@@ -107,7 +114,7 @@ def truth_of(gt: list[dict], person: dict) -> bool | None:
     有 hardhat 算戴，只有 no-hardhat 算没戴，两者都没有返回 None（不进统计）。
     """
     p = Box("person", 1.0, person["x1"], person["y1"], person["x2"], person["y2"])
-    head = p.top_region(HEAD_REGION_RATIO, HEAD_WIDTH_RATIO)
+    head = p.top_region(TRUTH_HEAD_REGION, TRUTH_HEAD_WIDTH)
     worn, seen = False, False
     for g in gt:
         if g["label"] not in ("helmet", "nohelmet"):

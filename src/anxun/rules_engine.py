@@ -95,6 +95,48 @@ MIN_ASPECT = 0.0
 MIN_PERSON_AREA_RATIO = 0.0
 EQUIP_OVERRIDE: dict[str, dict[str, float]] = {}
 
+# 装备框与比对区域的匹配判据：
+#   "iou"    默认。IoU 或包含度任一达标即可（v1.0 起一直用这个）。
+#   "center" 框中心落在区域内即达标。对框的大小不敏感，跨人也更难。
+#
+# 为什么要有第二种：归一化到 640 输入后，一个站姿中景的人 `person` 框宽约 70px，
+# 头部区域按 0.44 收窄只剩 31px，而头盔框本身宽 29px——横向偏 8px，包含度就从
+# 1.0 掉到 0.5，明明戴了也判「没戴」。放宽区域又会把邻人的头盔框圈进来，漏报反弹。
+# 实测（ppe 五类模型 + 100 张旧集）：IoU 判据最好只能到 22.9%/30.4%，
+# 中心点判据能到 9.1%/15.1%。两种判据都在，是因为老权重仍以 IoU 为准，
+# 换判据必须整链路重验，不能悄悄改默认值。
+MATCH_MODE = "iou"
+
+# 正反证据冲突时怎么办（同一个头部区域里既高置信检出装备框、又高置信检出裸头框）：
+#   "review"    默认，转「待复核」交人工。v1~v2 一直这么做，不冤枉人。
+#   "violation" 直接判「未佩戴」。安全场景优先——漏掉一个违规比多派一次复核贵得多。
+# 注意：业务统计里「待复核」是算漏报的（见 metrics.business_rates），
+# 所以这条策略直接改漏报率，不是只改文案。实测切到 violation 后 100 张旧集少 12 例漏报。
+CONFLICT_POLICY = "review"
+
+# 人员框的定论阈值，和装备框的 CONF_FINAL **分开**。
+# 为什么必须分开：CONF_FINAL 抬高是为了卡住低置信的装备框，但人员框本来就不该用
+# 同一个门槛——COCO 人体模型在密集场景常给出 0.3~0.5 的框，这些人是真的在那儿，
+# 只是框得不太自信。用 0.55 去要求它，等于把「没戴帽子」判成「待复核」，
+# 而待复核在业务统计里算漏报。实测（100 张旧集）：不拆时漏报 35.5%，拆开后 18.3%。
+PERSON_CONF_FINAL = 0.0
+
+# 每类装备各自的匹配判据。为什么不能一个口径通吃：
+#   头盔在头顶，中心点稳；背心从肩膀往下穿，几何中心常落在躯干区域（20%~70%）之外，
+#   用中心点判据会把「穿了」判成「没穿」——实测误报从 27.3% 涨到 47.7%。
+# 所以按装备分开配，没配的跟随 match_mode。
+EQUIP_MATCH_MODE: dict[str, str] = {}
+
+# 「贴头」约束：装备框的上沿必须落在人员框顶部多少比例以内，才算戴在身上。
+#
+# **实现后实测无效，默认关闭（0.0），留作以后排查用。**
+# 设计初衷是挡住「帽子在手里/挂在腰上」被判成「戴在头上」。
+# 但扫了 0.08~0.30 五档，指标一格没动、目标样本判定也没变——
+# 说明那个样本的误检框本来就在头顶位置（模型把后脑勺当成了深色头盔），
+# 不是「框在手里」。这类错误几何约束管不了，只能靠训练数据。
+# 详见 docs/15 附录 B.2/B.3。
+HEAD_TOP_TOL = 0.0
+
 
 def apply_profile(name: str) -> dict:
     """切换阈值口径并返回生效后的快照。
@@ -103,7 +145,8 @@ def apply_profile(name: str) -> dict:
     """
     global PROFILE, CONF_FINAL, CONF_REVIEW, HELMET_IOU_MIN, HEAD_REGION_RATIO
     global HEAD_WIDTH_RATIO, CONTAIN_MIN, MAX_EQUIP_RATIO, MIN_PERSON_AREA
-    global MIN_ASPECT, MIN_PERSON_AREA_RATIO, EQUIP_OVERRIDE
+    global MIN_ASPECT, MIN_PERSON_AREA_RATIO, EQUIP_OVERRIDE, MATCH_MODE, CONFLICT_POLICY
+    global PERSON_CONF_FINAL, EQUIP_MATCH_MODE, HEAD_TOP_TOL
 
     if name not in PROFILES:
         raise KeyError(f"未知阈值口径「{name}」，可选：{sorted(PROFILES)}")
@@ -115,6 +158,10 @@ def apply_profile(name: str) -> dict:
     HEAD_WIDTH_RATIO = float(prof["head_width_ratio"])
     MIN_PERSON_AREA = float(prof["min_person_area"])
     MIN_ASPECT = float(prof["min_aspect"])
+    MATCH_MODE = str(prof.get("match_mode", "iou"))
+    CONFLICT_POLICY = str(prof.get("conflict_policy", "review"))
+    PERSON_CONF_FINAL = float(prof.get("person_conf_final", CONF_FINAL))
+    HEAD_TOP_TOL = float(prof.get("head_top_tol", 0.0))
 
     equip = {k: dict(v) for k, v in prof["equip"].items()}
     helmet = equip.get("helmet", {})
@@ -123,6 +170,9 @@ def apply_profile(name: str) -> dict:
     MAX_EQUIP_RATIO = float(helmet.get("max_ratio", 3.0))
     # helmet 用模块常量（扫参入口），其他装备走覆盖表
     EQUIP_OVERRIDE = {k: v for k, v in equip.items() if k != "helmet"}
+    # 按装备取匹配判据；helmet 没单独配就跟随全局 MATCH_MODE
+    EQUIP_MATCH_MODE = {k: str(v.get("match_mode", MATCH_MODE)) for k, v in equip.items()
+                        if "match_mode" in v}
 
     MIN_PERSON_AREA_RATIO = MIN_PERSON_AREA / (1920 * 1080)
     return profile_snapshot()
@@ -453,15 +503,57 @@ def judge_equipment(person: Box, idx: int, boxes: Sequence[Box],
             return qbest, qi, qc, True
         return best, bi, bc, False
 
-    best, best_iou, best_contain, matched = _score(equip)
-    # 反向证据：模型专门训过「裸头」这一类（NO-Hardhat）。扔了它就只剩半个模型。
-    neg, neg_iou, neg_contain, neg_ok = _score(NEG_LABEL.get(equip, ""))
+    def _center(label: str, min_conf: float = 0.0):
+        """中心点判据：框中心落在区域内即达标，取其中置信度最高的一个。
+
+        与 _score 的区别只在「什么算达标」：不看 IoU 也不看包含度，只看中心点。
+        仍然保留两道闸门：
+          - max_ratio 面积闸门：比区域大 3 倍的框，中心点大概率落在别人身上
+          - min_conf 置信度闸门：**低置信框一律不算「找到」**。这一条是踩出来的——
+            不加的话，0.2~0.4 的框会从「不达标（判未佩戴）」变成「待复核 / 丢弃」，
+            而这两种状态在业务统计里都算漏报，实测把漏报从 15% 顶到 49%。"
+        """
+        best, bc = None, 0.0
+        for b in boxes:
+            if not label or b.label != label:
+                continue
+            if b.area <= 0 or b.area > max_ratio * region.area:
+                continue
+            if b.conf < min_conf:
+                continue
+            # 贴头约束：拎在手里/挂在腰上的帽子，框上沿离头顶很远
+            if HEAD_TOP_TOL > 0 and b.y1 > person.y1 + HEAD_TOP_TOL * person.h:
+                continue
+            if region.x1 <= b.cx <= region.x2 and region.y1 <= b.cy <= region.y2:
+                if b.conf > bc:
+                    best, bc = b, b.conf
+        return best
+
+    if EQUIP_MATCH_MODE.get(equip, MATCH_MODE) == "center":
+        best = _center(equip, CONF_FINAL)
+        matched = best is not None
+        best_iou = iou(region, best) if best else 0.0
+        best_contain = 0.0
+        neg = _center(NEG_LABEL.get(equip, ""), CONF_FINAL)
+        neg_ok = neg is not None
+        neg_iou = iou(region, neg) if neg else 0.0
+        neg_contain = 0.0
+    else:
+        best, best_iou, best_contain, matched = _score(equip)
+        # 反向证据：模型专门训过「裸头」这一类（NO-Hardhat）。扔了它就只剩半个模型。
+        neg, neg_iou, neg_contain, neg_ok = _score(NEG_LABEL.get(equip, ""))
 
     # --- 4. 结论 ---
     # 顺序很重要：正向证据优先；反向证据只有「高置信」时才有权覆盖。
     # 低置信度的裸头框不许把已经确定的结论降级——第一版写反了，漏报率从 45% 涨到 59%。
     if matched and best.conf >= CONF_FINAL:
         if neg_ok and neg.conf >= CONF_FINAL:
+            # 冲突时按口径决定：默认转人工，安全优先的口径直接判未佩戴
+            if CONFLICT_POLICY == "violation":
+                return Verdict(idx, equip, "未佩戴", min(best.conf, neg.conf),
+                               f"正反证据冲突：装备框（{best.conf:.2f}）与裸头框"
+                               f"（{neg.conf:.2f}）同时高置信，按安全优先判未佩戴",
+                               is_violation=True, person_id=pid, iou=best_iou)
             return Verdict(idx, equip, "待复核", max(best.conf, neg.conf),
                            f"正反证据冲突：头部区域同时检出装备框（{best.conf:.2f}）"
                            f"与裸头框（{neg.conf:.2f}），转人工",
@@ -494,7 +586,7 @@ def judge_equipment(person: Box, idx: int, boxes: Sequence[Box],
         return Verdict(idx, equip, "丢弃", conf,
                        f"人员框置信度 {conf:.2f} 过低，不作为依据",
                        person_id=pid, iou=best_iou)
-    if conf < CONF_FINAL:
+    if conf < PERSON_CONF_FINAL:
         return Verdict(idx, equip, "待复核", conf,
                        f"{region_name}内未检出装备框，但人员框置信度 {conf:.2f} 落在复核区间",
                        person_id=pid, iou=best_iou)

@@ -298,6 +298,10 @@ class OnnxDualDetector:
             if os.environ.get("ANXUN_ONNX_PARALLEL", "1") == "0":
                 parallel = False
         self.parallel = bool(parallel)
+        # 装备模型若自带 person 类（v3 的五类权重就带），会和人体模型的框重复。
+        # torch 侧的 DualDetector 同样有这个开关，两边必须一致，否则 ONNX 与 torch
+        # 的指标对不上——实测不去重时 person AP 从 0.797 掉到 0.655。
+        self.drop_equip_person = True
         self._pool = (ThreadPoolExecutor(max_workers=1 + len(self._equip_models()),
                                          thread_name_prefix="anxun-onnx")
                       if self.parallel else None)
@@ -323,11 +327,16 @@ class OnnxDualDetector:
         """三个模型输入尺寸一致时，同一张图的预处理结果可以共用。"""
         return all(m.imgsz == self.person.imgsz for m in self._equip_models())
 
+    def _equip_boxes(self, r: dict) -> list:
+        if not self.drop_equip_person:
+            return r["boxes"]
+        return [b for b in r["boxes"] if b.label != "person"]
+
     def _pack(self, a: dict, rest: list, ms: float) -> dict:
         boxes = list(a["boxes"])
         dropped = dict(a.get("dropped") or {})
         for r in rest:
-            boxes.extend(r["boxes"])
+            boxes.extend(self._equip_boxes(r))
             dropped.update(r.get("dropped") or {})
         return {"boxes": boxes, "infer_ms": round(ms, 2),
                 "backend": self.name, "kind": self.kind,

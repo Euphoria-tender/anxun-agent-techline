@@ -158,14 +158,16 @@ def verify_data() -> None:
 # ---------------------------------------------------------------- 二、模型
 def verify_models() -> None:
     head("二、模型（能跑的模型）")
-    pts = ["models/yolov8n.pt", "models/best.pt", "models/vest.pt"]
+    # v3.0.0 起没有独立的 vest 权重：五类模型的 best.pt 自带 vest / no-vest，
+    # 单独挂一个 vest.onnx 反而会把同一件背心检出两遍。
+    pts = ["models/yolov8n.pt", "models/best.pt"]
     for rel in pts:
         p = ROOT / rel
         check("模型", f"{rel} 存在", p.exists(),
               f"{p.stat().st_size / 1e6:.1f} MB" if p.exists() else "缺失")
 
     onnx_dir = ROOT / "models" / "onnx"
-    for name in ("yolov8n.onnx", "best.onnx", "vest.onnx", "manifest.json"):
+    for name in ("yolov8n.onnx", "best.onnx", "manifest.json"):
         p = onnx_dir / name
         check("模型", f"models/onnx/{name} 存在", p.exists(),
               f"{p.stat().st_size / 1e6:.2f} MB" if p.exists() else "缺失")
@@ -200,14 +202,14 @@ def verify_models() -> None:
         img, img_note = _probe_image(), "（合成烟测图）"
     try:
         det = DualDetector(str(ROOT / "models/yolov8n.pt"), str(ROOT / "models/best.pt"),
-                           vest_weights=str(ROOT / "models/vest.pt"), device="")
+                           device="")
         t0 = time.perf_counter()
         r = det.detect_image(img)
         ms = (time.perf_counter() - t0) * 1000
         labels = {b.label for b in r["boxes"]}
         # 有真图就要求检出目标；只有合成图时，只证明权重能加载、前向不炸（图中无目标属正常）
         ok = len(r["boxes"]) > 0 if imgs else isinstance(r.get("boxes"), list)
-        check("模型", "三模型推理可跑", ok,
+        check("模型", "双模型推理可跑", ok,
               f"{len(r['boxes'])} 个框，{ms:.1f} ms，标签 {sorted(labels)}{img_note}")
         if imgs:
             check("模型", "输出含 person 与装备类",
@@ -385,15 +387,16 @@ def verify_metrics() -> None:
 
     # 交出去的数字必须能说清是哪套阈值跑的，否则被追问就答不上来
     untagged = []
+    from anxun import rules_engine as R
     for rel in ("data/metrics_real.json", "data/metrics_onnx.json"):
         p = ROOT / rel
         if not p.exists():
             continue
         tag = ((json.loads(p.read_text(encoding="utf-8")).get("config") or {})
                .get("rules_profile"))
-        if tag != "measured":
+        if tag != R.active_profile():
             untagged.append(f"{rel}={tag!r}")
-    check("指标", "交付指标标注了阈值口径（measured）", not untagged,
+    check("指标", f"交付指标标注了阈值口径（{R.active_profile()}）", not untagged,
           "、".join(untagged) if untagged else "metrics_real / metrics_onnx 均已标注")
 
     # 误报/漏报必须能同时给出两个口径：只算已检出的人（matched，衡量判定层）

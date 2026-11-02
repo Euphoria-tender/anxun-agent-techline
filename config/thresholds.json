@@ -2,7 +2,7 @@
   "_comment": "判定阈值的唯一事实来源。改这里，不要改代码里的常量：rules_engine.py 启动时读本文件，文档与验收脚本也读本文件。",
   "schema": 1,
   "updated_at": "2026-11-02",
-  "default_profile": "measured",
+  "default_profile": "v3",
   "profiles": {
     "measured": {
       "label": "实测口径",
@@ -49,6 +49,33 @@
         }
       },
       "evidence": "v1.0 初版置信度（0.60/0.40），几何与 measured 同步（0.28 收 0.30、contain 0.70），演示用；四态齐全，能看见「待复核」这一档"
+    },
+    "v3": {
+      "label": "v3 中心点口径",
+      "purpose": "v3.0.0 起与 ppe 五类权重配套。装备框改用「中心点落在区域内」判达标，不再要求 IoU/包含度——在 640 输入下头部区域只有 30px 宽，头盔框本身就 29px，几何判据会把戴了的人判成没戴。换判据必须换权重，两者是绑定的。",
+      "conf_final": 0.59,
+      "conf_review": 0.2,
+      "head_region_ratio": 0.26,
+      "head_width_ratio": 0.7,
+      "min_person_area": 8000.0,
+      "min_aspect": 0.9,
+      "match_mode": "center",
+      "equip": {
+        "helmet": {
+          "iou_min": 0.28,
+          "contain_min": 0.7,
+          "max_ratio": 3.0
+        },
+        "vest": {
+          "iou_min": 0.1,
+          "contain_min": 0.6,
+          "max_ratio": 6.0,
+          "match_mode": "iou"
+        }
+      },
+      "evidence": "2026-11-02 扫参。conf 曲线（正式链路，双集同测）：0.45→7.14/23.66，0.55→8.16/19.35，0.58→9.18/18.28，0.59→10.20/16.13，0.65→16.33/15.05（旧集 误报/漏报）。取 0.59 是为让漏报 16.13% 优于 v2.2.0 的 17.20%，代价是误报 6.12%→10.20%。这一笔交换在 docs/15-技术线v3.0.0.md 第二节写明了，不能只报漏报不报误报。",
+      "conflict_policy": "violation",
+      "person_conf_final": 0.3
     }
   }
 }

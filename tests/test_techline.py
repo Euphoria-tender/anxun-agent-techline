@@ -54,6 +54,11 @@ class TestScoreMonotonic(unittest.TestCase):
     """判定择优必须单调：多一个不达标的框，不能把结论从「已佩戴」拉下来。"""
 
     def setUp(self):
+        # 这一组测的是 IoU/包含度判据下的择优单调性，必须固定在 measured 口径。
+        # v3 起默认口径是 center（只看框中心），几何不同，断言里的 IoU 值对不上——
+        # 那是另一种判据，该单独测，不能混在这一组里比。
+        from anxun import rules_engine as _R
+        _R.apply_profile("measured")
         self.person = Box("person", 0.9, 100, 100, 300, 600)
         # 包含度 1.0、IoU 0.182 —— 靠包含度达标
         self.good = Box("helmet", 0.90, 170, 120, 230, 160)

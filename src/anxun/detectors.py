@@ -159,17 +159,28 @@ class DualDetector:
     def __init__(self, person_weights: str, ppe_weights: str,
                  vest_weights: str = "",
                  imgsz: int = 640, conf: float = 0.25, device: str = "",
-                 gate: bool = True):
+                 gate: bool = True, drop_equip_person: bool = True):
         self.person = YoloDetector(person_weights, imgsz=imgsz, conf=conf, device=device)
         self.ppe = YoloDetector(ppe_weights, imgsz=imgsz, conf=conf, device=device)
         self.vest = (YoloDetector(vest_weights, imgsz=imgsz, conf=conf, device=device)
                      if vest_weights else None)
         if self.vest:
             self.name = "person+ppe+vest"
+        # 装备模型如果自带 person 类（v3 的五类权重就带），它给出的 person 会和
+        # 专用人体模型的框重复。判定是「按人」做的，同一个人出现两次会被算两遍，
+        # 误报率直接翻倍。person 一律只认人体模型那一路。
+        # 老的两类权重（Hardhat / Hardhat-NO）本来就没有 person 类，此开关对它们无影响。
+        self.drop_equip_person = drop_equip_person
         # 人员门控：判定是「按人」做的，画面里没人时装备模型的前向纯属浪费。
         # 这一步在语义上**完全无损**——没有 person，装备框不参与任何判定。
         self.gate = gate
         self.gate_skipped = 0
+
+    def _equip_boxes(self, r: dict) -> list:
+        """取装备模型的框；按需剔掉 person，避免和人体模型重复计数。"""
+        if not self.drop_equip_person:
+            return r["boxes"]
+        return [b for b in r["boxes"] if b.label != "person"]
 
     def _need_equip(self, person_res: dict) -> bool:
         if not self.gate:
@@ -196,7 +207,7 @@ class DualDetector:
         ms = 0.0
         for m in self._equip_models():
             r = m.detect_image(img, frame_idx)
-            boxes += r["boxes"]
+            boxes += self._equip_boxes(r)
             ms += r["infer_ms"]
         return self._merge(a, {"boxes": boxes, "infer_ms": ms})
 
@@ -208,7 +219,7 @@ class DualDetector:
         boxes, ms = [], 0.0
         for m in self._equip_models():
             r = m.detect_frame(frame)
-            boxes += r["boxes"]
+            boxes += self._equip_boxes(r)
             ms += r["infer_ms"]
         return self._merge(a, {"boxes": boxes, "infer_ms": ms})
 
@@ -225,7 +236,7 @@ class DualDetector:
             sub = [frames[i] for i in need]
             for i, r in zip(need, m.predict_many(sub)):
                 prev = out[i]
-                out[i] = self._merge(a[i], {"boxes": list(prev["boxes"]) + list(r["boxes"]),
+                out[i] = self._merge(a[i], {"boxes": list(prev["boxes"]) + self._equip_boxes(r),
                                             "infer_ms": prev["infer_ms"] + r["infer_ms"]})
         return out
 

@@ -86,17 +86,12 @@
   },
   "best": {
     "names": {
-      "0": "Hardhat",
-      "1": "NO-Hardhat"
+      "0": "helmet",
+      "1": "no-helmet",
+      "2": "no-vest",
+      "3": "person",
+      "4": "vest"
     },
     "imgsz": 640
-  },
-  "vest": {
-    "names": {
-      "0": "vest",
-      "1": "no_vest"
-    },
-    "imgsz": 640,
-    "exported_from": "models/vest.pt (vest_aug_full, 强增强+全量100张, 45轮)"
   }
 }

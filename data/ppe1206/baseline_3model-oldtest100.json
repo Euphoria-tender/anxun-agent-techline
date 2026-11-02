@@ -1,0 +1,94 @@
+{
+  "kind": "model-measured",
+  "config": {
+    "weights": "best.pt",
+    "imgsz": 640,
+    "conf": 0.25,
+    "device": "GPU（torch）",
+    "rules_profile": "measured",
+    "metric_scope": "matched",
+    "arch": "三模型串联（yolov8n.pt + best.pt + vest.pt）",
+    "single_model": false
+  },
+  "dataset": {
+    "name": "ppe_test-test",
+    "images": 100,
+    "persons_gt": 295,
+    "persons_pred": 297,
+    "eval_note": "测试集未参与训练与选轮次"
+  },
+  "helmet": {
+    "mAP50": 0.6808,
+    "per_class": {
+      "person": 0.7971,
+      "helmet": 0.5645
+    },
+    "fp_rate": 6.12,
+    "fn_rate": 17.2,
+    "n_compliant": 98,
+    "n_violating": 93,
+    "confusion": {
+      "tp": 77,
+      "fn": 16,
+      "fp": 6,
+      "tn": 92
+    },
+    "coverage": {
+      "n_truth_known": 212,
+      "n_judged": 191,
+      "rate": 90.09
+    },
+    "scope_detail": {
+      "matched": {
+        "fp_rate": 6.12,
+        "fn_rate": 17.2,
+        "n_compliant": 98,
+        "n_violating": 93,
+        "confusion": {
+          "tp": 77,
+          "fn": 16,
+          "fp": 6,
+          "tn": 92
+        }
+      },
+      "e2e": {
+        "fp_rate": 5.61,
+        "fn_rate": 26.67,
+        "n_compliant": 107,
+        "n_violating": 105,
+        "confusion": {
+          "tp": 77,
+          "fn": 28,
+          "fp": 6,
+          "tn": 101
+        }
+      }
+    },
+    "latency": {
+      "mean_ms": 36.53,
+      "p95_ms": 42.54,
+      "max_ms": 165.75,
+      "n": 100,
+      "pipeline_mean_ms": null
+    }
+  },
+  "vest": {
+    "mAP50": 0.4524,
+    "per_class": {
+      "vest": 0.4401,
+      "novest": 0.4646
+    },
+    "fp_rate": 27.27,
+    "fn_rate": 11.35,
+    "n_compliant": 44,
+    "n_violating": 185,
+    "confusion": {
+      "tp": 164,
+      "fn": 21,
+      "fp": 12,
+      "tn": 32
+    },
+    "boxes": 284
+  },
+  "generated": "2026-11-02 21:08:42"
+}

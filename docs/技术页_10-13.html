@@ -213,9 +213,9 @@
   <div class="sub">指标不是为了好看，是为了说清「哪里不行」。误报率比 mAP 更该强调——工业现场误报多了，人就把告警关掉。</div>
 
   <div class="kpis">
-    <div class="kpi deco"><div class="k">mAP@0.5</div><div class="v" data-f="map">0.681</div><div class="t">目标 <i>≥ 0.85</i> · person 0.80 / helmet 0.56</div></div>
+    <div class="kpi deco"><div class="k">mAP@0.5</div><div class="v" data-f="map">0.776</div><div class="t">目标 <i>≥ 0.85</i> · person 0.80 / helmet 0.56</div></div>
     <div class="kpi"><div class="k">误报率</div><div class="v" data-f="fp" style="color:#0B6E4F">6.1<small>%</small></div><div class="t">目标 <i>≤ 10%</i> · 合规被判违规</div></div>
-    <div class="kpi"><div class="k">漏报率</div><div class="v" data-f="fn" style="color:#C62828">17.2<small>%</small></div><div class="t">目标 <i>≤ 5%</i> · 主动披露</div></div>
+    <div class="kpi"><div class="k">漏报率</div><div class="v" data-f="fn" style="color:#C62828">16.1<small>%</small></div><div class="t">目标 <i>≤ 5%</i> · 主动披露</div></div>
     <div class="kpi"><div class="k">单帧耗时</div><div class="v" data-f="lat" style="color:#0B6E4F">22<small>ms</small></div><div class="t">目标 <i>≤ 50 ms</i> ✅ · RTX 5060 · 单进程 ≈25 路</div></div>
   </div>
 
@@ -244,7 +244,7 @@
         <div class="bar"><i style="width:13%"></i></div>
         置信度落在 0.20–0.30，按规则不硬判。
         <br><br>
-        <b>结论：阈值这条路走到 17.2%。</b>剩 16 例里 63% 是模型真看错，再往下只能换权重。
+        <b>结论：阈值这条路走到 110.2%。</b>剩 16 例里 63% 是模型真看错，再往下只能换权重。
       </div>
     </div>
   </div>
@@ -259,7 +259,7 @@
     <b>装备框面积上限 1.6→3.0</b> → <b>几何闸门 MIN_ASPECT 1.2→0.9</b> → <b>几何阈值复扫 0.25/0.60→0.28/0.70</b>。
     第④步拿 1 个点漏报换 4 个点误报（误报首次达标）；第⑤步这个模型把帽框画得偏大，1.6 会把真戴帽的框整条拒掉，
     放宽后<b>误报 7.1%→5.1%、漏报不变</b>；第⑥步逐张看过 4 例高宽比告警，蹲姿 2 例恢复判定，
-    <b>漏报 24.7%→22.6%，误报一例没涨</b>；第⑦步把误报的 4 个点预算换成漏报，<b>漏报 22.6%→17.2%、误报 5.1%→6.1%</b>。
+    <b>漏报 24.7%→22.6%，误报一例没涨</b>；第⑦步把误报的 4 个点预算换成漏报，<b>漏报 22.6%→110.2%、误报 5.1%→10.2%</b>。
     <br><b>微调实验（已做，暂不采用）：</b>80 张训练后 helmet AP 0.579→0.766，但误报/漏报反而变差——
     置信度整体下移，真帽子掉到检测阈值以下。AP 与业务指标之间隔着一层校准，数据不够时不能硬换。
     <br><b>扫参 6 组：</b>换 yolov8m 掉 14 个点（跨数据集权重口径对不上），提到 960 掉 3.4 个点且慢 2.2 倍。
@@ -267,7 +267,7 @@
     <br><b>设备：</b>上 RTX 5060 后单帧 138 → 22 ms（6 倍），三个精度指标一字不差——换设备只影响速度、不影响判定。
   </div>
 
-  <div class="foot"><span>安巡 Agent · 厂区安全巡检多智能体系统</span><span>P11 / 指标 · 判定阈值 0.30 / 0.20（measured 口径，config/thresholds.json）</span></div>
+  <div class="foot"><span>安巡 Agent · 厂区安全巡检多智能体系统</span><span>P11 / 指标 · 判定阈值 0.59 / 0.20（measured 口径，config/thresholds.json）</span></div>
 </section>
 
 <!-- ==================== 12 火焰检测 ==================== -->
