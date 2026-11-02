@@ -1,0 +1,55 @@
+{
+  "kind": "model-measured",
+  "scope": "detection-only",
+  "comparable_to": "data/metrics_real.json → results.per_class.helmet",
+  "not_comparable": [
+    "人次级误报率 / 漏报率（6.12% / 17.20%）——本集无 person 标注",
+    "三类 mAP（0.6808）——本集只有 helmet / nohelmet 两类"
+  ],
+  "config": {
+    "weights": "best.pt",
+    "imgsz": 640,
+    "conf": 0.25,
+    "device": "cuda:0"
+  },
+  "dataset": {
+    "name": "toborobot/Safety-helmet-dataset · test",
+    "split": "Phat_project-3/test",
+    "source": "https://hf-mirror.com/datasets/toborobot/Safety-helmet-dataset",
+    "license": "MIT",
+    "images": 706,
+    "boxes_gt": 2722,
+    "boxes_pred": 2762,
+    "images_without_gt": 0,
+    "note": "训练只用该数据源的 train 1200 + valid 400，本 split 从未参与训练；但与该训练集同源，所以它是「同源独立留出集」，不是跨域评测。"
+  },
+  "results": {
+    "n_images": 706,
+    "n_boxes": 2762,
+    "per_class": {
+      "helmet": {
+        "ap": 0.7501,
+        "npos": 1958,
+        "tp": 1620,
+        "fp": 738,
+        "precision": 0.687,
+        "recall": 0.8274,
+        "f1": 0.7507
+      },
+      "nohelmet": {
+        "ap": 0.4816,
+        "npos": 764,
+        "tp": 377,
+        "fp": 27,
+        "precision": 0.9332,
+        "recall": 0.4935,
+        "f1": 0.6455
+      }
+    },
+    "latency_ms": {
+      "mean": 12.79,
+      "p50": 8.95
+    }
+  },
+  "generated_at": "2026-11-02T16:51:55"
+}

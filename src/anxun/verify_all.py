@@ -293,6 +293,41 @@ def verify_metrics() -> None:
     check("指标", "README 漏报率与实测一致", fn_s in readme or f"{real['fn_rate']:.2f}" in readme,
           f"实测 {fn_s}")
 
+    # ---- v2.2.0 新增：第二数据源 + 误差预算 ----
+    # 第二源是「检测层」口径，不能和人次级的四指标混。这里钉两件事：
+    # 字段齐（能复现）+ 文件自己声明了 detection-only（不会被别人当成业务指标）。
+    sec = ROOT / "data/metrics_second_source.json"
+    if not sec.exists():
+        check("指标", "第二源指标 JSON 存在", False, "缺失，跑 tools/eval_second_source.py")
+    else:
+        try:
+            s = json.loads(sec.read_text(encoding="utf-8"))
+            h = ((s.get("results") or {}).get("per_class") or {}).get("helmet") or {}
+            need = ("ap", "npos", "tp", "fp", "precision", "recall")
+            missing = [k for k in need if h.get(k) is None]
+            check("指标", "第二源字段齐全且标注 detection-only",
+                  not missing and s.get("scope") == "detection-only",
+                  f"缺 {missing}，scope={s.get('scope')}" if missing or s.get("scope") != "detection-only"
+                  else f"helmet AP {h.get('ap')}")
+            # README 写的数必须和 JSON 对得上（v2.0 在这上面栽过一次）
+            ap_s = f"{h['ap']:.4f}" if h.get("ap") is not None else "—"
+            check("指标", "README 第二源 AP 与 JSON 一致", ap_s in readme, f"实测 {ap_s}")
+        except Exception as e:
+            check("指标", "第二源指标 JSON 可解析", False, f"{type(e).__name__}: {e}")
+
+    # 误差预算：各类加和必须等于漏报总数，否则就是「拆丢了」或「拆重了」
+    eb = ROOT / "data/error_budget.json"
+    if not eb.exists():
+        check("指标", "误差预算 JSON 存在", False, "缺失，跑 tools/error_budget.py")
+    else:
+        try:
+            e = json.loads(eb.read_text(encoding="utf-8"))
+            tot = sum(b.get("count", 0) for b in e.get("breakdown", []))
+            check("指标", f"误差预算加和 = 漏报数（{e.get('missed_total')}）",
+                  tot == e.get("missed_total"), f"加和 {tot}")
+        except Exception as e:
+            check("指标", "误差预算 JSON 可解析", False, f"{type(e).__name__}: {e}")
+
     # 版本号自洽：改了 __version__ 却没同步 README，文档和代码就会各说各话
     from anxun import __version__
     check("指标", "README 版本号与包版本一致", f"v{__version__}" in readme, f"包版本 v{__version__}")

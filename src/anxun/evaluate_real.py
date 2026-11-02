@@ -242,6 +242,8 @@ def run_eval(data_dir: str | Path, det, limit: int | None = None,
         "persons_gt": n_person_gt,
         "persons_pred": n_person_pred,
         "results": evaluate(samples, classes=("person", "helmet"), scope=scope),
+        # 逐例明细留给误差预算用（tools/error_budget.py）；不写进交付 JSON。
+        "samples": samples,
     }
 
 

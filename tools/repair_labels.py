@@ -27,7 +27,15 @@ REPO = "toborobot/Safety-helmet-dataset"
 API = f"https://hf-mirror.com/api/datasets/{REPO}"
 BASE = f"https://hf-mirror.com/datasets/{REPO}/resolve/main"
 REMAP = {1: 0, 0: 1}          # 1=戴帽 -> 0(helmet)；0=没戴 -> 1(nohelmet)
-SPLIT_DIR = {"train": "train", "val": "valid", "valid": "valid"}
+SPLIT_DIR = {"train": "train", "val": "valid", "valid": "valid", "test": "test"}
+
+# 429 时镜像返回 HTML 错误页。不校验就会 parse 出 0 行，被当成「真空标注」写盘。
+_HTML_MARKS = ("<!DOCTYPE", "<HTML", "访问频率限制", "Error 429")
+
+
+def _looks_like_html(text: str) -> bool:
+    head = text[:400].upper()
+    return any(m in head for m in _HTML_MARKS)
 
 
 def siblings() -> dict[str, str]:
@@ -52,15 +60,17 @@ def parse(body: str) -> list[str]:
     return rows
 
 
-def fetch_one(rel: str, tries: int = 5) -> list[str]:
+def fetch_one(rel: str, tries: int = 5) -> list[str] | None:
+    """返回 None = 拉取失败（不能写盘）；返回 [] = 远端确实是空标注（负样本）。"""
     for i in range(tries):
-        r = subprocess.run(["curl", "-sL", "-m", "45", f"{BASE}/{rel}"],
-                           capture_output=True)
-        rows = parse(r.stdout.decode("utf-8", "ignore"))
-        if rows:
-            return rows
+        r = subprocess.run(["curl", "-sL", "-m", "45", "-w", "\n%{http_code}",
+                            f"{BASE}/{rel}"], capture_output=True)
+        out = r.stdout.decode("utf-8", "ignore")
+        body, _, code = out.rpartition("\n")
+        if code.strip() == "200" and not _looks_like_html(body):
+            return parse(body)
         time.sleep(0.3 * (i + 1))
-    return []
+    return None
 
 
 def main() -> int:
@@ -73,8 +83,8 @@ def main() -> int:
     print(f"仓库标注文件 {len(files)} 个")
 
     # 本地目录名和仓库分片名可能不同（我们叫 valid，仓库也叫 valid；但脚本参数里写 val）
-    local = {"train": "train", "val": "valid", "valid": "valid"}
-    for split in ("train", "valid"):
+    local = {"train": "train", "val": "valid", "valid": "valid", "test": "test"}
+    for split in ("train", "valid", "test"):
         sd = SPLIT_DIR[split]
         img_dir = OUT / split / "images"
         lbl_dir = OUT / split / "labels"
@@ -91,17 +101,19 @@ def main() -> int:
                     todo.append((rel, lp))
 
         print(f"{split}: 待补 {len(todo)} 个标注")
-        fixed = 0
+        fixed = failed = 0
         with ThreadPoolExecutor(max_workers=args.workers) as ex:
             futs = {ex.submit(fetch_one, rel): (rel, lp) for rel, lp in todo}
             for i, fu in enumerate(as_completed(futs)):
                 rel, lp = futs[fu]
                 rows = fu.result()
-                if rows:
+                if rows is not None:
                     lp.write_text("\n".join(rows), encoding="utf-8")
                     fixed += 1
+                else:
+                    failed += 1
                 if i % 100 == 0:
-                    print(f"  {i}/{len(todo)}  已补 {fixed}")
+                    print(f"  {i}/{len(todo)}  已补 {fixed} 失败 {failed}")
 
         fs = list(lbl_dir.glob("*.txt"))
         ne = [f for f in fs if f.stat().st_size > 0]

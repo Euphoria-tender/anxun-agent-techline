@@ -1,0 +1,146 @@
+{
+  "kind": "error-budget",
+  "scope": "matched（只统计已检出的人，与 headline 17.20% 同口径）",
+  "dataset": {
+    "name": "Chapian/PPE_detection · test",
+    "images": 100
+  },
+  "violating_total": 93,
+  "missed_total": 16,
+  "fn_rate_recomputed": 17.2,
+  "breakdown": [
+    {
+      "category": "model_confused",
+      "count": 10,
+      "share": 0.625,
+      "label": "模型看错：裸头被框成安全帽"
+    },
+    {
+      "category": "undecidable",
+      "count": 4,
+      "share": 0.25,
+      "label": "无法判定：小目标 / 半身 / 头部不在判定区"
+    },
+    {
+      "category": "grey_zone",
+      "count": 2,
+      "share": 0.125,
+      "label": "灰区：置信度落在 [0.20, 0.30)"
+    }
+  ],
+  "cases": [
+    {
+      "image_id": "0209-00176-076b1_jpg.rf.bf4a342fb9fad43ac51f6f4fac9e677e",
+      "person_id": "G1",
+      "status": "已佩戴",
+      "category": "model_confused",
+      "why": "模型看错：裸头被框成安全帽"
+    },
+    {
+      "image_id": "128_jpg.rf.63136170453b163f037726ed7de48495",
+      "person_id": "G0",
+      "status": "已佩戴",
+      "category": "model_confused",
+      "why": "模型看错：裸头被框成安全帽"
+    },
+    {
+      "image_id": "142_jpg.rf.d78f014a9902bf06117796532d3a68d3",
+      "person_id": "G2",
+      "status": "无法判定",
+      "category": "undecidable",
+      "why": "无法判定：小目标 / 半身 / 头部不在判定区"
+    },
+    {
+      "image_id": "147_jpg.rf.09f3b8ee4afb9ee71c32d647f1f8b34b",
+      "person_id": "G1",
+      "status": "已佩戴",
+      "category": "model_confused",
+      "why": "模型看错：裸头被框成安全帽"
+    },
+    {
+      "image_id": "147_jpg.rf.09f3b8ee4afb9ee71c32d647f1f8b34b",
+      "person_id": "G2",
+      "status": "已佩戴",
+      "category": "model_confused",
+      "why": "模型看错：裸头被框成安全帽"
+    },
+    {
+      "image_id": "148_jpg.rf.8947c4e2233762f977b6ebf88a8e1c4a",
+      "person_id": "G1",
+      "status": "无法判定",
+      "category": "undecidable",
+      "why": "无法判定：小目标 / 半身 / 头部不在判定区"
+    },
+    {
+      "image_id": "161_jpg.rf.500b98a09cc36afaef82331035403aee",
+      "person_id": "G1",
+      "status": "待复核",
+      "category": "grey_zone",
+      "why": "灰区：置信度落在 [0.20, 0.30)"
+    },
+    {
+      "image_id": "166_jpg.rf.1e03f73a0aabd569a8b1d33e8b0bfb92",
+      "person_id": "G3",
+      "status": "已佩戴",
+      "category": "model_confused",
+      "why": "模型看错：裸头被框成安全帽"
+    },
+    {
+      "image_id": "166_jpg.rf.1e03f73a0aabd569a8b1d33e8b0bfb92",
+      "person_id": "G7",
+      "status": "无法判定",
+      "category": "undecidable",
+      "why": "无法判定：小目标 / 半身 / 头部不在判定区"
+    },
+    {
+      "image_id": "166_jpg.rf.1e03f73a0aabd569a8b1d33e8b0bfb92",
+      "person_id": "G9",
+      "status": "待复核",
+      "category": "grey_zone",
+      "why": "灰区：置信度落在 [0.20, 0.30)"
+    },
+    {
+      "image_id": "22_jpg.rf.41ebab33bdb99f5a9015caa635cd5647",
+      "person_id": "G2",
+      "status": "已佩戴",
+      "category": "model_confused",
+      "why": "模型看错：裸头被框成安全帽"
+    },
+    {
+      "image_id": "29_jpg.rf.7fecac1dba9aaaa7aa2d0dd699cd62c7",
+      "person_id": "G3",
+      "status": "已佩戴",
+      "category": "model_confused",
+      "why": "模型看错：裸头被框成安全帽"
+    },
+    {
+      "image_id": "4_jpg.rf.12096e4931d2d251412274a1f07a63e7",
+      "person_id": "G0",
+      "status": "已佩戴",
+      "category": "model_confused",
+      "why": "模型看错：裸头被框成安全帽"
+    },
+    {
+      "image_id": "4_jpg.rf.12096e4931d2d251412274a1f07a63e7",
+      "person_id": "G1",
+      "status": "已佩戴",
+      "category": "model_confused",
+      "why": "模型看错：裸头被框成安全帽"
+    },
+    {
+      "image_id": "4_jpg.rf.12096e4931d2d251412274a1f07a63e7",
+      "person_id": "G3",
+      "status": "已佩戴",
+      "category": "model_confused",
+      "why": "模型看错：裸头被框成安全帽"
+    },
+    {
+      "image_id": "6_png.rf.68d8ffd89cd1d80f1ce4b2677b846cbe",
+      "person_id": "G1",
+      "status": "无法判定",
+      "category": "undecidable",
+      "why": "无法判定：小目标 / 半身 / 头部不在判定区"
+    }
+  ],
+  "generated_at": "2026-11-02T16:54:20"
+}
