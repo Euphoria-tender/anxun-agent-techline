@@ -1,0 +1,77 @@
+{
+  "kind": "person-conf-probe",
+  "rows": [
+    {
+      "person_conf": 0.25,
+      "persons_pred": 297,
+      "coverage": 90.09,
+      "matched": {
+        "fp": 10.2,
+        "fn": 16.13,
+        "n_c": 98,
+        "n_v": 93
+      },
+      "e2e": {
+        "fp": 9.35,
+        "fn": 25.71,
+        "n_c": 107,
+        "n_v": 105
+      },
+      "mAP": 0.7758
+    },
+    {
+      "person_conf": 0.2,
+      "persons_pred": 322,
+      "coverage": 90.57,
+      "matched": {
+        "fp": 10.1,
+        "fn": 16.13,
+        "n_c": 99,
+        "n_v": 93
+      },
+      "e2e": {
+        "fp": 9.35,
+        "fn": 25.71,
+        "n_c": 107,
+        "n_v": 105
+      },
+      "mAP": 0.7821
+    },
+    {
+      "person_conf": 0.15,
+      "persons_pred": 360,
+      "coverage": 92.45,
+      "matched": {
+        "fp": 10.0,
+        "fn": 18.75,
+        "n_c": 100,
+        "n_v": 96
+      },
+      "e2e": {
+        "fp": 9.35,
+        "fn": 25.71,
+        "n_c": 107,
+        "n_v": 105
+      },
+      "mAP": 0.7907
+    },
+    {
+      "person_conf": 0.1,
+      "persons_pred": 416,
+      "coverage": 93.87,
+      "matched": {
+        "fp": 9.8,
+        "fn": 19.59,
+        "n_c": 102,
+        "n_v": 97
+      },
+      "e2e": {
+        "fp": 9.35,
+        "fn": 25.71,
+        "n_c": 107,
+        "n_v": 105
+      },
+      "mAP": 0.8011
+    }
+  ]
+}

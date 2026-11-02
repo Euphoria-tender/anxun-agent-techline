@@ -6,7 +6,7 @@
 JSON 里有数，图上没东西，PPT 就只能贴表格。本脚本把三张图从**同一份 JSON 与
 同一份阈值配置**里画出来，改数据重跑即可，不手工描点：
 
-    docs/figs/confusion_matrix.png   混淆矩阵 72/21/5/93（P11）
+    docs/figs/confusion_matrix.png   混淆矩阵 78/15/10/88（P11，随 metrics_real.json 自动更新）
     docs/figs/pr_curve.png           逐类 PR 曲线（P11）
     docs/figs/risk_matrix.png        L×S 风险矩阵与四色等级（P13 / 视频 3:10）
 

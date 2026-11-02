@@ -1,7 +1,7 @@
 {
   "version": "techline-v3.0.0",
-  "total": 59,
-  "passed": 56,
+  "total": 60,
+  "passed": 57,
   "skipped": 3,
   "results": [
     {
@@ -50,7 +50,7 @@
       "line": "数据",
       "item": "data.yaml 不含本机绝对路径",
       "ok": true,
-      "detail": "1 份均为相对路径，换机器不用改"
+      "detail": "4 份均为相对路径，换机器不用改"
     },
     {
       "line": "模型",
@@ -92,7 +92,7 @@
       "line": "模型",
       "item": "双模型推理可跑",
       "ok": true,
-      "detail": "3 个框，2338.2 ms，标签 ['helmet', 'novest', 'person']"
+      "detail": "3 个框，2567.1 ms，标签 ['helmet', 'novest', 'person']"
     },
     {
       "line": "模型",
@@ -168,9 +168,9 @@
     },
     {
       "line": "指标",
-      "item": "README 版本号与包版本一致",
+      "item": "README 头部版本号与包版本一致",
       "ok": true,
-      "detail": "包版本 v3.0.0"
+      "detail": "包版本 v3.0.0（检查范围：README 前 15 行）"
     },
     {
       "line": "指标",
@@ -218,7 +218,7 @@
       "line": "技术页",
       "item": "文件存在",
       "ok": true,
-      "detail": "17.4 KB"
+      "detail": "17.5 KB"
     },
     {
       "line": "技术页",
@@ -276,9 +276,15 @@
     },
     {
       "line": "技术页",
+      "item": "数字 19.5 与实测一致",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "line": "技术页",
       "item": "页脚标注了判定阈值口径",
       "ok": true,
-      "detail": "0.20 / 0.59"
+      "detail": "0.20 / 0.59（profile: v3）"
     },
     {
       "line": "技术页",
