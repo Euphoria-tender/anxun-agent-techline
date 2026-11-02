@@ -330,9 +330,13 @@ def verify_metrics() -> None:
         except Exception as e:
             check("指标", "误差预算 JSON 可解析", False, f"{type(e).__name__}: {e}")
 
-    # 版本号自洽：改了 __version__ 却没同步 README，文档和代码就会各说各话
+    # 版本号自洽：改了 __version__ 却没同步 README，文档和代码就会各说各话。
+    # 只在**头部 15 行**里找。以前拿整个 README 做子串匹配，等于永远通过——
+    # 正文里写着「v2.2.0」「v2.0」的地方一大堆，版本号忘了改也能过。
     from anxun import __version__
-    check("指标", "README 版本号与包版本一致", f"v{__version__}" in readme, f"包版本 v{__version__}")
+    _head = "\n".join(readme.splitlines()[:15])
+    check("指标", "README 头部版本号与包版本一致", f"v{__version__}" in _head,
+          f"包版本 v{__version__}（检查范围：README 前 15 行）")
 
     # 阈值只有一份定义（config/thresholds.json）。代码、文档、评测各自抄一份 = 两套口径，
     # 这就是 v1.1.0 的 P4-1。这条检查专门钉住它。

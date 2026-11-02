@@ -71,7 +71,10 @@ def main() -> int:
 
     vw = Path(args.vest)
     if not vw.exists():
-        print(f"找不到 vest 权重：{vw}\n先训练：python src/anxun/finetune.py "
+        print(f"找不到 vest 权重：{vw}\n"
+              f"v3.0.0 起背心已并入 models/best.pt 的五类权重，本脚本只用于\n"
+              f"「独立背心模型」的对照实验，日常评测不需要它。\n"
+              f"确实要独立模型：python src/anxun/finetune.py "
               f"--data datasets/vest/data.yaml --init models/yolov8n.pt --name vest_ft")
         return 2
 

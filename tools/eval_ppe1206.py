@@ -100,7 +100,8 @@ def eval_vest(data: Path, det) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--weights", default=str(ROOT / "runs/ppe1206_n/weights/best.pt"))
+    ap.add_argument("--weights", default=str(ROOT / "models/best.pt"),
+                    help="ppe 权重；默认用交付的五类权重。原 ppe1206 专用权重不随仓库分发")
     ap.add_argument("--data", default=str(ROOT / "datasets/ppe1206/test"))
     ap.add_argument("--out", default=str(ROOT / "data/metrics_ppe1206.json"))
     ap.add_argument("--imgsz", type=int, default=640)

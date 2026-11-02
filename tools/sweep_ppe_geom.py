@@ -3,6 +3,10 @@
 安巡 Agent · 判定几何阈值扫描（ppe 系列模型）
 =============================================
 
+⚠️ v3.0.0 起 helmet 改用中心点判据，`iou_min` / `contain_min` 两列不再影响 helmet 判定
+   （v3 的 vest 仍用 IoU）。region 两列仍然有效。v3 的完整区域扫描见
+   `tools/sweep_region_v3.py`——已实测 0.26–0.44 × 0.70–0.90 共 15 组，指标一格没动。
+
 为什么单独写一个：`sweep_geom.py` 是给老的三模型链路写的，扫的是
 `iou_min / contain_min` 两个维度，且权重写死 `models/best.pt`。
 ppe1206 这一轮暴露的问题不在那两个维度——新模型的头盔框比老模型更贴框，
@@ -50,7 +54,7 @@ def measure(det, data: Path) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--weights", default=str(ROOT / "runs/ppe_mix_n/weights/best.pt"))
+    ap.add_argument("--weights", default=str(ROOT / "models/best.pt"))
     ap.add_argument("--data", default=str(ROOT / "datasets/ppe_test/test"))
     ap.add_argument("--stage", default="region",
                     choices=("region", "geom", "conf", "fine"))

@@ -290,9 +290,11 @@ def main() -> int:
                     help="误报/漏报的口径：matched=只算已检出的人（默认，衡量判定层）；"
                          "e2e=连没检出的人一起算（衡量整条链路）。"
                          "两种结果都会写进 JSON，这里只决定 headline 用哪个")
-    ap.add_argument("--profile", default="", choices=("", "measured", "conservative"),
-                    help="判定阈值口径；留空用 config 默认（measured）。"
-                         "报数只能用 measured，换口径的结果不能和交付数字比")
+    import anxun.rules_engine as _R
+    ap.add_argument("--profile", default="", choices=("",) + tuple(_R.PROFILES),
+                    help=f"判定阈值口径；留空用 config 的 default_profile"
+                         f"（当前 {_R.DEFAULT_PROFILE}）。可选：{', '.join(_R.PROFILES)}。"
+                         f"换口径的结果不能和交付数字比")
     ap.add_argument("--force", action="store_true",
                     help="允许把非 torch 后端的结果写进 metrics_real.json（默认拒绝）")
     args = ap.parse_args()

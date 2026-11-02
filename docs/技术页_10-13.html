@@ -155,7 +155,7 @@
 <!-- ==================== 10 系统架构 ==================== -->
 <section class="slide">
   <div class="head"><span class="pno">10</span><h1 class="h1">系统架构：三级触发 —— 先决定「哪些帧值得算」，再决定「算得准不准」</h1></div>
-  <div class="sub">现场是固定机位、大部分时间空画面。真正的算力浪费不在模型慢，而在「算了不需要算的帧」。<br>后端三选一自动切换：<b>没显卡 → ONNX CPU（≈45 ms）</b>，<b>有显卡 → CUDA（≈22 ms）</b>，代码一行不改。</div>
+  <div class="sub">现场是固定机位、大部分时间空画面。真正的算力浪费不在模型慢，而在「算了不需要算的帧」。<br>后端三选一自动切换：<b>没显卡 → ONNX CPU（≈23 ms）</b>，<b>有显卡 → CUDA（≈19.5 ms）</b>，代码一行不改。</div>
 
   <div class="pipe">
     <div class="stage">
@@ -175,7 +175,7 @@
     <div class="stage model">
       <div class="stage-h">③ 感知层 · <span style="color:#B87200">看得见</span></div>
       <div class="stage-t">双模型串联</div>
-      <div class="stage-d">人体 + 安全帽 + 反光背心（三模型）<br>只给位置和置信度，不做任何判断</div>
+      <div class="stage-d">五类权重（人体 + 安全帽 + 裸头 + 背心 + 无背心）+ COCO 人体兜底（双模型）<br>只给位置和置信度，不做任何判断</div>
       <div class="stage-file">detectors.py</div>
     </div>
     <div class="arrow">›</div>
@@ -200,7 +200,7 @@
     <div><b>4</b>态判定（不是二分类）</div>
     <div><b>R = L × S</b>查表定级，不靠大模型</div>
     <div><b>2</b>fps 抽帧 · 单进程 ≈25 路</div>
-    <div><b>1080p</b> 单帧 30.5ms（640 输入 6.9ms）</div>
+    <div><b>1080p</b> 单帧 30.5ms（640 输入纯推理 6.9ms）</div>
   </div>
 
   <div class="foot"><span>安巡 Agent · 厂区安全巡检多智能体系统</span><span>P10 / 系统架构 · 交付形态：HTTP 服务（/api/inspect）+ 视频巡查 CLI</span></div>
@@ -264,7 +264,7 @@
     置信度整体下移，真帽子掉到检测阈值以下。AP 与业务指标之间隔着一层校准，数据不够时不能硬换。
     <br><b>扫参 6 组：</b>换 yolov8m 掉 14 个点（跨数据集权重口径对不上），提到 960 掉 3.4 个点且慢 2.2 倍。
     <b>s@640 已是这批权重的最优点</b>；要多带路数可切 480，快 35%、7 路/进程，代价是误报升到 15.8%。
-    <br><b>设备：</b>上 RTX 5060 后单帧 138 → 22 ms（6 倍），三个精度指标一字不差——换设备只影响速度、不影响判定。
+    <br><b>设备：</b>上 RTX 5060 后单帧 138 → 19.5 ms（7 倍），三个精度指标一字不差——换设备只影响速度、不影响判定。
   </div>
 
   <div class="foot"><span>安巡 Agent · 厂区安全巡检多智能体系统</span><span>P11 / 指标 · 判定阈值 0.59 / 0.20（measured 口径，config/thresholds.json）</span></div>
