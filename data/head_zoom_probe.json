@@ -1,0 +1,87 @@
+{
+  "kind": "head-zoom-probe",
+  "conf_final": 0.59,
+  "crop_scale": 1.8,
+  "rows": [
+    {
+      "case": 0,
+      "cause": "B2",
+      "person_w": 44,
+      "person_h": 215,
+      "conf_full_image": 0.517,
+      "conf_head_zoom": null
+    },
+    {
+      "case": 1,
+      "cause": "B2",
+      "person_w": 306,
+      "person_h": 635,
+      "conf_full_image": 0.581,
+      "conf_head_zoom": 0.743
+    },
+    {
+      "case": 2,
+      "cause": "B2",
+      "person_w": 137,
+      "person_h": 467,
+      "conf_full_image": 0.252,
+      "conf_head_zoom": 0.813
+    },
+    {
+      "case": 3,
+      "cause": "B1",
+      "person_w": 298,
+      "person_h": 636,
+      "conf_full_image": null,
+      "conf_head_zoom": null
+    },
+    {
+      "case": 4,
+      "cause": "B3",
+      "person_w": 51,
+      "person_h": 306,
+      "conf_full_image": null,
+      "conf_head_zoom": 0.765
+    },
+    {
+      "case": 5,
+      "cause": "B2",
+      "person_w": 206,
+      "person_h": 430,
+      "conf_full_image": 0.286,
+      "conf_head_zoom": 0.48
+    },
+    {
+      "case": 6,
+      "cause": "B2",
+      "person_w": 64,
+      "person_h": 261,
+      "conf_full_image": 0.308,
+      "conf_head_zoom": null
+    },
+    {
+      "case": 7,
+      "cause": "B2",
+      "person_w": 93,
+      "person_h": 479,
+      "conf_full_image": 0.579,
+      "conf_head_zoom": 0.473
+    },
+    {
+      "case": 8,
+      "cause": "B3",
+      "person_w": 39,
+      "person_h": 214,
+      "conf_full_image": null,
+      "conf_head_zoom": null
+    },
+    {
+      "case": 9,
+      "cause": "B1",
+      "person_w": 116,
+      "person_h": 161,
+      "conf_full_image": null,
+      "conf_head_zoom": null
+    }
+  ]
+}
