@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """技术线回归测试（不依赖模型权重，纯规则 / 编排 / 指标）。
 
-跑法：在 techline-v1.2.0 目录下
+跑法：在技术线目录下
 
     python -m unittest discover -s tests -v
 

@@ -187,7 +187,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(load_metrics() or {"kind": "empty"})
             if p.startswith("/docs/"):
                 target = (ROOT / "docs" / unquote(p[len("/docs/"):])).resolve()
-                # 字符串前缀判断会被 techline-v1.2.0_xxx 这种同级目录绕过，
+                # 字符串前缀判断会被 docs_bak 这种同级目录绕过（"docs" 是 "docs_bak" 的前缀），
                 # 必须按路径层级判断。
                 if not target.is_relative_to((ROOT / "docs").resolve()):
                     return self._json({"error": "forbidden"}, 403)
