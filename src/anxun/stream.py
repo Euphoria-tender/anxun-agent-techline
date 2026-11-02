@@ -236,6 +236,11 @@ class StreamPipeline:
             "region": self.region.name,
             "stream": self.sid,
             "observations": 1,
+            # 人员框（像素）。没有它，账本只能按时间窗对齐真值——
+            # 多人同时在画面里时会张冠李戴（实测把 12 个人全配成了「未佩戴」）。
+            # 有框才能按空间位置匹配，这也是复盘时唯一能定位到「谁」的字段。
+            "bbox": [round(tr.box.x1, 1), round(tr.box.y1, 1),
+                     round(tr.box.x2, 1), round(tr.box.y2, 1)],
         }
         self.ledger.append(rec)
         self._last[key] = rec
