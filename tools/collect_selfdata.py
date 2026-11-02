@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-自采数据 · 从现场视频到可标注帧
-===============================
+现场视频 → 可标注帧
+===================
 
-背景（P0-3）：数据集 1900 张**全部来自公开集，自采 0 张**。公开集是境外工地，
-与国内车间的安全帽款式、背心颜色、机位高度都对不上；PPT 第 05 页「自采数据」
-那一页因此是空的，「解决分布偏移」这个论点也失去支撑。
+现场部署时，摄像头录像要变成能训练的标注集，中间隔着「抽帧 + 去重 + 建目录」三步。
+这个脚本把它从一件写代码的事，变成一件跑命令的事：
 
-这个脚本把「补采」从一件写代码的事，变成一件跑命令的事：
-
-    # 1. 把手机/相机拍的视频放进 datasets/raw/（mp4/mov/avi 都行）
+    # 1. 把现场视频放进 datasets/raw/（mp4/mov/avi 都行）
     python tools/collect_selfdata.py --src datasets/raw
 
     # 2. 用任意 YOLO 标注工具打开 datasets/self/2026-11-02/images 标注
@@ -23,8 +20,8 @@
 - **只抽帧，不自动标注。** 自动标注会把模型的错误固化成真值，测出来的指标是自己骗自己。
 - **按秒抽 + 感知去重**：固定机位站着不动的十秒，抽 10 帧等于 1 帧。
   用 8×8 灰度均值哈希去重，阈值可调；宁可多留，别漏掉换姿势的瞬间。
-- **默认不并入测试集。** 自采数据只做训练/验证；测试集必须保持「从未参与训练」，
-  这是四个指标可信的前提。要评估自采域的效果，单独建一个集合评，别混进 ppe_test。
+- **默认不并入测试集。** 现场帧只做训练/验证；测试集必须保持「从未参与训练」，
+  这是四个指标可信的前提。要评估新域的效果，单独建一个集合评，别混进 ppe_test。
 """
 from __future__ import annotations
 
@@ -133,7 +130,7 @@ def collect(src: Path, out: Path, every: float, min_gap: int, limit: int) -> int
     print(f"  1) 用 YOLO 标注工具打开 {out / 'images'}，标注写到同名的 labels/*.txt")
     print(f"  2) 标完核对：python tools/collect_selfdata.py --check {out}")
     print("  3) 训练：把 data.yaml 的 val 指向留出的验证集，再跑 finetune.py"
-          "（自采数据只做训练/验证，别并进 ppe_test）")
+          "（现场帧只做训练/验证，别并进 ppe_test）")
     return 0
 
 
@@ -179,7 +176,7 @@ def check(target: Path) -> int:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="自采数据：视频抽帧 → 可标注目录")
+    ap = argparse.ArgumentParser(description="现场视频抽帧 → 可标注目录")
     ap.add_argument("--src", default=str(ROOT / "datasets" / "raw"),
                     help="视频所在目录（递归查找）")
     ap.add_argument("--out", default="", help="输出目录，默认 datasets/self/<今天>")
