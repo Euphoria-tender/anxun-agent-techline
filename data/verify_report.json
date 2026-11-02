@@ -1,7 +1,7 @@
 {
-  "version": "techline-v2.1.0",
-  "total": 59,
-  "passed": 56,
+  "version": "techline-v2.2.0",
+  "total": 62,
+  "passed": 59,
   "skipped": 3,
   "results": [
     {
@@ -104,7 +104,7 @@
       "line": "模型",
       "item": "三模型推理可跑",
       "ok": true,
-      "detail": "4 个框，3238.5 ms，标签 ['helmet', 'novest', 'person']"
+      "detail": "4 个框，2517.2 ms，标签 ['helmet', 'novest', 'person']"
     },
     {
       "line": "模型",
@@ -162,9 +162,27 @@
     },
     {
       "line": "指标",
+      "item": "第二源字段齐全且标注 detection-only",
+      "ok": true,
+      "detail": "helmet AP 0.7501"
+    },
+    {
+      "line": "指标",
+      "item": "README 第二源 AP 与 JSON 一致",
+      "ok": true,
+      "detail": "实测 0.7501"
+    },
+    {
+      "line": "指标",
+      "item": "误差预算加和 = 漏报数（16）",
+      "ok": true,
+      "detail": "加和 16"
+    },
+    {
+      "line": "指标",
       "item": "README 版本号与包版本一致",
       "ok": true,
-      "detail": "包版本 v2.1.0"
+      "detail": "包版本 v2.2.0"
     },
     {
       "line": "指标",
@@ -218,7 +236,7 @@
       "line": "技术页",
       "item": "文件存在",
       "ok": true,
-      "detail": "17.2 KB"
+      "detail": "17.4 KB"
     },
     {
       "line": "技术页",
