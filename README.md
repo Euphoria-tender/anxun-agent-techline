@@ -40,7 +40,7 @@ python src/anxun/verify_all.py
 | 克隆仓库直接跑 | **59 项：56 PASS · 0 FAIL · 3 SKIP** |
 | 补齐训练集与 1080p 素材后 | **59 项：59 PASS · 0 FAIL** |
 
-3 项 SKIP 是体积原因没入库的大件（60MB 训练集、51MB 复验素材），脚本把「缺件」和「东西坏了」分开报，不算失败。
+3 项 SKIP 是体积原因没入库的大件（60MB 训练集、53MB 复验素材），脚本把「缺件」和「东西坏了」分开报，不算失败。
 验收脚本会真起服务、真跑推理、真读 JSON、真数技术页的页数与数字，不是检查文件存不存在。
 结果同时写到 `data/verify_report.json`，可入档。
 
@@ -970,5 +970,5 @@ anxun-v1/
 └── requirements-cpu.txt / requirements-gpu.txt
 
 随仓库分发：models/ 6 份权重（105 MB）+ datasets/ppe_test 评测集（14 MB）+ 演示素材（300 KB）。
-只有训练用大件不入库（helmet_p2 60 MB、test1080 51 MB），用 tools/ 里的脚本重拉，见 2.3。
+只有训练用大件不入库（helmet_p2 60 MB、test1080 53 MB），用 tools/ 里的脚本重拉，见 2.3。
 ```
