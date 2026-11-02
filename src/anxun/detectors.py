@@ -47,10 +47,16 @@ class YoloDetector:
         # vest 训练集的类名是 vest / no_vest（下划线），别和 IGNORE 里的
         # "no-safety vest" 混为一类。no_vest 是反向证据，不能丢。
         "no_vest": "novest", "no-vest": "novest", "No-Vest": "novest",
+        # 同上：无连字符/无下划线写法也收进来
+        "novest": "novest", "no vest": "novest",
         # 否定类**不丢弃**，改标签后交给引擎当反向证据用。
         # 安全帽模型专门训练过「裸头」这一类，扔掉等于白扔一半信息。
         "NO-Hardhat": "nohelmet", "no-hardhat": "nohelmet", "NO-Helmet": "nohelmet",
         "no helmet": "nohelmet", "Head": "nohelmet", "head": "nohelmet",
+        # 无连字符写法：helmet_p2 数据集的 data.yaml 就是 ['helmet', 'nohelmet']。
+        # 精确匹配的字典查不到就会把整类框丢掉，静默变成「没有反向证据」——
+        # 漏报会虚高，而且不报错。v2.2 时期在这批数据上训过模型，一直没发现。
+        "nohelmet": "nohelmet",
     }
     IGNORE = {
         "NO-Safety Vest", "no-safety vest", "NO-Mask", "no-mask", "mask",
