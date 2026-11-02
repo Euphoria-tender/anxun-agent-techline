@@ -456,15 +456,28 @@ def _read(path) -> np.ndarray:
 
 def build_onnx_detector(conf: float = 0.25, imgsz: int = 640,
                         ppe: str = "", person: str = "", vest: str = "",
-                        device: str = "auto") -> tuple[object, str]:
-    """按目录里的 ONNX 权重挑组合，返回 (detector, 说明)。device=auto 时自动挑 CUDA/CPU。"""
+                        device: str = "auto",
+                        prefer_own_person: bool = True) -> tuple[object, str]:
+    """按目录里的 ONNX 权重挑组合，返回 (detector, 说明)。device=auto 时自动挑 CUDA/CPU。
+
+    **与 torch 侧 `build_detector` 同一条规则**：PPE 权重自带 person 类时优先用自己的，
+    不再外挂人体模型。两边必须一致，否则同一份 `metrics_*.json` 在两后端上对不上——
+    v3.1.0 换 s 权重后，单模型 person AP 0.846、双模型 0.797，差 0.05 会直接漏进 mAP。
+    """
     ppe_p = Path(ppe) if ppe else MODEL_DIR / "best.onnx"
-    per_p = Path(person) if person else MODEL_DIR / "yolov8n.onnx"
-    ves_p = Path(vest) if vest else MODEL_DIR / "vest.onnx"
     if not ppe_p.exists():
         raise FileNotFoundError(
             f"找不到 ONNX 权重：{ppe_p}\n先导出：python src/anxun/export_onnx.py")
     dev = device or "auto"
+
+    det = OnnxDetector(ppe_p, imgsz=imgsz, conf=conf, device=dev)
+    names = [str(n) for n in det.names.values()]
+    has_person = any(n.lower() == "person" for n in names)
+    if has_person and prefer_own_person:
+        return det, f"ONNX 单模型：{ppe_p.name}（{','.join(names)}）@ {det.provider}"
+
+    per_p = Path(person) if person else MODEL_DIR / "yolov8n.onnx"
+    ves_p = Path(vest) if vest else MODEL_DIR / "vest.onnx"
     if per_p.exists():
         if ves_p.exists():
             det = OnnxDualDetector(per_p, ppe_p, ves_p, imgsz=imgsz, conf=conf, device=dev)
@@ -472,5 +485,4 @@ def build_onnx_detector(conf: float = 0.25, imgsz: int = 640,
                          f"@ {det.person.provider}")
         det = OnnxDualDetector(per_p, ppe_p, imgsz=imgsz, conf=conf, device=dev)
         return det, f"ONNX 双模型：{per_p.name} + {ppe_p.name} @ {det.person.provider}"
-    det = OnnxDetector(ppe_p, imgsz=imgsz, conf=conf, device=dev)
     return det, f"ONNX 单模型：{ppe_p.name} @ {det.provider}（缺人体模型，人员判定不会生效）"

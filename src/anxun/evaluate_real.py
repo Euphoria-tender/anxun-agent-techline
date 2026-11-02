@@ -27,7 +27,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from anxun.detectors import DualDetector, YoloDetector, pick_device
+from anxun.detectors import DualDetector, YoloDetector, build_detector, pick_device
 from anxun.metrics import evaluate
 from anxun.rules_engine import Box, judge_frame, min_person_area
 
@@ -325,15 +325,9 @@ def main() -> int:
         if vest and not Path(vest).exists():
             print(f"找不到 vest 权重：{vest}")
             return 2
-        if Path(args.person_weights).exists():
-            det = DualDetector(args.person_weights, args.weights, vest_weights=vest,
-                               imgsz=args.imgsz, conf=args.conf, device=dev)
-            model_name = f"{Path(args.person_weights).name} + {Path(args.weights).name}"
-            if vest:
-                model_name += f" + {Path(vest).name}"
-        else:
-            det = YoloDetector(args.weights, imgsz=args.imgsz, conf=args.conf, device=dev)
-            model_name = Path(args.weights).name
+        det, model_name = build_detector(
+            args.weights, args.person_weights, vest_weights=vest,
+            imgsz=args.imgsz, conf=args.conf, device=dev)
     print(f"模型：{model_name}  imgsz={args.imgsz}  conf={args.conf}")
     warmup(det)
 

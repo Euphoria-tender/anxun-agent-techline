@@ -1,5 +1,5 @@
 {
-  "version": "techline-v3.0.0",
+  "version": "techline-v3.1.0",
   "total": 60,
   "passed": 57,
   "skipped": 3,
@@ -50,7 +50,7 @@
       "line": "数据",
       "item": "data.yaml 不含本机绝对路径",
       "ok": true,
-      "detail": "4 份均为相对路径，换机器不用改"
+      "detail": "6 份均为相对路径，换机器不用改"
     },
     {
       "line": "模型",
@@ -62,7 +62,7 @@
       "line": "模型",
       "item": "models/best.pt 存在",
       "ok": true,
-      "detail": "6.3 MB"
+      "detail": "22.5 MB"
     },
     {
       "line": "模型",
@@ -74,7 +74,7 @@
       "line": "模型",
       "item": "models/onnx/best.onnx 存在",
       "ok": true,
-      "detail": "12.24 MB"
+      "detail": "44.75 MB"
     },
     {
       "line": "模型",
@@ -90,9 +90,9 @@
     },
     {
       "line": "模型",
-      "item": "双模型推理可跑",
+      "item": "检测链推理可跑",
       "ok": true,
-      "detail": "3 个框，2567.1 ms，标签 ['helmet', 'novest', 'person']"
+      "detail": "4 个框，2851.1 ms，标签 ['helmet', 'novest', 'person']｜单模型：best.pt（helmet,no-helmet,no-vest,person,vest）@ cuda:0"
     },
     {
       "line": "模型",
@@ -140,13 +140,13 @@
       "line": "指标",
       "item": "README 误报率与实测一致",
       "ok": true,
-      "detail": "实测 10.2%"
+      "detail": "实测 6.1%"
     },
     {
       "line": "指标",
       "item": "README 漏报率与实测一致",
       "ok": true,
-      "detail": "实测 16.13%"
+      "detail": "实测 6.52%"
     },
     {
       "line": "指标",
@@ -170,13 +170,13 @@
       "line": "指标",
       "item": "README 头部版本号与包版本一致",
       "ok": true,
-      "detail": "包版本 v3.0.0（检查范围：README 前 15 行）"
+      "detail": "包版本 v3.1.0（检查范围：README 前 15 行）"
     },
     {
       "line": "指标",
       "item": "代码阈值与 config/thresholds.json 一致",
       "ok": true,
-      "detail": "口径 v3：0.2/0.59（比对 6 个字段）"
+      "detail": "口径 v3：0.2/0.65（比对 6 个字段）"
     },
     {
       "line": "指标",
@@ -218,7 +218,7 @@
       "line": "技术页",
       "item": "文件存在",
       "ok": true,
-      "detail": "17.5 KB"
+      "detail": "16.8 KB"
     },
     {
       "line": "技术页",
@@ -258,25 +258,25 @@
     },
     {
       "line": "技术页",
-      "item": "数字 10.2 与实测一致",
+      "item": "数字 6.1 与实测一致",
       "ok": true,
       "detail": ""
     },
     {
       "line": "技术页",
-      "item": "数字 16.1 与实测一致",
+      "item": "数字 6.5 与实测一致",
       "ok": true,
       "detail": ""
     },
     {
       "line": "技术页",
-      "item": "数字 0.776 与实测一致",
+      "item": "数字 0.865 与实测一致",
       "ok": true,
       "detail": ""
     },
     {
       "line": "技术页",
-      "item": "数字 19.5 与实测一致",
+      "item": "数字 11.8 与实测一致",
       "ok": true,
       "detail": ""
     },
@@ -284,7 +284,7 @@
       "line": "技术页",
       "item": "页脚标注了判定阈值口径",
       "ok": true,
-      "detail": "0.20 / 0.59（profile: v3）"
+      "detail": "0.20 / 0.65（profile: v3）"
     },
     {
       "line": "技术页",
@@ -296,7 +296,7 @@
       "line": "价值",
       "item": "事件文件含全量判定账本",
       "ok": true,
-      "detail": "1 份账本"
+      "detail": "3 份账本"
     },
     {
       "line": "价值",

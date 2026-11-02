@@ -1,0 +1,813 @@
+{
+  "kind": "model-measured",
+  "config": {
+    "weights": "yolov8n.pt + best.pt",
+    "imgsz": 640,
+    "conf": 0.25,
+    "backend": "torch",
+    "rules_profile": "v3",
+    "metric_scope": "matched",
+    "device": "GPU cuda:0 NVIDIA GeForce RTX 5060 Laptop GPU（torch 2.14.1+cu130）"
+  },
+  "dataset": {
+    "name": "Chapian/PPE_detection · test",
+    "source": "https://hf-mirror.com/datasets/Chapian/PPE_detection",
+    "license": "CC BY 4.0",
+    "images": 35,
+    "persons_gt": 101,
+    "persons_pred": 97,
+    "eval_note": "真值佩戴状态由标注框推导：Hardhat 落在头部区域=合规，只检出 NO-Hardhat=违规；两者都无则跳过。判定由引擎给出。"
+  },
+  "generated_at": "2026-11-03T01:47:16",
+  "results": {
+    "n_images": 35,
+    "n_boxes": 132,
+    "mAP50": 0.4808,
+    "per_class": {
+      "person": {
+        "ap": 0.7246,
+        "npos": 101,
+        "tp": 76,
+        "fp": 21
+      },
+      "helmet": {
+        "ap": 0.2369,
+        "npos": 16,
+        "tp": 7,
+        "fp": 28
+      }
+    },
+    "curves": {
+      "person": [
+        {
+          "conf": 0.929,
+          "recall": 0.0099,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.925,
+          "recall": 0.0198,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.9,
+          "recall": 0.0297,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.897,
+          "recall": 0.0396,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.895,
+          "recall": 0.0495,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.893,
+          "recall": 0.0594,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.889,
+          "recall": 0.0693,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.887,
+          "recall": 0.0792,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.879,
+          "recall": 0.0891,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.878,
+          "recall": 0.099,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.878,
+          "recall": 0.1089,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.876,
+          "recall": 0.1188,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.872,
+          "recall": 0.1287,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.867,
+          "recall": 0.1386,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.867,
+          "recall": 0.1485,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.858,
+          "recall": 0.1584,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.855,
+          "recall": 0.1683,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.853,
+          "recall": 0.1782,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.853,
+          "recall": 0.1881,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.85,
+          "recall": 0.198,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.845,
+          "recall": 0.2079,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.843,
+          "recall": 0.2178,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.838,
+          "recall": 0.2277,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.836,
+          "recall": 0.2376,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.835,
+          "recall": 0.2475,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.834,
+          "recall": 0.2574,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.832,
+          "recall": 0.2673,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.829,
+          "recall": 0.2673,
+          "precision": 0.9643
+        },
+        {
+          "conf": 0.828,
+          "recall": 0.2772,
+          "precision": 0.9655
+        },
+        {
+          "conf": 0.827,
+          "recall": 0.2871,
+          "precision": 0.9667
+        },
+        {
+          "conf": 0.825,
+          "recall": 0.297,
+          "precision": 0.9677
+        },
+        {
+          "conf": 0.811,
+          "recall": 0.3069,
+          "precision": 0.9688
+        },
+        {
+          "conf": 0.811,
+          "recall": 0.3168,
+          "precision": 0.9697
+        },
+        {
+          "conf": 0.811,
+          "recall": 0.3267,
+          "precision": 0.9706
+        },
+        {
+          "conf": 0.81,
+          "recall": 0.3366,
+          "precision": 0.9714
+        },
+        {
+          "conf": 0.809,
+          "recall": 0.3465,
+          "precision": 0.9722
+        },
+        {
+          "conf": 0.807,
+          "recall": 0.3564,
+          "precision": 0.973
+        },
+        {
+          "conf": 0.792,
+          "recall": 0.3663,
+          "precision": 0.9737
+        },
+        {
+          "conf": 0.79,
+          "recall": 0.3762,
+          "precision": 0.9744
+        },
+        {
+          "conf": 0.785,
+          "recall": 0.3861,
+          "precision": 0.975
+        },
+        {
+          "conf": 0.78,
+          "recall": 0.396,
+          "precision": 0.9756
+        },
+        {
+          "conf": 0.78,
+          "recall": 0.4059,
+          "precision": 0.9762
+        },
+        {
+          "conf": 0.775,
+          "recall": 0.4158,
+          "precision": 0.9767
+        },
+        {
+          "conf": 0.76,
+          "recall": 0.4257,
+          "precision": 0.9773
+        },
+        {
+          "conf": 0.76,
+          "recall": 0.4356,
+          "precision": 0.9778
+        },
+        {
+          "conf": 0.758,
+          "recall": 0.4455,
+          "precision": 0.9783
+        },
+        {
+          "conf": 0.756,
+          "recall": 0.4554,
+          "precision": 0.9787
+        },
+        {
+          "conf": 0.744,
+          "recall": 0.4653,
+          "precision": 0.9792
+        },
+        {
+          "conf": 0.74,
+          "recall": 0.4752,
+          "precision": 0.9796
+        },
+        {
+          "conf": 0.739,
+          "recall": 0.4752,
+          "precision": 0.96
+        },
+        {
+          "conf": 0.737,
+          "recall": 0.4851,
+          "precision": 0.9608
+        },
+        {
+          "conf": 0.737,
+          "recall": 0.495,
+          "precision": 0.9615
+        },
+        {
+          "conf": 0.73,
+          "recall": 0.505,
+          "precision": 0.9623
+        },
+        {
+          "conf": 0.711,
+          "recall": 0.505,
+          "precision": 0.9444
+        },
+        {
+          "conf": 0.686,
+          "recall": 0.5149,
+          "precision": 0.9455
+        },
+        {
+          "conf": 0.684,
+          "recall": 0.5248,
+          "precision": 0.9464
+        },
+        {
+          "conf": 0.683,
+          "recall": 0.5347,
+          "precision": 0.9474
+        },
+        {
+          "conf": 0.678,
+          "recall": 0.5446,
+          "precision": 0.9483
+        },
+        {
+          "conf": 0.656,
+          "recall": 0.5446,
+          "precision": 0.9322
+        },
+        {
+          "conf": 0.621,
+          "recall": 0.5545,
+          "precision": 0.9333
+        },
+        {
+          "conf": 0.619,
+          "recall": 0.5644,
+          "precision": 0.9344
+        },
+        {
+          "conf": 0.615,
+          "recall": 0.5743,
+          "precision": 0.9355
+        },
+        {
+          "conf": 0.615,
+          "recall": 0.5842,
+          "precision": 0.9365
+        },
+        {
+          "conf": 0.607,
+          "recall": 0.5842,
+          "precision": 0.9219
+        },
+        {
+          "conf": 0.598,
+          "recall": 0.5941,
+          "precision": 0.9231
+        },
+        {
+          "conf": 0.589,
+          "recall": 0.604,
+          "precision": 0.9242
+        },
+        {
+          "conf": 0.588,
+          "recall": 0.6139,
+          "precision": 0.9254
+        },
+        {
+          "conf": 0.58,
+          "recall": 0.6139,
+          "precision": 0.9118
+        },
+        {
+          "conf": 0.56,
+          "recall": 0.6139,
+          "precision": 0.8986
+        },
+        {
+          "conf": 0.542,
+          "recall": 0.6238,
+          "precision": 0.9
+        },
+        {
+          "conf": 0.541,
+          "recall": 0.6337,
+          "precision": 0.9014
+        },
+        {
+          "conf": 0.536,
+          "recall": 0.6436,
+          "precision": 0.9028
+        },
+        {
+          "conf": 0.536,
+          "recall": 0.6535,
+          "precision": 0.9041
+        },
+        {
+          "conf": 0.492,
+          "recall": 0.6634,
+          "precision": 0.9054
+        },
+        {
+          "conf": 0.486,
+          "recall": 0.6733,
+          "precision": 0.9067
+        },
+        {
+          "conf": 0.473,
+          "recall": 0.6733,
+          "precision": 0.8947
+        },
+        {
+          "conf": 0.473,
+          "recall": 0.6832,
+          "precision": 0.8961
+        },
+        {
+          "conf": 0.47,
+          "recall": 0.6931,
+          "precision": 0.8974
+        },
+        {
+          "conf": 0.445,
+          "recall": 0.6931,
+          "precision": 0.8861
+        },
+        {
+          "conf": 0.42,
+          "recall": 0.6931,
+          "precision": 0.875
+        },
+        {
+          "conf": 0.389,
+          "recall": 0.703,
+          "precision": 0.8765
+        },
+        {
+          "conf": 0.375,
+          "recall": 0.7129,
+          "precision": 0.878
+        },
+        {
+          "conf": 0.358,
+          "recall": 0.7129,
+          "precision": 0.8675
+        },
+        {
+          "conf": 0.343,
+          "recall": 0.7228,
+          "precision": 0.869
+        },
+        {
+          "conf": 0.338,
+          "recall": 0.7228,
+          "precision": 0.8588
+        },
+        {
+          "conf": 0.334,
+          "recall": 0.7327,
+          "precision": 0.8605
+        },
+        {
+          "conf": 0.327,
+          "recall": 0.7426,
+          "precision": 0.8621
+        },
+        {
+          "conf": 0.326,
+          "recall": 0.7426,
+          "precision": 0.8523
+        },
+        {
+          "conf": 0.325,
+          "recall": 0.7426,
+          "precision": 0.8427
+        },
+        {
+          "conf": 0.314,
+          "recall": 0.7426,
+          "precision": 0.8333
+        },
+        {
+          "conf": 0.298,
+          "recall": 0.7426,
+          "precision": 0.8242
+        },
+        {
+          "conf": 0.288,
+          "recall": 0.7525,
+          "precision": 0.8261
+        },
+        {
+          "conf": 0.287,
+          "recall": 0.7525,
+          "precision": 0.8172
+        },
+        {
+          "conf": 0.284,
+          "recall": 0.7525,
+          "precision": 0.8085
+        },
+        {
+          "conf": 0.261,
+          "recall": 0.7525,
+          "precision": 0.8
+        },
+        {
+          "conf": 0.26,
+          "recall": 0.7525,
+          "precision": 0.7917
+        },
+        {
+          "conf": 0.258,
+          "recall": 0.7525,
+          "precision": 0.7835
+        }
+      ],
+      "helmet": [
+        {
+          "conf": 0.881,
+          "recall": 0.0625,
+          "precision": 1.0
+        },
+        {
+          "conf": 0.824,
+          "recall": 0.0625,
+          "precision": 0.5
+        },
+        {
+          "conf": 0.819,
+          "recall": 0.125,
+          "precision": 0.6667
+        },
+        {
+          "conf": 0.817,
+          "recall": 0.125,
+          "precision": 0.5
+        },
+        {
+          "conf": 0.812,
+          "recall": 0.125,
+          "precision": 0.4
+        },
+        {
+          "conf": 0.769,
+          "recall": 0.1875,
+          "precision": 0.5
+        },
+        {
+          "conf": 0.736,
+          "recall": 0.1875,
+          "precision": 0.4286
+        },
+        {
+          "conf": 0.734,
+          "recall": 0.25,
+          "precision": 0.5
+        },
+        {
+          "conf": 0.732,
+          "recall": 0.25,
+          "precision": 0.4444
+        },
+        {
+          "conf": 0.732,
+          "recall": 0.25,
+          "precision": 0.4
+        },
+        {
+          "conf": 0.73,
+          "recall": 0.3125,
+          "precision": 0.4545
+        },
+        {
+          "conf": 0.679,
+          "recall": 0.3125,
+          "precision": 0.4167
+        },
+        {
+          "conf": 0.671,
+          "recall": 0.3125,
+          "precision": 0.3846
+        },
+        {
+          "conf": 0.659,
+          "recall": 0.375,
+          "precision": 0.4286
+        },
+        {
+          "conf": 0.642,
+          "recall": 0.375,
+          "precision": 0.4
+        },
+        {
+          "conf": 0.582,
+          "recall": 0.375,
+          "precision": 0.375
+        },
+        {
+          "conf": 0.579,
+          "recall": 0.375,
+          "precision": 0.3529
+        },
+        {
+          "conf": 0.537,
+          "recall": 0.375,
+          "precision": 0.3333
+        },
+        {
+          "conf": 0.522,
+          "recall": 0.375,
+          "precision": 0.3158
+        },
+        {
+          "conf": 0.502,
+          "recall": 0.375,
+          "precision": 0.3
+        },
+        {
+          "conf": 0.469,
+          "recall": 0.375,
+          "precision": 0.2857
+        },
+        {
+          "conf": 0.448,
+          "recall": 0.375,
+          "precision": 0.2727
+        },
+        {
+          "conf": 0.436,
+          "recall": 0.375,
+          "precision": 0.2609
+        },
+        {
+          "conf": 0.425,
+          "recall": 0.375,
+          "precision": 0.25
+        },
+        {
+          "conf": 0.418,
+          "recall": 0.375,
+          "precision": 0.24
+        },
+        {
+          "conf": 0.399,
+          "recall": 0.375,
+          "precision": 0.2308
+        },
+        {
+          "conf": 0.361,
+          "recall": 0.375,
+          "precision": 0.2222
+        },
+        {
+          "conf": 0.349,
+          "recall": 0.375,
+          "precision": 0.2143
+        },
+        {
+          "conf": 0.343,
+          "recall": 0.4375,
+          "precision": 0.2414
+        },
+        {
+          "conf": 0.334,
+          "recall": 0.4375,
+          "precision": 0.2333
+        },
+        {
+          "conf": 0.321,
+          "recall": 0.4375,
+          "precision": 0.2258
+        },
+        {
+          "conf": 0.308,
+          "recall": 0.4375,
+          "precision": 0.2188
+        },
+        {
+          "conf": 0.297,
+          "recall": 0.4375,
+          "precision": 0.2121
+        },
+        {
+          "conf": 0.284,
+          "recall": 0.4375,
+          "precision": 0.2059
+        },
+        {
+          "conf": 0.26,
+          "recall": 0.4375,
+          "precision": 0.2
+        }
+      ]
+    },
+    "metric_scope": "matched",
+    "fp_rate": 27.27,
+    "fn_rate": 14.58,
+    "confusion": {
+      "tp": 41,
+      "fn": 7,
+      "fp": 3,
+      "tn": 8
+    },
+    "n_compliant": 11,
+    "n_violating": 48,
+    "scope_detail": {
+      "matched": {
+        "fp_rate": 27.27,
+        "fn_rate": 14.58,
+        "n_compliant": 11,
+        "n_violating": 48,
+        "confusion": {
+          "tp": 41,
+          "fn": 7,
+          "fp": 3,
+          "tn": 8
+        }
+      },
+      "e2e": {
+        "fp_rate": 23.08,
+        "fn_rate": 26.79,
+        "n_compliant": 13,
+        "n_violating": 56,
+        "confusion": {
+          "tp": 41,
+          "fn": 15,
+          "fp": 3,
+          "tn": 10
+        }
+      }
+    },
+    "coverage": {
+      "n_truth_known": 69,
+      "n_judged": 59,
+      "rate": 85.51
+    },
+    "fn_cases": [
+      {
+        "image_id": "13_jpg.rf.39ad35991322494671fbc724f9af3ef3",
+        "person": "G0",
+        "equip": "helmet",
+        "judged": "已佩戴",
+        "why": ""
+      },
+      {
+        "image_id": "142_jpg.rf.d78f014a9902bf06117796532d3a68d3",
+        "person": "G2",
+        "equip": "helmet",
+        "judged": "无法判定",
+        "why": ""
+      },
+      {
+        "image_id": "147_jpg.rf.09f3b8ee4afb9ee71c32d647f1f8b34b",
+        "person": "G1",
+        "equip": "helmet",
+        "judged": "已佩戴",
+        "why": ""
+      },
+      {
+        "image_id": "147_jpg.rf.09f3b8ee4afb9ee71c32d647f1f8b34b",
+        "person": "G2",
+        "equip": "helmet",
+        "judged": "已佩戴",
+        "why": ""
+      },
+      {
+        "image_id": "166_jpg.rf.1e03f73a0aabd569a8b1d33e8b0bfb92",
+        "person": "G7",
+        "equip": "helmet",
+        "judged": "无法判定",
+        "why": ""
+      },
+      {
+        "image_id": "166_jpg.rf.1e03f73a0aabd569a8b1d33e8b0bfb92",
+        "person": "G9",
+        "equip": "helmet",
+        "judged": "待复核",
+        "why": ""
+      },
+      {
+        "image_id": "6_png.rf.68d8ffd89cd1d80f1ce4b2677b846cbe",
+        "person": "G1",
+        "equip": "helmet",
+        "judged": "无法判定",
+        "why": ""
+      }
+    ],
+    "latency": {
+      "mean_ms": 46.52,
+      "p95_ms": 108.91,
+      "max_ms": 141.61,
+      "n": 35,
+      "pipeline_mean_ms": null
+    },
+    "targets": {
+      "mAP50": 0.85,
+      "fp_rate": 10.0,
+      "fn_rate": 5.0,
+      "latency_ms": 50.0
+    }
+  }
+}

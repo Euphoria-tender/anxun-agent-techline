@@ -166,6 +166,26 @@ class DualDetector:
                  vest_weights: str = "",
                  imgsz: int = 640, conf: float = 0.25, device: str = "",
                  gate: bool = True, drop_equip_person: bool = True):
+        # 单模型模式：person 与装备权重是同一个文件（v3 的五类权重自带 person）。
+        # 只加载一次、只前向一次，person 与装备框来自同一次推理。
+        #
+        # 为什么不能走"双模型但传同一个文件"：那条路会前向两次，然后 `_merge`
+        # 把 person 模型的**全部**框（含 helmet/vest）和装备模型的框拼起来——
+        # 装备框被算两遍。实测 helmet 框 2 个变成 4 个，fp 从 27 涨到 189，
+        # helmet AP 从 0.87 掉到 0.45。这不是模型问题，是拼框逻辑的假设失效：
+        # 它默认「person 模型只出 person」，而 yolov8n 恰好如此。
+        self.single = (str(Path(person_weights).resolve())
+                       == str(Path(ppe_weights).resolve()))
+        if self.single:
+            self.ppe = YoloDetector(ppe_weights, imgsz=imgsz, conf=conf, device=device)
+            self.person = self.ppe
+            self.vest = None
+            self.name = "ppe+person"
+            self.drop_equip_person = False
+            self.gate = False
+            self.gate_skipped = 0
+            return
+
         self.person = YoloDetector(person_weights, imgsz=imgsz, conf=conf, device=device)
         self.ppe = YoloDetector(ppe_weights, imgsz=imgsz, conf=conf, device=device)
         self.vest = (YoloDetector(vest_weights, imgsz=imgsz, conf=conf, device=device)
@@ -207,6 +227,8 @@ class DualDetector:
         if not img:
             raise ValueError(f"场景 {scene.get('scene_id')} 没有 image 字段，无法推理")
         a = self.person.detect_image(img, frame_idx)
+        if self.single:      # 一次前向already包含全部类别
+            return self._merge(a, {"boxes": [], "infer_ms": 0.0})
         if not self._need_equip(a):
             return self._merge(a, {"boxes": [], "infer_ms": 0.0})
         boxes: list[Box] = []
@@ -220,6 +242,8 @@ class DualDetector:
     def detect_frame(self, frame) -> dict:
         """三模型跑同一帧（视频流）。没人就跳过全部装备模型。"""
         a = self.person.detect_frame(frame)
+        if self.single:      # 单模型：一次前向已含全部类别
+            return self._merge(a, {"boxes": [], "infer_ms": 0.0})
         if not self._need_equip(a):
             return self._merge(a, {"boxes": [], "infer_ms": 0.0})
         boxes, ms = [], 0.0
@@ -234,6 +258,8 @@ class DualDetector:
         if not frames:
             return []
         a = self.person.predict_many(frames)
+        if self.single:      # 单模型：一批帧一次前向，框已完整
+            return [self._merge(r, {"boxes": [], "infer_ms": 0.0}) for r in a]
         need = [i for i, r in enumerate(a) if self._need_equip(r)]
         out = [self._merge(r, {"boxes": [], "infer_ms": 0.0}) for r in a]
         for m in self._equip_models():
@@ -307,26 +333,42 @@ def pick_device(device: str = "") -> str:
 
 
 def build_detector(weights: str, person_weights: str = "", vest_weights: str = "",
-                   imgsz: int = 640, conf: float = 0.25, device: str = ""):
+                   imgsz: int = 640, conf: float = 0.25, device: str = "",
+                   prefer_own_person: bool = True):
     """
     按权重组合挑检测器，返回 (detector, 说明)。
     权重缺失直接报错，不做降级——没有模型就没有指标，藏起来没意义。
+
+    **PPE 权重自带 person 类时优先用自己的**（v3.1.0 起默认走这条）：
+
+    - 同一次前向就能拿到 person 与装备框，耗时减半（22.9 → 11.4 ms）；
+    - 人框与装备框出自同一模型、同一套坐标，头部区域推算不会错位；
+    - 实测 person AP 0.846，高于外挂 yolov8n 的 0.797。
+
+    外挂人体模型只在 PPE 权重没有 person 类时才需要（老的两类权重点这样）。
+    显式想用外部人体模型时传 `prefer_own_person=False`。
     """
     dev = pick_device(device)
     w = Path(weights)
-    pw = Path(person_weights) if person_weights else None
     if not w.exists():
         raise FileNotFoundError(f"找不到 PPE 权重：{weights}")
+
+    det = YoloDetector(str(w), imgsz=imgsz, conf=conf, device=dev)
+    names = [str(n) for n in det.names.values()]
+    has_person = any(n.lower() == "person" for n in names)
+
+    if has_person and prefer_own_person:
+        return det, f"单模型：{w.name}（{','.join(names)}）@ {dev}"
+
     vw = Path(vest_weights) if vest_weights else None
+    pw = Path(person_weights) if person_weights else None
     if pw and pw.exists():
         if vw and vw.exists():
             det = DualDetector(str(pw), str(w), str(vw), imgsz=imgsz, conf=conf, device=dev)
             return det, f"三模型：{pw.name} + {w.name} + {vw.name} @ {dev}"
         return DualDetector(str(pw), str(w), imgsz=imgsz, conf=conf, device=dev), \
                f"双模型：{pw.name} + {w.name} @ {dev}"
-    det = YoloDetector(str(w), imgsz=imgsz, conf=conf, device=dev)
-    names = [str(n) for n in det.names.values()]
-    has_person = any(n.lower() == "person" for n in names)
+
     note = f"单模型：{w.name}（{','.join(names)}）@ {dev}"
     if not has_person:
         note += "；缺 person 类，人员判定不会生效，请配 --person-model"

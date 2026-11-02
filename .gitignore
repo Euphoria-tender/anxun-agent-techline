@@ -42,3 +42,9 @@ __pycache__/
 *.pyc
 *.tmp
 .DS_Store
+
+# 训练起点权重：COCO 预训练，本地按需下载，不是交付物。
+# 交付权重只有 models/best.pt 与 models/onnx/best.onnx；
+# 这两个若入库，单是 s+m 就要多占 72 MB 提交预算。
+models/yolov8s.pt
+models/yolov8m.pt

@@ -194,23 +194,26 @@ def verify_models() -> None:
         check("模型", "真图推理", False, "权重不全，跳过")
         return
 
-    from anxun.detectors import DualDetector
+    from anxun.detectors import build_detector
     imgs = _eval_images()
     if imgs:
         img, img_note = str(imgs[0]), ""
     else:
         img, img_note = _probe_image(), "（合成烟测图）"
     try:
-        det = DualDetector(str(ROOT / "models/yolov8n.pt"), str(ROOT / "models/best.pt"),
-                           device="")
+        # 用 build_detector 而不是硬编码 DualDetector：v3.1.0 起 best.pt 自带 person，
+        # 默认走单模型。写死双模型会让后续 ONNX 比对拿「torch 双模型 vs onnx 单模型」
+        # 去比标签多重集，必然对不上（实测 2/5 张不一致）。
+        det, det_note = build_detector(
+            str(ROOT / "models" / "best.pt"), str(ROOT / "models" / "yolov8n.pt"), device="")
         t0 = time.perf_counter()
         r = det.detect_image(img)
         ms = (time.perf_counter() - t0) * 1000
         labels = {b.label for b in r["boxes"]}
         # 有真图就要求检出目标；只有合成图时，只证明权重能加载、前向不炸（图中无目标属正常）
         ok = len(r["boxes"]) > 0 if imgs else isinstance(r.get("boxes"), list)
-        check("模型", "双模型推理可跑", ok,
-              f"{len(r['boxes'])} 个框，{ms:.1f} ms，标签 {sorted(labels)}{img_note}")
+        check("模型", "检测链推理可跑", ok,
+              f"{len(r['boxes'])} 个框，{ms:.1f} ms，标签 {sorted(labels)}｜{det_note}{img_note}")
         if imgs:
             check("模型", "输出含 person 与装备类",
                   "person" in labels and bool(labels & {"helmet", "nohelmet", "vest", "novest"}),
