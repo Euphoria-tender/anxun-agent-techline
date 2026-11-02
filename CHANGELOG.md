@@ -1,5 +1,35 @@
 # 变更日志
 
+## [未发布] — 2026-11-03
+
+**交付指标不变**：0.7758 / 10.20% / 16.13% / 19.5 ms。这一版只修一致性缺陷 + 记 v3.1 的负结果。
+
+### 修复
+
+- `stream.py --help` 直接崩：help 文本里的 `82%` 被 argparse 当格式符，`%` 后跟中文抛
+  `ValueError: unsupported format character`。改成 `82%%`。
+- `--profile` 的 choices 缺 `v3`（`app.py` / `evaluate_real.py`），而 config 默认早就是 v3——
+  显式传 `--profile v3` 报错，help 还写「默认 measured」。改成从 `PROFILES` 动态生成。
+- `verify_all` 的「README 版本号与包版本一致」用整个 README 做子串匹配，正文里 v2.2.0/v2.0
+  出现几十次，等于永远通过。改成只查头部 15 行。
+- `verify_all` 新增「数字 19.5 与实测一致」：此前只查 fp / fn / mAP 三项，
+  耗时从 22 ms 变 19.5 ms 没人发现。验收项 59 → 61（含服务）。
+- `detectors.LABEL_MAP` 缺 `nohelmet`（无连字符）：helmet_p2 的 `data.yaml` 正是这个写法，
+  精确匹配查不到 → 反向证据整类被静默丢弃，漏报虚高且不报错。
+- 技术页（PPT 第 10–13 页直接引用）仍写 22 ms / 45 ms / 三模型，已同步 v3。
+- `sweep_ppe_geom.py` / `eval_ppe1206.py` 的默认权重指向不存在的 `runs/*` 目录，
+  改用 `models/best.pt`；`sweep_geom.py` / `sweep_ppe_geom.py` 补 v3 警告
+  （helmet 已改中心点判据，`iou_min` / `contain_min` 扫了不会有变化）。
+
+### 新增（v3.1 探索，负结果）
+
+- `docs/16-技术线v3.1.0-探索记录.md`：四条路线——提全图分辨率（960 / 1280）、降阈值、
+  对「未佩戴」的人做头部放大复核、放宽判定区域——**全部实测否掉**。
+  误报 10.20% 的根因是「640 输入下头只有 20–30 px」这个物理事实，不是判定层。
+- `tools/attr_fp.py`（误报逐例归因，B1–B5 分类 + 裁图）、
+  `probe_head_zoom.py`（头部放大可行性探针）、`eval_two_stage.py`（两级判定全量评测）、
+  `sweep_region_v3.py`（判定区域 15 组扫描）。
+
 ## v3.0.0 — 2026-11-02
 
 **模型换成自己训的了。** 检测层全面变强，业务指标是一笔明码标价的交换。

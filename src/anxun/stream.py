@@ -432,7 +432,7 @@ def main() -> int:
     ap.add_argument("--motion", type=float, default=3.0,
                     help="帧差阈值（160x160 灰度均值差），低于此值跳过推理（0=关闭）。"
                          "v2.1.0 从 10.0 降回 3.0：实测人走动全幅帧差 P50 仅 1.99，"
-                         "10.0 会跳过 82% 的走动帧。见 VideoInspector 注释")
+                         "10.0 会跳过 82%% 的走动帧。见 VideoInspector 注释")
     ap.add_argument("--no-gate", action="store_true",
                     help="关闭人员门控（没人也跑 PPE），用于全量对照")
     ap.add_argument("--model", default=str(ROOT / "models" / "best.pt"))

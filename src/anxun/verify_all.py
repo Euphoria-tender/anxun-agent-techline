@@ -501,15 +501,21 @@ def verify_slides() -> None:
     import re as _re
     _real = json.loads((ROOT / "data/metrics_real.json").read_text(encoding="utf-8"))["results"]
     expected = (f"{_real['fp_rate']:.1f}", f"{_real['fn_rate']:.1f}", f"{_real['mAP50']:.3f}")
+    # 单帧耗时也要查：v2.2 → v3.0.0 从 22 ms 变成 19.5 ms，技术页正文改了但这项没查，
+    # 差点一直漂着。期望值同样从 JSON 取，不写死。
+    _lat = _real.get("latency", {}).get("mean_ms")
+    if _lat:
+        expected = expected + (f"{_lat:.1f}",)
     for num in expected:
         hit = bool(_re.search(rf"(?<![\d.]){_re.escape(num)}(?![\d])", t))
         check("技术页", f"数字 {num} 与实测一致", hit, "")
 
-    # 页脚要写明阈值口径：P11 报的四个数只在 measured 口径下成立
+    # 页脚要写明阈值口径：P11 报的四个数只在当前 profile 下成立
     from anxun import rules_engine as R
     cf, cr = R.CONF_FINAL, R.CONF_REVIEW
     check("技术页", "页脚标注了判定阈值口径",
-          f"{cf:.2f}" in t and f"{cr:.2f}" in t, f"{cr:.2f} / {cf:.2f}")
+          f"{cf:.2f}" in t and f"{cr:.2f}" in t,
+          f"{cr:.2f} / {cf:.2f}（profile: {R.active_profile()}）")
 
     # PPT 第 11/13 页要贴图，JSON 有数但没图等于没做
     figs = ["confusion_matrix.png", "pr_curve.png", "risk_matrix.png"]

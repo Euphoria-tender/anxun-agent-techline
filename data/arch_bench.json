@@ -8,57 +8,57 @@
       "arch": "yolov8n",
       "params_m": 3.16,
       "flops_g": 8.9,
-      "cpu_ms": 44.2,
-      "p90_ms": 52.0
+      "cpu_ms": 7.9,
+      "p90_ms": 9.3
     },
     {
       "arch": "yolov8s",
       "params_m": 11.17,
       "flops_g": 28.8,
-      "cpu_ms": 97.6,
-      "p90_ms": 108.2
+      "cpu_ms": 12.1,
+      "p90_ms": 30.0
     },
     {
       "arch": "yolo11n",
       "params_m": 2.62,
       "flops_g": 6.6,
-      "cpu_ms": 41.4,
-      "p90_ms": 45.1
+      "cpu_ms": 9.0,
+      "p90_ms": 26.0
     },
     {
       "arch": "yolo11s",
       "params_m": 9.46,
       "flops_g": 21.7,
-      "cpu_ms": 88.7,
-      "p90_ms": 95.9
+      "cpu_ms": 10.7,
+      "p90_ms": 22.6
     },
     {
       "arch": "yolo12n",
       "params_m": 2.6,
       "flops_g": 6.7,
-      "cpu_ms": 52.9,
-      "p90_ms": 56.2
+      "cpu_ms": 10.8,
+      "p90_ms": 11.7
     },
     {
       "arch": "yolo12s",
       "params_m": 9.28,
       "flops_g": 21.7,
-      "cpu_ms": 102.0,
-      "p90_ms": 110.3
+      "cpu_ms": 13.1,
+      "p90_ms": 22.2
     },
     {
       "arch": "yolo26n",
       "params_m": 2.57,
       "flops_g": 6.1,
-      "cpu_ms": 43.9,
-      "p90_ms": 48.9
+      "cpu_ms": 10.2,
+      "p90_ms": 32.9
     },
     {
       "arch": "yolo26s",
       "params_m": 10.01,
       "flops_g": 22.8,
-      "cpu_ms": 92.8,
-      "p90_ms": 107.4
+      "cpu_ms": 11.8,
+      "p90_ms": 44.9
     }
   ]
 }
