@@ -1,27 +1,27 @@
 [
-  {
-    "batch": 1,
-    "total_ms": 19.5,
-    "per_frame_ms": 19.5
-  },
-  {
-    "batch": 2,
-    "total_ms": 30.3,
-    "per_frame_ms": 15.2
-  },
-  {
-    "batch": 4,
-    "total_ms": 54.8,
-    "per_frame_ms": 13.7
-  },
-  {
-    "batch": 8,
-    "total_ms": 118.0,
-    "per_frame_ms": 14.8
-  },
-  {
-    "batch": 16,
-    "total_ms": 224.9,
-    "per_frame_ms": 14.1
-  }
+ {
+  "batch": 1,
+  "total_ms": 14.8,
+  "per_frame_ms": 14.8
+ },
+ {
+  "batch": 2,
+  "total_ms": 24.1,
+  "per_frame_ms": 12.0
+ },
+ {
+  "batch": 4,
+  "total_ms": 45.2,
+  "per_frame_ms": 11.3
+ },
+ {
+  "batch": 8,
+  "total_ms": 100.7,
+  "per_frame_ms": 12.6
+ },
+ {
+  "batch": 16,
+  "total_ms": 185.9,
+  "per_frame_ms": 11.6
+ }
 ]
