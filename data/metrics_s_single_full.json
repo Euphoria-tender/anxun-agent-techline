@@ -1,7 +1,7 @@
 {
   "kind": "model-measured",
   "config": {
-    "weights": "best.pt + best.pt",
+    "weights": "单模型：best.pt（helmet,no-helmet,no-vest,person,vest）@ cuda:0",
     "imgsz": 640,
     "conf": 0.25,
     "backend": "torch",
@@ -18,7 +18,7 @@
     "persons_pred": 723,
     "eval_note": "真值佩戴状态由标注框推导：Hardhat 落在头部区域=合规，只检出 NO-Hardhat=违规；两者都无则跳过。判定由引擎给出。"
   },
-  "generated_at": "2026-11-03T02:56:27",
+  "generated_at": "2026-11-03T10:53:38",
   "results": {
     "n_images": 272,
     "n_boxes": 1056,
@@ -5324,39 +5324,39 @@
       ]
     },
     "metric_scope": "matched",
-    "fp_rate": 5.58,
+    "fp_rate": 9.3,
     "fn_rate": 5.12,
     "confusion": {
       "tp": 204,
       "fn": 11,
-      "fp": 12,
-      "tn": 203
+      "fp": 20,
+      "tn": 195
     },
     "n_compliant": 215,
     "n_violating": 215,
     "scope_detail": {
       "matched": {
-        "fp_rate": 5.58,
+        "fp_rate": 9.3,
         "fn_rate": 5.12,
         "n_compliant": 215,
         "n_violating": 215,
         "confusion": {
           "tp": 204,
           "fn": 11,
-          "fp": 12,
-          "tn": 203
+          "fp": 20,
+          "tn": 195
         }
       },
       "e2e": {
-        "fp_rate": 5.29,
+        "fp_rate": 8.81,
         "fn_rate": 11.3,
         "n_compliant": 227,
         "n_violating": 230,
         "confusion": {
           "tp": 204,
           "fn": 26,
-          "fp": 12,
-          "tn": 215
+          "fp": 20,
+          "tn": 207
         }
       }
     },
@@ -5445,9 +5445,9 @@
       }
     ],
     "latency": {
-      "mean_ms": 11.37,
-      "p95_ms": 12.56,
-      "max_ms": 23.51,
+      "mean_ms": 14.76,
+      "p95_ms": 17.53,
+      "max_ms": 29.12,
       "n": 272,
       "pipeline_mean_ms": null
     },

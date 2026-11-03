@@ -92,7 +92,7 @@
       "line": "模型",
       "item": "检测链推理可跑",
       "ok": true,
-      "detail": "4 个框，2851.1 ms，标签 ['helmet', 'novest', 'person']｜单模型：best.pt（helmet,no-helmet,no-vest,person,vest）@ cuda:0"
+      "detail": "4 个框，2640.8 ms，标签 ['helmet', 'novest', 'person']｜单模型：best.pt（helmet,no-helmet,no-vest,person,vest）@ cuda:0"
     },
     {
       "line": "模型",
@@ -146,7 +146,7 @@
       "line": "指标",
       "item": "README 漏报率与实测一致",
       "ok": true,
-      "detail": "实测 6.52%"
+      "detail": "实测 4.35%"
     },
     {
       "line": "指标",
@@ -218,7 +218,7 @@
       "line": "技术页",
       "item": "文件存在",
       "ok": true,
-      "detail": "16.8 KB"
+      "detail": "16.9 KB"
     },
     {
       "line": "技术页",
@@ -264,7 +264,7 @@
     },
     {
       "line": "技术页",
-      "item": "数字 6.5 与实测一致",
+      "item": "数字 4.3 与实测一致",
       "ok": true,
       "detail": ""
     },
@@ -276,7 +276,7 @@
     },
     {
       "line": "技术页",
-      "item": "数字 11.8 与实测一致",
+      "item": "数字 15.0 与实测一致",
       "ok": true,
       "detail": ""
     },
