@@ -18,7 +18,7 @@
     "persons_pred": 302,
     "eval_note": "真值佩戴状态由标注框推导：Hardhat 落在头部区域=合规，只检出 NO-Hardhat=违规；两者都无则跳过。判定由引擎给出。"
   },
-  "generated_at": "2026-11-03T07:10:27",
+  "generated_at": "2026-11-03T11:15:50",
   "results": {
     "n_images": 100,
     "n_boxes": 457,
@@ -2330,10 +2330,10 @@
     },
     "metric_scope": "matched",
     "fp_rate": 5.05,
-    "fn_rate": 7.53,
+    "fn_rate": 6.45,
     "confusion": {
-      "tp": 86,
-      "fn": 7,
+      "tp": 87,
+      "fn": 6,
       "fp": 5,
       "tn": 94
     },
@@ -2342,24 +2342,24 @@
     "scope_detail": {
       "matched": {
         "fp_rate": 5.05,
-        "fn_rate": 7.53,
+        "fn_rate": 6.45,
         "n_compliant": 99,
         "n_violating": 93,
         "confusion": {
-          "tp": 86,
-          "fn": 7,
+          "tp": 87,
+          "fn": 6,
           "fp": 5,
           "tn": 94
         }
       },
       "e2e": {
         "fp_rate": 4.67,
-        "fn_rate": 18.1,
+        "fn_rate": 17.14,
         "n_compliant": 107,
         "n_violating": 105,
         "confusion": {
-          "tp": 86,
-          "fn": 19,
+          "tp": 87,
+          "fn": 18,
           "fp": 5,
           "tn": 102
         }
@@ -2412,19 +2412,12 @@
         "equip": "helmet",
         "judged": "已佩戴",
         "why": ""
-      },
-      {
-        "image_id": "6_png.rf.68d8ffd89cd1d80f1ce4b2677b846cbe",
-        "person": "G1",
-        "equip": "helmet",
-        "judged": "无法判定",
-        "why": ""
       }
     ],
     "latency": {
-      "mean_ms": 20.0,
-      "p95_ms": 21.78,
-      "max_ms": 34.41,
+      "mean_ms": 23.49,
+      "p95_ms": 25.57,
+      "max_ms": 37.4,
       "n": 100,
       "pipeline_mean_ms": null
     },
