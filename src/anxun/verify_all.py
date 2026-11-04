@@ -504,14 +504,22 @@ def verify_slides() -> None:
     import re as _re
     _real = json.loads((ROOT / "data/metrics_real.json").read_text(encoding="utf-8"))["results"]
     expected = (f"{_real['fp_rate']:.1f}", f"{_real['fn_rate']:.1f}", f"{_real['mAP50']:.3f}")
-    # 单帧耗时也要查：v2.2 → v3.0.0 从 22 ms 变成 19.5 ms，技术页正文改了但这项没查，
-    # 差点一直漂着。期望值同样从 JSON 取，不写死。
-    _lat = _real.get("latency", {}).get("mean_ms")
-    if _lat:
-        expected = expected + (f"{_lat:.1f}",)
     for num in expected:
         hit = bool(_re.search(rf"(?<![\d.]){_re.escape(num)}(?![\d])", t))
         check("技术页", f"数字 {num} 与实测一致", hit, "")
+
+    # 耗时是**唯一会随机器负载抖动**的数：交付口径 15.0，换个机器复跑 15.45，
+    # 精确匹配会把「认真跑了一遍评测」的人判成 FAIL——这是验收脚本自己的毛病。
+    # 只匹配带 ms 单位的数（`15.0 ms` / `26.4ms`），否则 batch 表里的 14.8 会蒙混过关；
+    # 命中任意一个落在实测值 ±5% 内的即可。
+    _lat = _real.get("latency", {}).get("mean_ms")
+    if _lat:
+        ms_nums = [float(m) for m in _re.findall(r"(?<![\d.])(\d{1,3}\.\d)\s*(?:ms|毫秒)", t)]
+        near = [x for x in ms_nums if abs(x - _lat) / _lat <= 0.05]
+        check("技术页", f"单帧耗时 {_lat:.1f} ms 与技术页一致（±5%）",
+              bool(near),
+              f"命中 {near[:3]}" if near
+              else f"页面上的耗时 {ms_nums[:6]} 都不在 {_lat*0.95:.1f}–{_lat*1.05:.1f} 内")
 
     # 页脚要写明阈值口径：P11 报的四个数只在当前 profile 下成立
     from anxun import rules_engine as R
