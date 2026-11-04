@@ -30,24 +30,33 @@ ROOT = Path(__file__).resolve().parents[2]
 
 # 数据源登记表：目录 -> (来源, 许可, 角色说明)
 SOURCES = [
+    ("ppe_full/train", "Chapian/ppev3（Roboflow ppe-detection-9p0pu v3） · train", "CC BY 4.0",
+     "**v3.1.0 主训练集**：2451 张，9 类重映射为 5 类，已剔除与评测集重名的 165 张"),
+    ("ppe_full/valid", "Chapian/ppev3 · valid", "CC BY 4.0",
+     "v3.1.0 训练时的验证集（选轮次用），不参与评测"),
     ("ppe_test/train", "Chapian/PPE_detection · train", "CC BY 4.0",
-     "helmet / vest / person 三类标注。helmet 微调与 vest 训练的同域数据都出自这里"),
+     "v3.0.0 时代的同域训练集；**与 ppe_test/test 同源**，v3.1.0 已不再用它训练"),
     ("ppe_test/test", "Chapian/PPE_detection · test", "CC BY 4.0",
-     "**评测集**：helmet 与 vest 的四个指标全部出自这 100 张，全程不参与训练与选轮次"),
+     "**评测集**：helmet 的四个指标全部出自这 100 张，全程不参与训练与选轮次"),
     ("helmet_p2/train", "toborobot/Safety-helmet-dataset · train", "MIT",
-     "helmet 两类（0=没戴帽，1=戴帽，已人工抽样核对）。用于 helmet 微调扩量"),
+     "helmet 两类（0=helmet, 1=nohelmet，已人工抽样核对）。用于第二数据源验证与早前的微调扩量"),
     ("helmet_p2/valid", "toborobot/Safety-helmet-dataset · valid", "MIT",
-     " helmet 微调的验证集（选轮次用），不参与测试集评测"),
-    ("vest_all", "Chapian train 的 vest 子集（80/20 合并）", "CC BY 4.0",
-     " vest 模型最终训练集：80/20 实验定轮数后，用全量 100 张重训"),
+     "helmet 微调的验证集（选轮次用），不参与测试集评测"),
+    ("helmet_p2/test", "toborobot/Safety-helmet-dataset · test", "MIT",
+     "**第二数据源留出集（706 张）**：只验检测层，无 person 标注，因此不算业务指标"),
+    ("vest/train", "Chapian train 的 vest 子集 · train", "CC BY 4.0",
+     "v2.x 的独立背心模型训练集；v3.1.0 起背心并入五类权重，此集仅作历史留档"),
+    ("vest/val", "Chapian train 的 vest 子集 · valid", "CC BY 4.0",
+     "同上，历史留档"),
 ]
 
-# 每个数据源目录下的类别名（与标注文件里的整数 id 对应）
+# 每个数据源目录下的类别名（与标注文件里的整数 id 对应，顺序即 data.yaml 的 names）
 NAMES = {
     "ppe_test": ["boots", "gloves", "hardhat", "no_boots", "no_gloves",
                  "no_hardhat", "no_vest", "person", "vest"],
-    "helmet_p2": ["no_vest", "vest"],          # 已重映射：0=helmet, 1=nohelmet
-    "vest_all": ["vest", "no_vest"],
+    "ppe_full": ["helmet", "no-helmet", "no-vest", "person", "vest"],
+    "helmet_p2": ["helmet", "nohelmet"],       # data.yaml: names: ['helmet','nohelmet']
+    "vest": ["vest", "no_vest"],
 }
 
 
@@ -132,17 +141,18 @@ def main() -> int:
 
 | 缺口 | 影响 | 状态 |
 |---|---|---|
-| 数据全部来自境外工地 | 安全帽款式、工装颜色与国内车间差异明显，是 helmet 漏报压不到 10% 的根因 | 两轮公开数据微调均为负面结果（README 5.4/5.5） |
-| vest 只有 100 张训练图 | vest 误报 27.3% / 漏报 13.0%，远差于 helmet 的 5.1% | 已试重增强（mAP 0.418→0.452）；HF 镜像上再无带 vest 标注的可用数据源 |
+| 数据全部来自境外工地 | 安全帽款式、工装颜色与国内车间差异明显；**跨域泛化未验证** | 两轮公开数据微调均为负面结果（README 5.4/5.5）；v3.1.0 只做到同源独立留出 |
+| vest 标注密度低 | 996 图 / 1530 框，远少于 helmet（1428 图 / 2891 框）。vest 误报 28.26%、漏报 6.09%，**不能与 helmet 并列宣传** | v3.1.0 已并入五类权重；HF 镜像上再无带 vest 标注的可用数据源 |
 | 空标注负样本 0 张 | 误报率的负样本侧不够硬 | 公开集均无此分片 |
-| 无 1080p 真实监控素材 | 三级触发链的收益是在 15% 占用率的模拟视频上测的 | 需现场录像复核 |
+| 无 1080p 真实监控素材 | 三级触发链的收益是在合成视频上测的；1080p 复验用的是 3× 上采样图（`ppe_test/test1080`），不是真机录像 | 需现场录像复核 |
 
 ## 五、复现
 
 ```bash
 python src/anxun/data_card.py        # 重新生成本卡片
-python tools/make_vest.py            # 重建 vest 80/20 训练集
-python tools/make_mix.py             # 合并 helmet 两个数据源
+python tools/build_ppe_full.py       # v3.1.0 主训练集：9 类→5 类，剔除评测集重叠
+python tools/fetch_helmet_p2.py --splits test   # 第二数据源 706 张留出集
+python tools/make_vest.py            # v2.x 历史的 vest 80/20 训练集
 ```
 """)
 

@@ -34,7 +34,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 import anxun.rules_engine as R
-from anxun.detectors import DualDetector, pick_device
+from anxun.detectors import build_detector, pick_device
 from anxun.evaluate_real import (TRUTH_HEAD_REGION, TRUTH_HEAD_WIDTH, iou_box,
                                  list_images, load_gt, read_names, truth_of)
 from anxun.rules_engine import Box, judge_frame, min_person_area
@@ -141,7 +141,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default=str(DATA))
     ap.add_argument("--weights", default=str(ROOT / "models" / "best.pt"))
-    ap.add_argument("--person-weights", default=str(ROOT / "models" / "yolov8n.pt"))
+    ap.add_argument("--person-weights", default="",
+                    help="人体权重；留空走 v3.1.0 单模型（best.pt 自带 person）。"
+                         "只有测老的两类权重时才需要传 models/yolov8n.pt")
     ap.add_argument("--imgsz", type=int, default=640)
     ap.add_argument("--conf", type=float, default=0.25)
     ap.add_argument("--limit", type=int, default=0)
@@ -154,8 +156,10 @@ def main() -> int:
     print(f"口径 {R.active_profile()}  conf_final={R.CONF_FINAL}  "
           f"region={R.HEAD_REGION_RATIO}/{R.HEAD_WIDTH_RATIO}")
 
-    det = DualDetector(args.person_weights, args.weights,
-                       imgsz=args.imgsz, conf=args.conf, device=pick_device(""))
+    det, det_note = build_detector(args.weights, args.person_weights,
+                                   imgsz=args.imgsz, conf=args.conf,
+                                   device=pick_device(""))
+    print(det_note)
     data = Path(args.data)
     img_dir = data / "images" if (data / "images").exists() else data
     lbl_dir = data / "labels" if (data / "labels").exists() else data

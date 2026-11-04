@@ -1,1 +1,1 @@
-{"input_size": 640, "task": "object-detection", "ultralytics_version": "8.4.99", "model_type": "v8", "classes": 5, "names": ["helmet", "no-helmet", "no-vest", "person", "vest"], "trained_by": "anxun-team", "train_set": "ppe1206+mix(1097)", "val_map50": 0.8289}
+{"input_size": 640, "task": "object-detection", "ultralytics_version": "8.4.99", "model_type": "v8s", "classes": 5, "names": ["helmet", "no-helmet", "no-vest", "person", "vest"], "trained_by": "anxun-team", "train_set": "ppe_full(2451 train / 272 val)", "best_epoch": 62, "val_map50": 0.8857}

@@ -1,11 +1,11 @@
 {
   "kind": "fp-attribution",
-  "generated_at": "2026-11-03T00:41:38",
+  "generated_at": "2026-11-04T20:49:27",
   "config": {
     "imgsz": 640,
     "conf": 0.25,
     "profile": "v3",
-    "conf_final": 0.59,
+    "conf_final": 0.65,
     "region": [
       0.26,
       0.7
@@ -13,11 +13,10 @@
   },
   "summary": {
     "n_images": 100,
-    "n_fp": 10,
+    "n_fp": 6,
     "by_cause": {
       "B1": 2,
-      "B2": 6,
-      "B3": 2
+      "B2": 4
     }
   },
   "legend": {
@@ -32,17 +31,17 @@
       "image_id": "000187_jpg.rf.38a1967760986ebd237fc00709b46603",
       "image": "datasets/ppe_test/test/images/000187_jpg.rf.38a1967760986ebd237fc00709b46603.jpg",
       "person": {
-        "x1": 484.1,
-        "y1": 277.0,
-        "x2": 528.0,
-        "y2": 492.1,
-        "w": 44.0,
-        "h": 215.0
+        "x1": 482.4,
+        "y1": 276.7,
+        "x2": 534.4,
+        "y2": 515.4,
+        "w": 52.0,
+        "h": 238.7
       },
-      "person_conf": 0.72,
+      "person_conf": 0.739,
       "verdict": {
         "status": "未佩戴",
-        "conf": 0.72,
+        "conf": 0.739,
         "reason": "头部区域内未检出装备框（最高 IoU=0.00 < 0.28，包含度 0.00 < 0.7），判定为未佩戴"
       },
       "gt_helmet_boxes": [
@@ -54,468 +53,294 @@
         }
       ],
       "cause": "B2",
-      "n_helmet_boxes": 6,
-      "best_conf_in_region": 0.517,
-      "best_conf_out_region": 0.735,
-      "max_area_ratio": 0.46,
+      "n_helmet_boxes": 8,
+      "best_conf_in_region": 0.513,
+      "best_conf_out_region": 0.697,
+      "max_area_ratio": 0.3,
       "offsets": [
         {
-          "conf": 0.735,
-          "dx": 10.09,
+          "conf": 0.697,
+          "dx": 8.48,
           "dy": 0.0
         },
         {
-          "conf": 0.731,
-          "dx": 15.35,
+          "conf": 0.627,
+          "dx": 5.94,
           "dy": 0.0
         },
         {
-          "conf": 0.601,
-          "dx": 2.98,
+          "conf": 0.609,
+          "dx": 12.96,
           "dy": 0.0
         },
         {
-          "conf": 0.564,
-          "dx": 7.03,
+          "conf": 0.544,
+          "dx": 8.87,
           "dy": 0.0
         },
         {
-          "conf": 0.414,
-          "dx": 7.41,
+          "conf": 0.54,
+          "dx": 2.5,
+          "dy": 0.0
+        },
+        {
+          "conf": 0.295,
+          "dx": 6.25,
+          "dy": 0.0
+        },
+        {
+          "conf": 0.274,
+          "dx": 12.94,
           "dy": 0.0
         }
-      ],
-      "fig": "runs/_review_fp/fp_00_000187_jpg.rf.38a1967760986ebd237fc00709b46603.jpg"
+      ]
     },
     {
-      "image_id": "000946_jpg.rf.ce108909598efc5054b9475928922801",
-      "image": "datasets/ppe_test/test/images/000946_jpg.rf.ce108909598efc5054b9475928922801.jpg",
+      "image_id": "000187_jpg.rf.38a1967760986ebd237fc00709b46603",
+      "image": "datasets/ppe_test/test/images/000187_jpg.rf.38a1967760986ebd237fc00709b46603.jpg",
       "person": {
-        "x1": 174.9,
-        "y1": 4.9,
-        "x2": 481.1,
-        "y2": 639.9,
-        "w": 306.2,
-        "h": 635.0
+        "x1": 367.9,
+        "y1": 272.7,
+        "x2": 412.3,
+        "y2": 484.3,
+        "w": 44.3,
+        "h": 211.6
       },
-      "person_conf": 0.841,
+      "person_conf": 0.575,
       "verdict": {
         "status": "未佩戴",
-        "conf": 0.841,
+        "conf": 0.575,
         "reason": "头部区域内未检出装备框（最高 IoU=0.00 < 0.28，包含度 0.00 < 0.7），判定为未佩戴"
       },
       "gt_helmet_boxes": [
         {
-          "x1": 263.2,
-          "y1": 2.2,
-          "x2": 424.7,
-          "y2": 267.8
+          "x1": 384.2,
+          "y1": 273.0,
+          "x2": 410.8,
+          "y2": 297.0
         }
       ],
       "cause": "B2",
-      "n_helmet_boxes": 1,
-      "best_conf_in_region": 0.581,
-      "best_conf_out_region": null,
-      "max_area_ratio": 1.13,
-      "fig": "runs/_review_fp/fp_01_000946_jpg.rf.ce108909598efc5054b9475928922801.jpg"
+      "n_helmet_boxes": 8,
+      "best_conf_in_region": 0.54,
+      "best_conf_out_region": 0.697,
+      "max_area_ratio": 0.39,
+      "offsets": [
+        {
+          "conf": 0.697,
+          "dx": 6.23,
+          "dy": 0.0
+        },
+        {
+          "conf": 0.627,
+          "dx": 3.25,
+          "dy": 0.0
+        },
+        {
+          "conf": 0.609,
+          "dx": 11.48,
+          "dy": 0.0
+        },
+        {
+          "conf": 0.544,
+          "dx": 6.68,
+          "dy": 0.0
+        },
+        {
+          "conf": 0.513,
+          "dx": 2.99,
+          "dy": 0.0
+        },
+        {
+          "conf": 0.295,
+          "dx": 3.61,
+          "dy": 0.12
+        },
+        {
+          "conf": 0.274,
+          "dx": 11.45,
+          "dy": 0.0
+        }
+      ]
     },
     {
-      "image_id": "001626_jpg.rf.c558c00ac7da125dca8bb9c1982b3ab7",
-      "image": "datasets/ppe_test/test/images/001626_jpg.rf.c558c00ac7da125dca8bb9c1982b3ab7.jpg",
+      "image_id": "001225_jpg.rf.c9e5697efe7543c18858af611b304190",
+      "image": "datasets/ppe_test/test/images/001225_jpg.rf.c9e5697efe7543c18858af611b304190.jpg",
       "person": {
-        "x1": 285.2,
-        "y1": 172.2,
-        "x2": 422.6,
-        "y2": 639.4,
-        "w": 137.3,
-        "h": 467.2
+        "x1": 558.9,
+        "y1": 338.2,
+        "x2": 590.5,
+        "y2": 444.1,
+        "w": 31.6,
+        "h": 105.9
       },
-      "person_conf": 0.847,
+      "person_conf": 0.839,
       "verdict": {
         "status": "未佩戴",
-        "conf": 0.847,
+        "conf": 0.839,
         "reason": "头部区域内未检出装备框（最高 IoU=0.00 < 0.28，包含度 0.00 < 0.7），判定为未佩戴"
       },
       "gt_helmet_boxes": [
         {
-          "x1": 321.0,
-          "y1": 180.2,
-          "x2": 394.0,
-          "y2": 273.8
+          "x1": 573.2,
+          "y1": 338.2,
+          "x2": 583.8,
+          "y2": 353.8
         }
       ],
       "cause": "B2",
-      "n_helmet_boxes": 4,
-      "best_conf_in_region": 0.252,
-      "best_conf_out_region": 0.886,
-      "max_area_ratio": 0.54,
-      "offsets": [
-        {
-          "conf": 0.886,
-          "dx": 0.58,
-          "dy": 0.0
-        },
-        {
-          "conf": 0.882,
-          "dx": 1.82,
-          "dy": 0.0
-        },
-        {
-          "conf": 0.735,
-          "dx": 0.93,
-          "dy": 0.0
-        }
-      ],
-      "fig": "runs/_review_fp/fp_02_001626_jpg.rf.c558c00ac7da125dca8bb9c1982b3ab7.jpg"
-    },
-    {
-      "image_id": "001823_jpg.rf.3d21e91a673d9307bfa6fbf13420e6d9",
-      "image": "datasets/ppe_test/test/images/001823_jpg.rf.3d21e91a673d9307bfa6fbf13420e6d9.jpg",
-      "person": {
-        "x1": 169.1,
-        "y1": 2.9,
-        "x2": 467.1,
-        "y2": 639.2,
-        "w": 298.0,
-        "h": 636.3
-      },
-      "person_conf": 0.787,
-      "verdict": {
-        "status": "未佩戴",
-        "conf": 0.787,
-        "reason": "头部区域内未检出装备框（最高 IoU=0.00 < 0.28，包含度 0.00 < 0.7），判定为未佩戴"
-      },
-      "gt_helmet_boxes": [
-        {
-          "x1": 309.0,
-          "y1": 0.0,
-          "x2": 456.0,
-          "y2": 230.0
-        }
-      ],
-      "cause": "B1",
-      "n_helmet_boxes": 0,
-      "best_conf_in_region": null,
-      "best_conf_out_region": null,
-      "max_area_ratio": null,
-      "fig": "runs/_review_fp/fp_03_001823_jpg.rf.3d21e91a673d9307bfa6fbf13420e6d9.jpg"
-    },
-    {
-      "image_id": "001883_jpg.rf.b69aa48988c3ebf9169311ad17f578b3",
-      "image": "datasets/ppe_test/test/images/001883_jpg.rf.b69aa48988c3ebf9169311ad17f578b3.jpg",
-      "person": {
-        "x1": 218.5,
-        "y1": 170.1,
-        "x2": 269.9,
-        "y2": 475.6,
-        "w": 51.4,
-        "h": 305.5
-      },
-      "person_conf": 0.669,
-      "verdict": {
-        "status": "未佩戴",
-        "conf": 0.669,
-        "reason": "头部区域内未检出装备框（最高 IoU=0.00 < 0.28，包含度 0.00 < 0.7），判定为未佩戴"
-      },
-      "gt_helmet_boxes": [
-        {
-          "x1": 234.2,
-          "y1": 166.5,
-          "x2": 266.8,
-          "y2": 200.5
-        }
-      ],
-      "cause": "B3",
       "n_helmet_boxes": 6,
-      "best_conf_in_region": null,
-      "best_conf_out_region": 0.86,
-      "max_area_ratio": 2.98,
+      "best_conf_in_region": 0.632,
+      "best_conf_out_region": 0.759,
+      "max_area_ratio": 3.1,
       "offsets": [
         {
-          "conf": 0.86,
-          "dx": 4.59,
-          "dy": 0.53
+          "conf": 0.759,
+          "dx": 15.22,
+          "dy": 4.43
         },
         {
-          "conf": 0.802,
-          "dx": 8.59,
-          "dy": 0.0
+          "conf": 0.755,
+          "dx": 7.27,
+          "dy": 0.66
         },
         {
-          "conf": 0.76,
-          "dx": 4.53,
-          "dy": 0.13
+          "conf": 0.748,
+          "dx": 8.7,
+          "dy": 2.99
         },
         {
           "conf": 0.739,
-          "dx": 1.07,
-          "dy": 0.05
-        },
-        {
-          "conf": 0.718,
-          "dx": 6.66,
-          "dy": 0.07
-        },
-        {
-          "conf": 0.395,
-          "dx": 3.17,
-          "dy": 0.0
+          "dx": 12.15,
+          "dy": 2.49
         }
-      ],
-      "fig": "runs/_review_fp/fp_04_001883_jpg.rf.b69aa48988c3ebf9169311ad17f578b3.jpg"
+      ]
     },
     {
-      "image_id": "00593_jpg.rf.1b7cb5d0d8fd18734b409e4a65f19074",
-      "image": "datasets/ppe_test/test/images/00593_jpg.rf.1b7cb5d0d8fd18734b409e4a65f19074.jpg",
+      "image_id": "001659_jpg.rf.5e2ca27bd4846d58aaebcda34925d1f5",
+      "image": "datasets/ppe_test/test/images/001659_jpg.rf.5e2ca27bd4846d58aaebcda34925d1f5.jpg",
       "person": {
-        "x1": 173.3,
-        "y1": 209.0,
-        "x2": 379.4,
-        "y2": 639.1,
-        "w": 206.2,
-        "h": 430.1
+        "x1": 100.2,
+        "y1": 30.7,
+        "x2": 640.0,
+        "y2": 639.7,
+        "w": 539.8,
+        "h": 609.0
       },
-      "person_conf": 0.791,
+      "person_conf": 0.707,
       "verdict": {
         "status": "未佩戴",
-        "conf": 0.791,
+        "conf": 0.707,
         "reason": "头部区域内未检出装备框（最高 IoU=0.00 < 0.28，包含度 0.00 < 0.7），判定为未佩戴"
       },
       "gt_helmet_boxes": [
         {
-          "x1": 226.2,
-          "y1": 208.0,
-          "x2": 332.8,
-          "y2": 268.0
-        }
-      ],
-      "cause": "B2",
-      "n_helmet_boxes": 3,
-      "best_conf_in_region": 0.286,
-      "best_conf_out_region": 0.715,
-      "max_area_ratio": 0.4,
-      "offsets": [
-        {
-          "conf": 0.715,
-          "dx": 0.88,
-          "dy": 0.0
-        },
-        {
-          "conf": 0.605,
-          "dx": 0.38,
-          "dy": 0.0
-        }
-      ],
-      "fig": "runs/_review_fp/fp_05_00593_jpg.rf.1b7cb5d0d8fd18734b409e4a65f19074.jpg"
-    },
-    {
-      "image_id": "47_jpg.rf.3fe7f5b94b72373e0d7bfc0603f3b3e2",
-      "image": "datasets/ppe_test/test/images/47_jpg.rf.3fe7f5b94b72373e0d7bfc0603f3b3e2.jpg",
-      "person": {
-        "x1": 123.5,
-        "y1": 172.7,
-        "x2": 187.3,
-        "y2": 433.8,
-        "w": 63.7,
-        "h": 261.1
-      },
-      "person_conf": 0.792,
-      "verdict": {
-        "status": "未佩戴",
-        "conf": 0.792,
-        "reason": "头部区域内未检出装备框（最高 IoU=0.00 < 0.28，包含度 0.00 < 0.7），判定为未佩戴"
-      },
-      "gt_helmet_boxes": [
-        {
-          "x1": 144.0,
-          "y1": 170.2,
-          "x2": 174.0,
-          "y2": 219.8
-        }
-      ],
-      "cause": "B2",
-      "n_helmet_boxes": 6,
-      "best_conf_in_region": 0.308,
-      "best_conf_out_region": 0.769,
-      "max_area_ratio": 1.23,
-      "offsets": [
-        {
-          "conf": 0.769,
-          "dx": 1.54,
-          "dy": 0.56
-        },
-        {
-          "conf": 0.734,
-          "dx": 6.83,
-          "dy": 0.57
-        },
-        {
-          "conf": 0.73,
-          "dx": 10.02,
-          "dy": 0.27
-        },
-        {
-          "conf": 0.579,
-          "dx": 3.44,
-          "dy": 0.92
-        },
-        {
-          "conf": 0.343,
-          "dx": 3.45,
-          "dy": 0.56
-        }
-      ],
-      "fig": "runs/_review_fp/fp_06_47_jpg.rf.3fe7f5b94b72373e0d7bfc0603f3b3e2.jpg"
-    },
-    {
-      "image_id": "47_jpg.rf.3fe7f5b94b72373e0d7bfc0603f3b3e2",
-      "image": "datasets/ppe_test/test/images/47_jpg.rf.3fe7f5b94b72373e0d7bfc0603f3b3e2.jpg",
-      "person": {
-        "x1": 288.9,
-        "y1": 109.0,
-        "x2": 382.2,
-        "y2": 587.6,
-        "w": 93.3,
-        "h": 478.6
-      },
-      "person_conf": 0.76,
-      "verdict": {
-        "status": "未佩戴",
-        "conf": 0.76,
-        "reason": "头部区域内未检出装备框（最高 IoU=0.00 < 0.28，包含度 0.00 < 0.7），判定为未佩戴"
-      },
-      "gt_helmet_boxes": [
-        {
-          "x1": 308.2,
-          "y1": 86.8,
-          "x2": 356.8,
-          "y2": 153.2
-        }
-      ],
-      "cause": "B2",
-      "n_helmet_boxes": 6,
-      "best_conf_in_region": 0.579,
-      "best_conf_out_region": 0.769,
-      "max_area_ratio": 0.46,
-      "offsets": [
-        {
-          "conf": 0.769,
-          "dx": 3.65,
-          "dy": 0.0
-        },
-        {
-          "conf": 0.734,
-          "dx": 1.75,
-          "dy": 0.0
-        },
-        {
-          "conf": 0.73,
-          "dx": 3.93,
-          "dy": 0.0
-        },
-        {
-          "conf": 0.308,
-          "dx": 2.21,
-          "dy": 0.0
-        }
-      ],
-      "fig": "runs/_review_fp/fp_07_47_jpg.rf.3fe7f5b94b72373e0d7bfc0603f3b3e2.jpg"
-    },
-    {
-      "image_id": "47_jpg.rf.3fe7f5b94b72373e0d7bfc0603f3b3e2",
-      "image": "datasets/ppe_test/test/images/47_jpg.rf.3fe7f5b94b72373e0d7bfc0603f3b3e2.jpg",
-      "person": {
-        "x1": 262.1,
-        "y1": 194.1,
-        "x2": 300.8,
-        "y2": 408.5,
-        "w": 38.7,
-        "h": 214.5
-      },
-      "person_conf": 0.327,
-      "verdict": {
-        "status": "未佩戴",
-        "conf": 0.327,
-        "reason": "头部区域内未检出装备框（最高 IoU=0.00 < 0.28，包含度 0.00 < 0.7），判定为未佩戴"
-      },
-      "gt_helmet_boxes": [
-        {
-          "x1": 268.8,
-          "y1": 183.8,
-          "x2": 292.2,
-          "y2": 230.2
-        }
-      ],
-      "cause": "B3",
-      "n_helmet_boxes": 6,
-      "best_conf_in_region": null,
-      "best_conf_out_region": 0.769,
-      "max_area_ratio": 2.47,
-      "offsets": [
-        {
-          "conf": 0.769,
-          "dx": 7.5,
-          "dy": 1.06
-        },
-        {
-          "conf": 0.734,
-          "dx": 6.91,
-          "dy": 1.08
-        },
-        {
-          "conf": 0.73,
-          "dx": 12.16,
-          "dy": 0.71
-        },
-        {
-          "conf": 0.579,
-          "dx": 1.33,
-          "dy": 1.51
-        },
-        {
-          "conf": 0.343,
-          "dx": 1.35,
-          "dy": 1.06
-        },
-        {
-          "conf": 0.308,
-          "dx": 4.04,
-          "dy": 0.17
-        }
-      ],
-      "fig": "runs/_review_fp/fp_08_47_jpg.rf.3fe7f5b94b72373e0d7bfc0603f3b3e2.jpg"
-    },
-    {
-      "image_id": "5d18d072f4468a583914096f07a455f8_jpg.rf.c3cd92ae7df4944e30f31209abe0dfc2",
-      "image": "datasets/ppe_test/test/images/5d18d072f4468a583914096f07a455f8_jpg.rf.c3cd92ae7df4944e30f31209abe0dfc2.jpg",
-      "person": {
-        "x1": 313.0,
-        "y1": 361.0,
-        "x2": 429.1,
-        "y2": 522.0,
-        "w": 116.2,
-        "h": 161.0
-      },
-      "person_conf": 0.65,
-      "verdict": {
-        "status": "未佩戴",
-        "conf": 0.65,
-        "reason": "头部区域内未检出装备框（最高 IoU=0.00 < 0.28，包含度 0.00 < 0.7），判定为未佩戴"
-      },
-      "gt_helmet_boxes": [
-        {
-          "x1": 366.5,
-          "y1": 362.8,
-          "x2": 400.5,
-          "y2": 386.2
+          "x1": 224.0,
+          "y1": 145.2,
+          "x2": 361.0,
+          "y2": 257.8
         }
       ],
       "cause": "B1",
       "n_helmet_boxes": 0,
       "best_conf_in_region": null,
       "best_conf_out_region": null,
-      "max_area_ratio": null,
-      "fig": "runs/_review_fp/fp_09_5d18d072f4468a583914096f07a455f8_jpg.rf.c3cd92ae7df4944e30f31209abe0dfc2.jpg"
+      "max_area_ratio": null
+    },
+    {
+      "image_id": "003267_jpg.rf.88283b4433ad2a65cfcc98041d1fc24f",
+      "image": "datasets/ppe_test/test/images/003267_jpg.rf.88283b4433ad2a65cfcc98041d1fc24f.jpg",
+      "person": {
+        "x1": 265.9,
+        "y1": 173.9,
+        "x2": 511.2,
+        "y2": 640.0,
+        "w": 245.3,
+        "h": 466.1
+      },
+      "person_conf": 0.858,
+      "verdict": {
+        "status": "未佩戴",
+        "conf": 0.858,
+        "reason": "头部区域内未检出装备框（最高 IoU=0.00 < 0.28，包含度 0.00 < 0.7），判定为未佩戴"
+      },
+      "gt_helmet_boxes": [
+        {
+          "x1": 332.2,
+          "y1": 123.2,
+          "x2": 429.8,
+          "y2": 221.8
+        },
+        {
+          "x1": 403.0,
+          "y1": 222.2,
+          "x2": 453.0,
+          "y2": 278.8
+        }
+      ],
+      "cause": "B2",
+      "n_helmet_boxes": 6,
+      "best_conf_in_region": 0.611,
+      "best_conf_out_region": 0.897,
+      "max_area_ratio": 0.46,
+      "offsets": [
+        {
+          "conf": 0.897,
+          "dx": 1.15,
+          "dy": 0.34
+        },
+        {
+          "conf": 0.879,
+          "dx": 0.0,
+          "dy": 0.04
+        },
+        {
+          "conf": 0.874,
+          "dx": 0.3,
+          "dy": 0.0
+        },
+        {
+          "conf": 0.863,
+          "dx": 0.05,
+          "dy": 0.0
+        },
+        {
+          "conf": 0.801,
+          "dx": 1.53,
+          "dy": 0.0
+        }
+      ]
+    },
+    {
+      "image_id": "128_jpg.rf.63136170453b163f037726ed7de48495",
+      "image": "datasets/ppe_test/test/images/128_jpg.rf.63136170453b163f037726ed7de48495.jpg",
+      "person": {
+        "x1": 136.9,
+        "y1": 2.0,
+        "x2": 198.9,
+        "y2": 87.8,
+        "w": 62.0,
+        "h": 85.9
+      },
+      "person_conf": 0.901,
+      "verdict": {
+        "status": "未佩戴",
+        "conf": 0.901,
+        "reason": "头部区域内未检出装备框（最高 IoU=0.00 < 0.28，包含度 0.00 < 0.7），判定为未佩戴"
+      },
+      "gt_helmet_boxes": [
+        {
+          "x1": 159.0,
+          "y1": 0.0,
+          "x2": 178.0,
+          "y2": 28.0
+        }
+      ],
+      "cause": "B1",
+      "n_helmet_boxes": 0,
+      "best_conf_in_region": null,
+      "best_conf_out_region": null,
+      "max_area_ratio": null
     }
   ]
 }

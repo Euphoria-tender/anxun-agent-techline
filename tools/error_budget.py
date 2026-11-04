@@ -27,7 +27,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from anxun.detectors import DualDetector, pick_device            # noqa: E402
+from anxun.detectors import build_detector, pick_device            # noqa: E402
 from anxun.evaluate_real import run_eval, warmup                 # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -47,13 +47,14 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default=str(DATA))
     ap.add_argument("--weights", default=str(ROOT / "models" / "best.pt"))
-    ap.add_argument("--person-weights", default=str(ROOT / "models" / "yolov8n.pt"))
+    ap.add_argument("--person-weights", default="",
+                    help="人体权重；留空走 v3.1.0 单模型（best.pt 自带 person）")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--out", default=str(OUT))
     args = ap.parse_args()
 
-    det = DualDetector(args.person_weights, args.weights, imgsz=640, conf=0.25,
-                       device=pick_device(""))
+    det, _ = build_detector(args.weights, args.person_weights,
+                            imgsz=640, conf=0.25, device=pick_device(""))
     warmup(det)
     out = run_eval(args.data, det, limit=args.limit or None, scope="matched")
     samples = out["samples"]

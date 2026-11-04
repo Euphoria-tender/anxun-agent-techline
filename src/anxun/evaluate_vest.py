@@ -30,7 +30,7 @@ from PIL import Image                                     # noqa: E402
 
 from anxun import rules_engine as R                       # noqa: E402
 from anxun.rules_engine import Box                           # noqa: E402
-from anxun.detectors import DualDetector, pick_device     # noqa: E402
+from anxun.detectors import DualDetector, build_detector, pick_device     # noqa: E402
 from anxun.evaluate_real import (list_images, load_gt,     # noqa: E402
                                  read_names, iou_box)
 from anxun.metrics import evaluate                        # noqa: E402
@@ -70,17 +70,21 @@ def main() -> int:
     args = ap.parse_args()
 
     vw = Path(args.vest)
-    if not vw.exists():
-        print(f"找不到 vest 权重：{vw}\n"
-              f"v3.0.0 起背心已并入 models/best.pt 的五类权重，本脚本只用于\n"
-              f"「独立背心模型」的对照实验，日常评测不需要它。\n"
-              f"确实要独立模型：python src/anxun/finetune.py "
-              f"--data datasets/vest/data.yaml --init models/yolov8n.pt --name vest_ft")
-        return 2
-
-    det = DualDetector(args.person, "" if args.no_helmet else args.helmet,
-                       vest_weights=str(vw), device=pick_device(args.device))
-    print(f"模型：{det.name}  imgsz=640")
+    if vw.exists():
+        # 老路：独立背心模型（v3.0.0 及之前）。留着是为了跑历史对照。
+        det = DualDetector(args.person, "" if args.no_helmet else args.helmet,
+                           vest_weights=str(vw), device=pick_device(args.device))
+        note = det.name
+    else:
+        # v3.1.0 默认：五类权重自带 vest / no-vest，单模型直接出。
+        det, note = build_detector(args.helmet, args.person,
+                                   device=pick_device(args.device))
+        labels = {str(n) for n in det.names.values()}
+        if not ({"vest", "no-vest"} & labels):
+            print(f"权重里没有 vest 类：{sorted(labels)}\n"
+                  f"v3.1.0 请用 models/best.pt（helmet / no-helmet / no-vest / person / vest）。")
+            return 2
+    print(f"模型：{note}  imgsz=640")
     det.detect_frame(__import__("numpy").zeros((640, 640, 3), dtype=__import__("numpy").uint8))
 
     data = Path(args.data)
@@ -153,15 +157,17 @@ def main() -> int:
     print(f"误报率    {r['fp_rate']}%   (合规 {n_c} 人次)   穿了被判没穿")
     print(f"漏报率    {r['fn_rate']}%   (违规 {n_v} 人次)   没穿被判穿了")
     print(f"混淆矩阵   {r['confusion']}")
-    print(f"单帧耗时   {round(sum(lat) / len(lat), 1)} ms（三模型串联）")
+    print(f"单帧耗时   {round(sum(lat) / len(lat), 1)} ms（{note}）")
     out = ROOT / "data" / "metrics_vest.json"
     out.write_text(json.dumps(
         {"kind": "model-measured",
-         "config": {"models": det.name, "vest": Path(args.vest).name,
-                    "device": f"GPU（torch）"},
+         "config": {"models": note,
+                    "vest": "内置于 best.pt 五类" if not vw.exists() else Path(args.vest).name,
+                    "device": "GPU（torch）"},
          "dataset": {"name": "Chapian/PPE_detection · test", "license": "CC BY 4.0",
                      "images": len(files), "n_compliant": n_c, "n_violating": n_v,
-                     "eval_note": "vest 训练用的是 train 分片，本页全部数字来自未参与的 test 分片"},
+                     "eval_note": "训练用 ppe_full（已剔除与 test 重叠的 165 张），"
+                                  "本页全部数字来自未参与训练的 test 分片"},
          "results": r}, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"-> {out}")
 

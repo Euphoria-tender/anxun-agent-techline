@@ -13,7 +13,7 @@
 所以口径写死在这里：
 
     能算：helmet 单类 AP@0.5、框级 precision / recall / F1、单帧耗时
-    不能算：人次级误报率 6.12% / 漏报率 17.20%、三类 mAP 0.6808
+    不能算：人次级误报率 6.12% / 漏报率 4.35%、两类 mAP 0.8654
 
 **两个口径不并列、不混算、不加总。**
 
@@ -138,8 +138,8 @@ def main() -> int:
         "scope": "detection-only",
         "comparable_to": "data/metrics_real.json → results.per_class.helmet",
         "not_comparable": [
-            "人次级误报率 / 漏报率（6.12% / 17.20%）——本集无 person 标注",
-            "三类 mAP（0.6808）——本集只有 helmet / nohelmet 两类",
+            "人次级误报率 / 漏报率（6.12% / 4.35%）——本集无 person 标注",
+            "两类 mAP（0.8654）——本集只有 helmet / nohelmet 两类",
         ],
         "config": {
             "weights": Path(args.weights).name,
@@ -181,8 +181,16 @@ def main() -> int:
     h = payload["results"]["per_class"]["helmet"]
     print(f"\n706 张 / helmet 单类：AP@0.5 = {h['ap']}  "
           f"P = {h['precision']}  R = {h['recall']}  F1 = {h['f1']}")
-    print(f"  真值框 {h['npos']} / 命中 {h['tp']} / 误检 {h['fp']}  "
-          f"（对比 100 张主口径：npos 146 / tp 122 / fp 131 / AP 0.5645）")
+    # 对比数从主口径 JSON 现读，别硬编码——换一版权重就会过期
+    cmp_txt = ""
+    try:
+        _main = json.loads((ROOT / "data" / "metrics_real.json").read_text(encoding="utf-8"))
+        _h = _main["results"]["per_class"]["helmet"]
+        cmp_txt = (f"（对比 100 张主口径：npos {_h['npos']} / tp {_h['tp']} / "
+                   f"fp {_h['fp']} / AP {_h['ap']}）")
+    except Exception:
+        pass
+    print(f"  真值框 {h['npos']} / 命中 {h['tp']} / 误检 {h['fp']}  {cmp_txt}")
     print(f"  单帧耗时 mean {payload['results']['latency_ms']['mean']} ms")
     print(f"-> {out}")
     return 0

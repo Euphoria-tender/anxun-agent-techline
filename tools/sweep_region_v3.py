@@ -26,7 +26,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 import anxun.rules_engine as R
-from anxun.detectors import DualDetector, pick_device
+from anxun.detectors import build_detector, pick_device
 from anxun.evaluate_real import iou_box, list_images, load_gt, read_names, truth_of
 from anxun.metrics import business_rates
 from anxun.rules_engine import judge_frame, min_person_area
@@ -39,14 +39,15 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default=str(DATA))
     ap.add_argument("--weights", default=str(ROOT / "models" / "best.pt"))
-    ap.add_argument("--person-weights", default=str(ROOT / "models" / "yolov8n.pt"))
+    ap.add_argument("--person-weights", default="",
+                    help="人体权重；留空走 v3.1.0 单模型（best.pt 自带 person）")
     ap.add_argument("--limit", type=int, default=0)
     args = ap.parse_args()
 
     from PIL import Image
 
-    det = DualDetector(args.person_weights, args.weights,
-                       imgsz=640, conf=0.25, device=pick_device(""))
+    det, _ = build_detector(args.weights, args.person_weights,
+                            imgsz=640, conf=0.25, device=pick_device(""))
     from anxun.evaluate_real import warmup
     warmup(det)
 

@@ -3,8 +3,8 @@
   "scope": "detection-only",
   "comparable_to": "data/metrics_real.json → results.per_class.helmet",
   "not_comparable": [
-    "人次级误报率 / 漏报率（6.12% / 17.20%）——本集无 person 标注",
-    "三类 mAP（0.6808）——本集只有 helmet / nohelmet 两类"
+    "人次级误报率 / 漏报率（6.12% / 4.35%）——本集无 person 标注",
+    "两类 mAP（0.8654）——本集只有 helmet / nohelmet 两类"
   ],
   "config": {
     "weights": "best.pt",
@@ -19,37 +19,37 @@
     "license": "MIT",
     "images": 706,
     "boxes_gt": 2722,
-    "boxes_pred": 2762,
+    "boxes_pred": 1972,
     "images_without_gt": 0,
     "note": "训练只用该数据源的 train 1200 + valid 400，本 split 从未参与训练；但与该训练集同源，所以它是「同源独立留出集」，不是跨域评测。"
   },
   "results": {
     "n_images": 706,
-    "n_boxes": 2762,
+    "n_boxes": 1972,
     "per_class": {
       "helmet": {
-        "ap": 0.7501,
+        "ap": 0.2345,
         "npos": 1958,
-        "tp": 1620,
-        "fp": 738,
-        "precision": 0.687,
-        "recall": 0.8274,
-        "f1": 0.7507
+        "tp": 811,
+        "fp": 1161,
+        "precision": 0.4113,
+        "recall": 0.4142,
+        "f1": 0.4127
       },
       "nohelmet": {
-        "ap": 0.4816,
+        "ap": 0.0,
         "npos": 764,
-        "tp": 377,
-        "fp": 27,
-        "precision": 0.9332,
-        "recall": 0.4935,
-        "f1": 0.6455
+        "tp": 0,
+        "fp": 0,
+        "precision": null,
+        "recall": 0.0,
+        "f1": null
       }
     },
     "latency_ms": {
-      "mean": 12.79,
-      "p50": 8.95
+      "mean": 16.95,
+      "p50": 11.71
     }
   },
-  "generated_at": "2026-11-02T16:51:55"
+  "generated_at": "2026-11-04T21:03:44"
 }
