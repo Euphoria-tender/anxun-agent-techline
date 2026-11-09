@@ -151,8 +151,8 @@ def plot_risk(plt) -> Path:
 
     fig, ax = plt.subplots(figsize=(W, H))
     # 四色等级按 R = L × S 切档；配色与前端一致
-    bands = [(12, "#C62828", "红色 · 立即停工"), (8, "#F08C00", "橙色 · 当日整改"),
-             (4, "#F2C230", "黄色 · 限期整改"), (0, "#3E7BD6", "蓝色 · 加强关注")]
+    bands = [(13, "#C62828", "红色 · 立即停工"), (9, "#F08C00", "橙色 · 当日整改"),
+             (5, "#F2C230", "黄色 · 限期整改"), (0, "#3E7BD6", "蓝色 · 加强关注")]
 
     def color_of(rv: int) -> str:
         for floor, col, _ in bands:
@@ -173,7 +173,7 @@ def plot_risk(plt) -> Path:
     ax.set_ylim(0.5, 4.5)
     ax.set_xticks(range(1, 5), ["1 轻微", "2 一般", "3 较大", "4 严重"])
     ax.set_yticks(range(1, 5), ["1 罕见", "2 偶发", "3 多发", "4 频发"])
-    ax.set_xlabel("S · 后果严重度（违规类型 × 场景）", fontsize=13)
+    ax.set_xlabel("S · 后果严重度（作业类型）", fontsize=13)
     ax.set_ylabel("L · 可能性（近 30 天违规次数）", fontsize=13)
     ax.tick_params(length=0, labelsize=12)
     ax.grid(False)

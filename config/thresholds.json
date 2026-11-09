@@ -6,7 +6,7 @@
   "profiles": {
     "measured": {
       "label": "实测口径",
-      "purpose": "交付与评测默认。四个指标（0.6808 / 6.12% / 17.20% / 22.1ms）就是在这套阈值下测出来的，评委当场重跑 evaluate_real.py 得到同一组数。",
+      "purpose": "对照口径：conf 0.30 时四态齐全，适合演示「待复核」分支与低阈值对照。**交付指标不在本口径下**——v3.1.0 的四个数（0.8654 / 6.12% / 4.35% / 15.0ms）是 profile v3 测的，见 data/metrics_real.json 的 rules_profile 字段。",
       "conf_final": 0.3,
       "conf_review": 0.2,
       "head_region_ratio": 0.3,

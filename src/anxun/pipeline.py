@@ -173,12 +173,15 @@ def _rule_text(ev: Event) -> dict:
     """把 L/S 的查表过程摊开，回答「为什么是这个等级」。"""
     l_rows = [{"range": f"≤{cap}", "L": val} for cap, val in L_TABLE]
     l_rows.append({"range": f">{L_TABLE[-1][0]}", "L": 4})
+    s_why = f"作业类型 {ev.region.scene} → S={ev.S}"
+    if ev.region.scene not in S_MAP:
+        s_why += "（作业类型未登记，按最低档 S=2）"
     return {
         "L_why": f"{ev.region.name} 近 30 天违规 {ev.region.violation_30d} 次 → L={ev.L}",
-        "S_why": f"{ev.equip} × {ev.region.scene} → S={ev.S}",
+        "S_why": s_why,
         "R_why": f"R = L × S = {ev.L} × {ev.S} = {ev.R}",
         "L_table": l_rows,
-        "S_table": [{"k": f"{a}·{b}", "S": v} for (a, b), v in S_MAP.items()],
+        "S_table": [{"k": k, "S": v} for k, v in S_MAP.items()],
     }
 
 

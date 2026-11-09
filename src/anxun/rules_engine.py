@@ -270,25 +270,27 @@ def min_person_area(width: float, height: float) -> float:
 L_TABLE = ((1, 1), (3, 2), (6, 3))
 L_MAX = 4
 
-# 风险矩阵：违规类型 + 场景 -> 后果严重度 S
+# 风险矩阵：作业类型 -> 后果严重度 S
+#
+# 口径唯一出处：docs/安巡风险分级标准.md 第 2.2 节（v1.0，2026-11-08）。
+# S 只由**作业类型**决定，与违规的是安全帽还是反光背心无关。
+# 旧实现按「装备类型 × 场景」查表（如 vest·普通=2），与文档、与研判台页面都不一致：
+# 同一场景网页算出红色 2 小时、接口算出橙色 24 小时。2026-11-09 统一到文档。
 S_MAP = {
-    ("helmet",  "高处"): 4,   # 高处作业未戴安全帽
-    ("helmet",  "起重"): 4,   # 起重作业未戴安全帽
-    ("helmet",  "动火"): 3,
-    ("helmet",  "普通"): 3,
-    ("helmet",  "车辆"): 3,   # v1 补：README 的示例（装卸区 R=3）依赖这一行，原表漏了会掉到默认 2
-    ("vest",    "车辆"): 3,   # 有车辆通行区域未穿反光背心
-    ("vest",    "普通"): 2,
-    ("goggles", "飞溅"): 3,
-    ("goggles", "普通"): 2,
+    "普通":   3,   # 防护缺失可致重伤
+    "车辆":   3,   # 存在碰撞 / 碾压风险
+    "高处":   4,   # 坠落后果可能致命
+    "动火":   4,   # 可能引发火灾爆炸
+    "受限空间": 4,  # 中毒窒息后果严重
 }
-S_DEFAULT = 2
+S_DEFAULT = 2      # 未登记的作业类型按最低档，并在研判里注明「作业类型未登记」
 
 # 等级判定：(风险值下限, 等级, 处置要求, 整改时限)
+# 分档与 docs/安巡风险分级标准.md 第 3 节逐字对齐：≥13 红 / 9–12 橙 / 5–8 黄 / ≤4 蓝
 GRADE_RULES = (
-    (12, "红色", "立即停止作业并整改", timedelta(hours=2)),
-    (8,  "橙色", "当日整改",           timedelta(hours=24)),
-    (4,  "黄色", "限期整改",           timedelta(days=7)),
+    (13, "红色", "立即停止作业并整改", timedelta(hours=2)),
+    (9,  "橙色", "当日整改",           timedelta(hours=24)),
+    (5,  "黄色", "限期整改",           timedelta(days=7)),
     (0,  "蓝色", "加强关注",           timedelta(days=30)),
 )
 
@@ -667,9 +669,18 @@ def likelihood(violation_count_30d: int) -> int:
     return L_MAX
 
 
-def severity(equip: str, scene: str) -> int:
-    """后果严重度 S：由违规类型 + 作业场景决定。"""
-    return S_MAP.get((equip, scene), S_DEFAULT)
+def severity(scene: str, risk_class: str = "") -> int:
+    """后果严重度 S：由作业类型决定（docs/安巡风险分级标准.md §2.2）。
+
+    `scene` 是区域登记的作业类型（普通 / 车辆 / 高处 / 动火 / 受限空间）。
+    有些区域登记的是场所属性（如「消防通道」），这时用 `risk_class` 兜底，
+    两者都没有就落到 S_DEFAULT=2，并在研判里注明「作业类型未登记」。
+    """
+    if scene in S_MAP:
+        return S_MAP[scene]
+    if risk_class in S_MAP:
+        return S_MAP[risk_class]
+    return S_DEFAULT
 
 
 def grade_of(risk: int) -> tuple[str, str, timedelta]:
@@ -716,7 +727,7 @@ def build_event(region: Region, equip: str, ts: datetime,
                 conf: float, evidence: str, event_id: str = "") -> Event:
     """把一条违规判定转成带定级的事件。"""
     L = likelihood(region.violation_30d)
-    S = severity(equip, region.scene)
+    S = severity(region.scene, getattr(region, "risk_class", ""))
     R = L * S
     g, act, due_delta = grade_of(R)
     return Event(
