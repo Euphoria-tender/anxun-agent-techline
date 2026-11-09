@@ -197,16 +197,29 @@ def _summary(final, events, persons) -> dict:
     cnt: dict[str, int] = {}
     for v in final:
         cnt[v.status] = cnt.get(v.status, 0) + 1
+
+    # 两个口径必须分开写清楚：`states` 是**人次**（一个人查两件装备就是两条），
+    # `person_states` 是**按人取最坏态**。只给 states 会出现「persons=1，
+    # 却已佩戴 1 + 未佩戴 1」这种看着像 bug 的返回——页面和指标都按人算。
+    person_cnt: dict[str, int] = {}
+    for p in persons:
+        k = p.get("worst") or "-"
+        person_cnt[k] = person_cnt.get(k, 0) + 1
+
     worst = ""
     if events:
         worst = max(events, key=lambda e: GRADE_ORDER.get(e["grade"], 0))["grade"]
     return {
         "persons": len(persons),
         "states": cnt,
-        "violations": sum(1 for v in final if v.is_violation),
-        "review": cnt.get("待复核", 0),
-        "undetermined": cnt.get("无法判定", 0),
-        "discarded": cnt.get("丢弃", 0),
+        "states_basis": "人次（一人多件装备算多条）",
+        "person_states": person_cnt,
+        "person_states_basis": "按人取最坏态",
+        "violations": person_cnt.get("未佩戴", 0),
+        "violations_basis": "按人计（人×最坏态）",
+        "review": person_cnt.get("待复核", 0),
+        "undetermined": person_cnt.get("无法判定", 0),
+        "discarded": person_cnt.get("丢弃", 0),
         "events": len(events),
         "worst_grade": worst,
     }
